@@ -1,0 +1,70 @@
+body {
+    background: #394e8c;
+    color: white;
+    font-size: 4vmax;
+}
+
+input {
+    font-size: 4vmax;
+}
+
+textarea {
+    font-size: 2vmax;
+    width: 100%
+}
+
+div#wiki-wrapper {
+    background: #F2F4FA;
+    color: #3E414C;
+    max-width: 80%;
+}
+
+.markdown-body pre {
+    background: #3E414C;
+    color: #F2F4FA;
+}
+
+ul.actions a.action-home-page {
+    background: #394D88;
+    color: white;
+}
+
+ul.actions a {
+    background: #1B2032;
+    color: white;
+}
+
+h2 {
+    background: linear-gradient(transparent 70%, #a7d6ff 70%);
+    color: #3E414C;
+}
+
+h3 {
+    background: linear-gradient(transparent 70%, #a7d6ff 30%);
+    color: #3E414C;
+}
+
+table {
+    border-collapse: collapse;
+    text-align: left;
+    line-height: 1.5;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+}
+
+table th {
+    width: 150px;
+    padding: 10px;
+    font-weight: bold;
+    vertical-align: top;
+}
+
+table td {
+    width: 350px;
+    padding: 10px;
+    vertical-align: top;
+}
+
+table .even {
+    background: #efefef;
+}

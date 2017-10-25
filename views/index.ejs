@@ -1,0 +1,90 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script>
+
+        var tbody = document.getElementById("tbody");
+
+        window.onload = function () {
+            var request = new XMLHttpRequest();
+
+            request.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    if (!this.response) {
+                        return;
+                    }
+
+                    var table = document.getElementById("table");
+                    table.innerHTML = "<tr><th style='display: none;'></th><th style='width:10px;'></th><th>日付</th><th>名前</th><th>お店</th></tr>";
+                    var datas = JSON.parse(this.response);
+
+                    datas.forEach(function (element) {
+                        console.log(this.response);
+                        var tr = table.insertRow(-1);
+                        var td1 = tr.insertCell(-1);
+                        var td2 = tr.insertCell(-1);
+                        var td3 = tr.insertCell(-1);
+                        var td4 = tr.insertCell(-1);
+                        var td5 = tr.insertCell(-1);
+                        td1.style.display = "none";
+                        td1.innerText = element._id;
+                        td2.innerHTML = "<input type='checkbox' />";
+                        td2.style.width = "10px";
+                        td3.innerText = element.date;
+                        td4.innerText = element.name;
+                        td5.innerText = element.talk;
+                    }, this);
+                }
+            }
+
+            request.open('GET', './list.json', true);
+            request.send();
+        };
+
+        function test() {
+            var table = document.getElementById("table");
+            var children = table.children[0].children;
+
+            var data = "[";
+            for (var i = 0; i < children.length; i++) {
+                var element = children[i];
+                var id = element.children[0].textContent;
+
+                if (id == "") {
+                    continue;
+                }
+
+                if (!element.children[1].children[0].checked) {
+                    continue;
+                }
+
+                if (data.length != 1) {
+                    data = data + ",";
+                }
+
+                data = data + "\"" + id + "\"";
+            }
+            // data = "{\"ids\":" + data + "]}";
+            data = data + "]";
+
+            var request = new XMLHttpRequest();
+            request.open('DELETE', './list.json', true);
+            request.setRequestHeader("Content-Type", "application/json");
+            request.send(data);
+        };
+    </script>
+</head>
+
+<body>
+    <h1>HMemo</h1>
+    <a href="./detail">新規登録</a>
+    <br />
+    <br />
+    <table id="table">
+    </table>
+    <input type="button" id="deleteButton" onclick="test();" value="削除" />
+</body>
+
+</html>

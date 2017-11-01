@@ -1,11 +1,33 @@
 body {
     background: #394e8c;
     color: white;
-    font-size: 4vmax;
+    font-size: 3vmax;
+}
+
+.row {
+    margin : auto;
+    
+    width:960px;
+}
+
+@media (max-width: 960px) {
+    .row{
+        margin : auto;
+        display: block;
+        width:100%;
+    }
+}
+
+input.sub {
+    font-size: 1vmax;
+    margin-top:10px;
+    margin-bottom:10px;
 }
 
 input {
-    font-size: 4vmax;
+    font-size: 2vmax;
+    margin-top:10px;
+    margin-bottom:10px;
 }
 
 textarea {
@@ -36,7 +58,7 @@ ul.actions a {
 
 h2 {
     background: linear-gradient(transparent 70%, #a7d6ff 70%);
-    color: #3E414C;
+    color: white;
 }
 
 h3 {
@@ -67,4 +89,23 @@ table td {
 
 table .even {
     background: #efefef;
+}
+
+/** ポップアップウィンドウ */
+.style_default {
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0.0, #000080, color-stop(1.0, #000080)));
+    background: -webkit-linear-gradient(top, #000080, #000080);
+    background: -moz-linear-gradient(top, #000080, #000080);
+    background: linear-gradient(top, #000080, #000080);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+.style_focused {
+       background: -webkit-gradient(linear, left top, left bottom, color-stop(0.0, #000080, color-stop(1.0, #000080)));
+       background: -webkit-linear-gradient(top, #000080, #000080);
+       background: -moz-linear-gradient(top, #000080, #000080);
+       background: linear-gradient(top, #000080, #000080);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
 }

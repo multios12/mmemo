@@ -1,10 +1,28 @@
 
+window.onload = function () {
+    showListContainer();
+}
+
 $('#date').datepicker({
     format: "yyyy/mm/dd",
     language: "ja",
     todayHighlight: true
 });
 
+document.getElementById("editOkButton").onclick =function() {
+    insertMemos();
+    return false;
+}
+
+document.getElementById('editCloseButton').onclick = function() {
+    showListContainer();
+}
+
+/** 
+ * アラートメッセージを表示する
+ * @param {*} message メッセージ 
+ * @param {*} isError trueの場合、エラーアラートを表示する
+ */
 function showMessage(message, isError) {
     var e = document.getElementById("message");
     e.classList.remove("alert-danger");
@@ -14,6 +32,9 @@ function showMessage(message, isError) {
     e.style.display = "block";
 }
 
+/**
+ * アラートメッセージを閉じる
+ */
 function closeMessage() {
     var e = document.getElementById("message");
     e.classList.remove("alert-danger");
@@ -22,7 +43,10 @@ function closeMessage() {
     e.style.display = "none";
 }
 
-function showmemos() {
+function showListContainer() {
+    document.getElementById("editContainer").style.display = "none";
+    $("#listContainer").fadeIn();
+
     var request = new XMLHttpRequest();
     request.onreadystatechange = function () {
         if (this.readyState != 4 || this.status != 200) {
@@ -58,48 +82,13 @@ function showmemos() {
     request.send();
 };
 
-$('#editArea').on('hide.bs.modal', function (e) {
-    //return false;
-});
+function showEditContainer(id) {
+    document.getElementById("listContainer").style.display = "none";
+    $("#editContainer").fadeIn();
 
-$('#editForm').on('invalid.bs.validator', function(e){
-    document.getElementById("editOkButton").removeAttribute("data-dismiss"); 
-});
-
-$('#editForm').on('valid.bs.validator', function(e){
-    document.getElementById("editOkButton").setAttribute("data-dismiss", "modal"); 
- });
- 
-$('#editForm').validator().on('submit', function (e) {
-    if (e.isDefaultPrevented()) {
-        // handle the invalid form...
-        $(this).off;
-        return false;
-    } else {
-        // everything looks good!
-        insertMemos();
-    }
-});
-
-function insertMemos() {
-    var request = new XMLHttpRequest();
-    request.onloadend = function () {
-        analyzeResponse(request, function () {
-            showMessage("登録が完了しました。", false);
-        });
-    }
-
-    request.open('POST', './memos', true);
-    request.setRequestHeader("Content-Type", "application/json");
-    var data = parseJson($('#editForm').serializeArray());
-    request.send(JSON.stringify(data));
-};
-
-function showEditModal(id) {
     if (!id) {
         document.editForm.reset();
-        //document.editForm.date.value = moment(new Date()).format("YYYY/MM/DD");
-        $('#editArea').modal();
+        document.editForm._id.value ="";
         closeMessage();
         return;
     }
@@ -108,7 +97,6 @@ function showEditModal(id) {
     request.onloadend = function () {
         analyzeResponse(request, function () {
             jsonToForm(request.response, document.editForm);
-            $('#editArea').modal();
         });
     }
 
@@ -120,6 +108,7 @@ function showEditModal(id) {
 }
 
 function showViewModal(id) {
+
     closeMessage();
     var request = new XMLHttpRequest();
     request.onloadend = function () {
@@ -130,7 +119,7 @@ function showViewModal(id) {
             document.getElementById("viewdate").innerText = data.date ? data.date : "";
             document.getElementById("viewshoptype").innerText = data.shoptype ? data.shoptype : "";
             document.getElementById("viewshop").innerText = data.shop ? data.shop : "";
-            document.getElementById("viewhomepage").innerText = data.homepage ? data.homepage : "";
+            document.getElementById("viewhomepage").innerHTML = data.homepage ? "<a href='" + data.homepage + "' target='_blank'>" + data.homepage + "</a>" : "";
             document.getElementById("viewplay").innerText = data.play ? data.play : "";
             document.getElementById("viewtalk").innerText = data.talk ? data.talk : "";
 
@@ -143,12 +132,28 @@ function showViewModal(id) {
     request.send();
 }
 
+function insertMemos() {
+    var request = new XMLHttpRequest();
+    request.onloadend = function () {
+        analyzeResponse(request, function () {
+            showMessage("登録が完了しました。", false);
+            showListContainer();
+        });
+    }
+
+    request.open('POST', './memos', true);
+    request.setRequestHeader("Content-Type", "application/json");
+    var data = parseJson($('#editForm').serializeArray());
+    request.send(JSON.stringify(data));
+};
+
 function deletememos(id) {
     var request = new XMLHttpRequest();
     request.onloadend = function () {
         analyzeResponse(request, function () {
             showMessage("削除しました。", false);
         });
+        showListContainer();
     }
     request.open('DELETE', './memos?_id=' + id, true);
     request.setRequestHeader("Content-Type", "application/json");
@@ -159,7 +164,6 @@ function deletememos(id) {
 var analyzeResponse = function (request, successAction) {
     if (request.status == 200) {
         successAction();
-        showmemos();
     } else {
         showMessage(request.status + ":" + request.response, false);
     }

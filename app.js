@@ -3,7 +3,7 @@ var bodyParser = require('body-parser');
 var app = express();
 var mongo = require("mongodb");
 var mongoClient = mongo.MongoClient;
-var mongoUri = "mongodb://livaz:27017/hmemo";
+var mongoUri = "mongodb://livaz:27017/hmemo2";
 
 app.set('view engine', 'ejs');
 app.use('/assets', express.static('assets'));
@@ -11,13 +11,10 @@ app.use('/css', express.static('css'));
 app.use('/fonts', express.static('fonts'));
 app.use('/js', express.static('js'));
 
-/* 2. listen()メソッドを実行して3000番ポートで待ち受け。*/
+/* listen()メソッドを実行して3000番ポートで待ち受け。*/
 var server = app.listen(3000, function () {
     console.log("Node.js is listening to PORT:" + server.address().port);
-
-    if (process.env.MONGO_URI) {
-        mongoUri = process.env.MONGO_URI;
-    }
+    mongoUri = process.env.MONGO_URI ? process.env.MONGO_URI : mongoUri;
     console.log("MONGO_URI=" + mongoUri);
 });
 
@@ -26,31 +23,26 @@ app.get("/", function (req, res, next) {
     res.render("index", {});
 });
 
-app.get("/detail", function (req, res, next) {
-    console.log(req.url);
-    res.render("detail");
-});
-
 //#region Json API [memo]------------------------------------------------------
-app.get("/memos", function (req, res, next) {
-    var q = req.query.id ? { "_id": new mongo.ObjectId(req.query.id) } : {};
-
+var collectionName = "memos";
+var pathName = "/" + collectionName;
+app.get(pathName, function (req, res, next) {
     // MongoDB へ 接続
     mongoClient.connect(mongoUri, (error, db) => {
-        // コレクションに含まれるドキュメントをすべて取得
-        db.collection("memos").find(q).toArray((error, documents) => {
+        var q = req.query.id ? { "_id": new mongo.ObjectId(req.query.id) } : {};
+        db.collection(collectionName).find(q).toArray((error, documents) => {
             res.json(documents);
         });
     });
 })
 
-app.post("/memos", bodyParser.json(), function (req, res, next) {
+app.post(pathName, bodyParser.json(), (req, res, next) => {
     if (!req.body) return res.sendStatus(400);
     console.log(req.url);
     console.log(req.body);
     // MongoDB へ 接続
     mongoClient.connect(mongoUri, (error, db) => {
-        var collection = db.collection("memos");
+        var collection = db.collection(collectionName);
         var filter = req.body._id ? { "_id": new mongo.ObjectId(req.body._id) } : undefined;
         delete req.body._id;
 
@@ -69,24 +61,19 @@ app.post("/memos", bodyParser.json(), function (req, res, next) {
 
 });
 
-app.delete("/memos", bodyParser.json(), function (req, res, next) {
+app.delete(pathName, bodyParser.json(), (req, res, next) => {
     if (!req.query) return res.sendStatus(400);
     console.log("DELETE:" + req.url);
 
     // MongoDB へ 接続
     mongoClient.connect(mongoUri, (error, db) => {
-        db.collection("memos").deleteOne({ "_id": new mongo.ObjectId(req.query._id) }, (error, result) => {
+        db.collection(collectionName).deleteOne({ "_id": new mongo.ObjectId(req.query._id) }, (error, result) => {
             db.close();
             res.sendStatus(200);
         });
     });
 })
 //#endregion
-
-function resultAction(error, result) {
-    db.close();
-    res.sendStatus(200);
-}
 
 function stringsToObjectIds(strings) {
     for (let i = 0; i < strings.length; i++) {

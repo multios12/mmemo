@@ -1,21 +1,33 @@
+import jQuery from 'jquery';
+const $ = jQuery;
+window.jQuery = jQuery;
+
+import dt from 'datatables.net';
+import 'datatables.net-dt/css/jquery.datatables.css';
+import 'bootstrap/dist/js/bootstrap.js';
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-datepicker';
+import moment from 'moment';
+import "moment/locale/ja";
+import '../css/main.css';
 
 window.onload = function () {
     showListContainer();
-}
 
-$('#date').datepicker({
-    format: "yyyy/mm/dd",
-    language: "ja",
-    todayHighlight: true
-});
+    document.getElementById("registButton").onclick = showEditContainer;
+    document.getElementById("editButton").onclick = () => { showEditContainer(viewForm._id.value); };
+    $('#date').datepicker({
+        format: "yyyy/mm/dd",
+        language: "ja",
+        todayHighlight: true
+    });
 
-document.getElementById("editOkButton").onclick =function() {
-    insertMemos();
-    return false;
-}
+    document.getElementById("editOkButton").onclick = function () {
+        insertMemos();
+        return false;
+    }
 
-document.getElementById('editCloseButton').onclick = function() {
-    showListContainer();
+    document.getElementById('editCloseButton').onclick = function () { showListContainer(); }
 }
 
 /** 
@@ -88,14 +100,14 @@ function showEditContainer(id) {
 
     if (!id) {
         document.editForm.reset();
-        document.editForm._id.value ="";
+        document.editForm._id.value = "";
         closeMessage();
         return;
     }
 
     var request = new XMLHttpRequest();
     request.onloadend = function () {
-        analyzeResponse(request, function () {
+        analyzeResponses(request, function () {
             jsonToForm(request.response, document.editForm);
         });
     }
@@ -112,7 +124,7 @@ function showViewModal(id) {
     closeMessage();
     var request = new XMLHttpRequest();
     request.onloadend = function () {
-        analyzeResponse(request, function () {
+        analyzeResponses(request, function () {
             var data = JSON.parse(request.response)[0];
             viewForm._id.value = data._id;
             document.getElementById("viewname").innerText = data.name ? data.name : "";
@@ -135,7 +147,7 @@ function showViewModal(id) {
 function insertMemos() {
     var request = new XMLHttpRequest();
     request.onloadend = function () {
-        analyzeResponse(request, function () {
+        analyzeResponses(request, function () {
             showMessage("登録が完了しました。", false);
             showListContainer();
         });
@@ -150,7 +162,7 @@ function insertMemos() {
 function deletememos(id) {
     var request = new XMLHttpRequest();
     request.onloadend = function () {
-        analyzeResponse(request, function () {
+        analyzeResponses(request, function () {
             showMessage("削除しました。", false);
         });
         showListContainer();
@@ -161,7 +173,7 @@ function deletememos(id) {
 };
 
 /** レスポンスを処理する */
-var analyzeResponse = function (request, successAction) {
+function analyzeResponses(request, successAction) {
     if (request.status == 200) {
         successAction();
     } else {
@@ -171,7 +183,7 @@ var analyzeResponse = function (request, successAction) {
 
 var parseJson = function (data) {
     var returnJson = {};
-    for (idx = 0; idx < data.length; idx++) {
+    for (var idx = 0; idx < data.length; idx++) {
         if (data[idx].value == "") {
             continue;
         }

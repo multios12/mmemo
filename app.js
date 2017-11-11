@@ -6,10 +6,7 @@ var mongoClient = mongo.MongoClient;
 var mongoUri = "mongodb://livaz:27017/hmemo2";
 
 app.set('view engine', 'ejs');
-app.use('/assets', express.static('assets'));
-app.use('/css', express.static('css'));
-app.use('/fonts', express.static('fonts'));
-app.use('/js', express.static('js'));
+app.use('/js', express.static('dist'));
 
 /* listen()メソッドを実行して3000番ポートで待ち受け。*/
 var server = app.listen(3000, function () {

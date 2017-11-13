@@ -8,10 +8,8 @@ var compression = require('compression');
 const path = require('path');
 var logger = require('morgan');
 
-//app.use(compression({ threshold: 0, level: 9, memLevel: 9 }));
-//app.use('/js', path.join(path.dirname(process.argv[1]), "js"));
-//console.log(path.join(path.dirname(process.argv[1]), "js"));
 app.use(logger('dev'));
+app.use(compression({ threshold: 0, level: 9, memLevel: 9 }));
 app.use('/main.js', express.static(path.join(path.dirname(process.argv[1]), "js/main.js")));
 
 /* listen()メソッドを実行して3000番ポートで待ち受け。*/

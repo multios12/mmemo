@@ -14,8 +14,8 @@ import '../css/main.css';
 window.onload = function () {
     showListContainer();
 
-    document.getElementById("registButton").onclick = showEditContainer;
-    document.getElementById("editButton").onclick = () => { showEditContainer(viewForm._id.value); };
+    document.getElementById("registButton").onclick = function () { showEditContainer(); };
+    document.getElementById("editButton").onclick = function () { showEditContainer(viewForm._id.value); };
     $('#date').datepicker({
         format: "yyyy/mm/dd",
         language: "ja",

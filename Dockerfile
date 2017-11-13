@@ -4,4 +4,4 @@ ADD ./ /root/{my-node-project}
 WORKDIR /root/{my-node-project}
 RUN npm install
 
-ENTRYPOINT ["node", "app.js"]
+ENTRYPOINT ["node", "./dist/app.js"]

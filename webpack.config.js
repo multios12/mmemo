@@ -1,7 +1,7 @@
 const webpack = require("webpack");
 const path = require('path');
 const CompressionPlugin = require("compression-webpack-plugin");
-const nodeExternals = require("webpack-node-externals");
+const DEBUG = process.env.NODE_ENV ? process.env.NODE_ENV.trim() == 'dev' : false;
 
 var plugins = [
     new webpack.ProvidePlugin({
@@ -13,13 +13,12 @@ var plugins = [
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
 ];
 
-// if (process.env.NODE_ENV == 'dev') {
-//     console.log(`リリースビルド`);
-//     plugins.push(
-//         new webpack.optimize.UglifyJsPlugin(),
-//         new webpack.optimize.AggressiveMergingPlugin()
-//     );
-// }
+if (!DEBUG) {
+    plugins.push(
+        new webpack.optimize.UglifyJsPlugin(),
+        new webpack.optimize.AggressiveMergingPlugin()
+    );
+}
 
 var modules = {
     loaders: [
@@ -33,15 +32,8 @@ var modules = {
 };
 
 module.exports = [{
-    name: "client",
-    entry: { bundle: './src/js/main.js' },
-    output: { path: path.join(__dirname, '/dist/js'), filename: 'main.js' },
+    entry: { main: './src/js/main.js' },
+    output: { path: `${__dirname}/dist/`, filename: "[name].js" },
     plugins: plugins,
     module: modules
-},
-{
-    target: 'node',
-    externals: [nodeExternals()],
-    entry: {app: "./src/app.js"},
-    output: { path:path.join(__dirname, '/dist/'), filename: "app.js" }
 }];

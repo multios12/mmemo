@@ -55,6 +55,9 @@ function closeMessage() {
     e.style.display = "none";
 }
 
+/**
+ * リストコンテナを表示する
+ */
 function showListContainer() {
     document.getElementById("editContainer").style.display = "none";
     $("#listContainer").fadeIn();
@@ -94,6 +97,10 @@ function showListContainer() {
     request.send();
 };
 
+/**
+ * 指定したIDのデータをエディタコンテナに表示する
+ * @param {String} id 
+ */
 function showEditContainer(id) {
     document.getElementById("listContainer").style.display = "none";
     $("#editContainer").fadeIn();
@@ -116,7 +123,6 @@ function showEditContainer(id) {
     request.setRequestHeader("Content-Type", "application/json");
     request.send();
     closeMessage();
-
 }
 
 function showViewModal(id) {

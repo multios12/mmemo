@@ -3,26 +3,16 @@ var bodyParser = require('body-parser');
 var app = express();
 var mongo = require("mongodb");
 var mongoClient = mongo.MongoClient;
-var mongoUri = "mongodb://livaz:27017/hmemo2";
 var compression = require('compression');
 const path = require('path');
 var logger = require('morgan');
 
+var mongoUri = "mongodb://livaz:27017/hmemo2";
+
 app.use(logger('dev'));
 app.use(compression({ threshold: 0, level: 9, memLevel: 9 }));
-app.use('/main.js', express.static(path.join(path.dirname(process.argv[1]), "js/main.js")));
-
-/* listen()メソッドを実行して3000番ポートで待ち受け。*/
-var server = app.listen(3000, function () {
-    console.log("Node.js is listening to PORT:" + server.address().port);
-    mongoUri = process.env.MONGO_URI ? process.env.MONGO_URI : mongoUri;
-    console.log("MONGO_URI=" + mongoUri);
-});
-
-app.get("/", function (req, res, next) {
-    var filePath = path.join(path.dirname(process.argv[1]), "views/index.html");
-    res.sendFile(filePath);
-});
+app.use('/main.js', express.static(path.join(path.dirname(process.argv[1]), "dist/main.js")));
+app.get("/", express.static(path.join(path.dirname(process.argv[1]), "dist/views/index.html")));
 
 //#region Json API [memo]------------------------------------------------------
 var collectionName = "memos";

@@ -1,6 +1,6 @@
 {
   "name": "hmemo",
-  "description": "",
+  "description": "HMemo ver1.0.0",
   "version": "1.0.0",
   "main": "node ./bin/www",
   "scripts": {
@@ -18,6 +18,7 @@
     "bootstrap-datepicker": "1.7.1",
     "compression": "1.7.1",
     "datatables.net-dt": "1.10.16",
+    "ejs": "2.5.7",
     "express": "4.16.2",
     "jquery": "3.2.1",
     "moment": "2.19.1",

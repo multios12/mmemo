@@ -1,7 +1,7 @@
-FROM node:6-alpine
+FROM node:8-alpine
 
-ADD ./ /root/hmemo
+ADD ./hmemo.tar.gz /root/hmemo
 WORKDIR /root/hmemo
-RUN npm install
+RUN npm install --production
 
 ENTRYPOINT ["node", "./bin/www"]

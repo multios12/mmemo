@@ -5,8 +5,8 @@ var gzip = require("gulp-gzip");
 var del = require('del');
 
 gulp.task('releaseDocker', function () {
-    gulp.src(['app.js', 'dist/*', 'package.json', 'package-lock.json'], { base: './' })
-        .pipe(tar('nyaaWatcher.tar'))
+    gulp.src(['bin/www', 'app.js', 'dist/*','dist/views/*', 'package.json', 'package-lock.json'], { base: './' })
+        .pipe(tar('hmemo.tar'))
         .pipe(gzip())
         .pipe(gulp.dest('./docker'));
 });

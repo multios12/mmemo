@@ -89,7 +89,8 @@ function showListContainer() {
             td3.innerText = element.shop ? element.shop : "";
             td3.onclick = function () { showViewModal(this.parentNode.getAttribute("data-id")); }
             var td4 = tr.insertCell(-1);
-            td4.innerHTML = "<button type='button' class='btn btn-sm btn-default' onclick=\"deletememos('" + element._id + "');\">delete</button>";
+            td4.innerHTML = "<button type='button' class='btn btn-sm btn-default'>delete</button>";
+            td4.children[0].onclick = function () { deletememos(this.parentNode.parentNode.getAttribute("data-id")); }
         }, this);
     }
 

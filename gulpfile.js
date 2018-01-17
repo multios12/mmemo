@@ -1,7 +1,7 @@
 // gulpと使用するプラグインを読み込む
 var gulp = require('gulp');
-var tar = require("gulp-tar");
-var gzip = require("gulp-gzip");
+var tar = require('gulp-tar');
+var gzip = require('gulp-gzip');
 var del = require('del');
 
 gulp.task('releaseDocker', function () {

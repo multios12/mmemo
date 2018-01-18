@@ -13,6 +13,10 @@
         },
         "sourceType": "module"
     },
+    "globals": {
+        "describe": false,
+        "it": false
+    },
     "rules": {
         "indent": [
             "error",

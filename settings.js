@@ -9,7 +9,7 @@ var _datasPath;
 settings.DatasPath = () => {
     if(!_datasPath) {
         _datasPath = process.env.DATAS_PATH ? process.env.DATAS_PATH : path.join(__dirname, 'data');
-        if(!fs.exists(_datasPath)) {
+        if(!fs.existsSync(_datasPath)) {
             fs.mkdirSync(_datasPath);
         }
     }
@@ -21,5 +21,8 @@ settings.CreateIdPath = (id) => path.join(settings.DatasPath(), id);
 
 /** 指定されたID・ファイル名のデータ保存パスを返す */
 settings.CreateImagePath =  (id, fileName) => path.join(settings.DatasPath(), id, fileName);
+
+/** memos.dbファイルのパスを返す */
+settings.MemosDBPath = path.join(settings.DatasPath(), 'memos.db');
 
 module.exports = settings;

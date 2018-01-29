@@ -6,9 +6,10 @@
   "scripts": {
     "start": "node ./bin/www",
     "clean": "gulp clean",
-    "build": "webpack && cpx \"./src/**/*.html\" dist/",
-    "release": "webpack --optimize-minimize && cpx \"./src/**/*.html\" dist/ && gulp releaseDocker",
-    "nodemon": "nodemon start"
+    "build": "SET NODE_ENV=dev && webpack && cpx \"./src/**/*.html\" dist/",
+    "release": "SET NODE_ENV=production && webpack --optimize-minimize && cpx \"./src/**/*.html\" dist/ && gulp releaseDocker",
+    "nodemon": "nodemon start",
+    "test": "mocha"
   },
   "author": "",
   "license": "ISC",
@@ -34,8 +35,10 @@
     "gulp": "3.9.1",
     "gulp-gzip": "1.4.0",
     "gulp-tar": "2.0.0",
+    "mocha": "4.1.0",
     "nodemon": "1.14.11",
     "style-loader": "0.19.0",
+    "supertest": "3.0.0",
     "uglify-save-license": "0.4.1",
     "url-loader": "0.6.2",
     "webpack": "3.8.1",

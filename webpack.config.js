@@ -1,12 +1,12 @@
-const webpack = require("webpack");
-const path = require('path');
-const CompressionPlugin = require("compression-webpack-plugin");
+const webpack = require('webpack');
+// const path = require('path');
+// const CompressionPlugin = require('compression-webpack-plugin');
 const DEBUG = process.env.NODE_ENV ? process.env.NODE_ENV.trim() == 'dev' : false;
 
 var plugins = [
     new webpack.ProvidePlugin({
-        $: "jquery",
-        jQuery: "jquery",
+        $: 'jquery',
+        jQuery: 'jquery',
         'window.jQuery': 'jquery',
         'window.$': 'jquery'
     }),
@@ -33,7 +33,7 @@ var modules = {
 
 module.exports = [{
     entry: { main: './src/js/main.js' },
-    output: { path: `${__dirname}/dist/`, filename: "[name].js" },
+    output: { path: `${__dirname}/dist/`, filename: '[name].js' },
     plugins: plugins,
     module: modules
 }];

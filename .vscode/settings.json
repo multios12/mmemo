@@ -1,0 +1,13 @@
+{
+    // Controls whether eslint is enabled for JavaScript files or not.
+    "eslint.enable": true,
+    "eslint.options": {
+        "parserOptions": {
+            "ecmaVersion": 2017,
+            "sourceType": "module",
+            "ecmaFeatures": {
+                "jsx": true
+            },
+        }
+    }
+}

@@ -67,3 +67,46 @@
       background-color: #ffba00;
     }
   }
+
+/* #region ピクチャーボックス */
+  .picture {
+    display: inline-block;
+    object-fit: contain;
+    height: 200px;
+    width: 200px;
+  }
+
+  .pictureover {
+    -webkit-filter: brightness(0.5);
+    -moz-filter: brightness(0.5);
+    -o-filter: brightness(0.5);
+    -ms-filter: brightness(0.5);
+    filter: brightness(0.5);
+    border: 3px dashed #ffba00;
+  }
+
+  .pictureSelectBox {
+    border: 2px dashed #bbb;
+    border-radius: 5px;
+    padding: 0px;
+    text-align: center;
+    font-size: 128px;
+    color: #bbb;
+    float: left;
+    vertical-align: middle;
+    height: 200px;
+    width: 200px;
+  }
+  /* #endregion */
+
+  .inputFile {
+    height: 0px;
+    visibility: hidden;
+    position: absolute;
+  }
+
+  span#imageBoxIcon{
+    position: absolute;
+    top: 50%;
+    margin: -0.5em;
+}

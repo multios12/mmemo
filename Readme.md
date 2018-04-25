@@ -1,13 +1,24 @@
-# HMemo
+# vue-laboratory
 
-## dockerでの実行
-~~~
-docker build --tag hmemo:0.7 .
-~~~
+> jue.js + Bootstrapの実験室
 
-~~~
- docker run -it --name hmemo -p 3001:3000 -e MONGO_URI=mongodb://mongo:27017/hmemo --link mongo:mongo hmemo:0.7
-~~~
+## モジュール
+* vue.js
+* Bootstrap4
+* Express
+* fortawesome
 
-## 環境変数
-MONGO_URI：データ保存用mongoDB接続URIを変更します。
+## Build Setup
+
+``` bash
+# 依存モジュールのインストール
+npm install
+
+# ホットリロードサーバ開始 localhost:3000
+npm run dev
+
+# リリースビルド実行
+npm run release
+```
+
+For detailed explanation on how things work, consult the [docs for vue-loader](http://vuejs.github.io/vue-loader).

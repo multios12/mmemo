@@ -1,7 +1,7 @@
-var express = require('express');
+import express from 'express';
+import fs from 'fs';
+import settings from '../config/settings';
 var router = express.Router();
-var fs = require('fs');
-var settings = require('../settings');
 
 router.get('/:id', (req, res) => {
     if (!req.params.id) return res.sendStatus(404);
@@ -35,7 +35,7 @@ router.delete('/:id', (req, res) => {
     if (!req.params.id) return res.sendStatus(400);
 
     var idPath = settings.CreateIdPath(req.params.id);
-    fs.delete(idPath);
+    fs.rmdirSync(idPath);
 });
 
 module.exports = router;

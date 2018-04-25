@@ -1,14 +1,13 @@
-var express = require('express');
+import express from 'express';
+import NeDB from 'nedb';
+import settings from '../config/settings';
+
 var router = express.Router();
+var memos = new NeDB({ filename: settings.MemosDBPath(), autoload: true });
 
-var NeDB = require('nedb');
-
-var settings = require('../settings');
-var memos = new NeDB({ filename: settings.MemosDB, autoload: true });
-
-router.get('/',  (req, res) => {
+router.get('/', (req, res) => {
     var q = req.query.id ? { '_id': req.query.id } : {};
-    memos.find(q, (err, docs) => res.json(docs));
+    memos.find(q, (err: any, docs: any) => res.json(docs));
 });
 
 router.post('/', (req, res) => {
@@ -18,7 +17,7 @@ router.post('/', (req, res) => {
     delete req.body._id;
 
     if (filter) {
-        memos.update(filter, req.body, () => res.sendStatus(200));
+        memos.update(filter, req.body, undefined, () => res.sendStatus(200));
     } else {
         memos.insert(req.body);
         res.sendStatus(200);

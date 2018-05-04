@@ -7,10 +7,6 @@ var logger = require('morgan');
 
 var app = express();
 
-// view engine setup
-app.set('views', path.join(__dirname, '../views'));
-app.set('view engine', 'ejs');
-
 app.use(compression());
 app.use(logger('dev'));
 
@@ -19,7 +15,7 @@ if (app.get('env') == 'development') {
   var browserSync = require('browser-sync');
   var connectBrowserSync = require('connect-browser-sync');
 
-  var browserSyncConfigurations = { "files": path.join(__dirname, "../views/*") };
+  var browserSyncConfigurations = { "files": path.join(__dirname, "./public/*") };
   app.use(connectBrowserSync(browserSync(browserSyncConfigurations)));
 }
 

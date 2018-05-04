@@ -7,15 +7,13 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 import fontawesome from '@fortawesome/fontawesome'
 import faSolid from '@fortawesome/fontawesome-free-solid'
 
-import navbar from './navbar.vue'
-import main from './main.vue'
+import mainComponent from './main.vue'
 
 new Vue(
   {
     el: '#app',
     components: {
-      "app-nav": navbar,
-      "app-main": main
+      "app-main": mainComponent
     }
   }
 )

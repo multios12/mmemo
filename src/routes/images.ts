@@ -37,5 +37,17 @@ router.delete('/:id', (req, res) => {
     var idPath = settings.CreateIdPath(req.params.id);
     fs.rmdirSync(idPath);
 });
-
+    /**
+     * ランダムな文字列を作成する
+     * @param length 文字列の長さ
+     */
+    var createRandomString= function(length:number ) {
+        var c = "abcdefghijklmnopqrstuvwxyz0123456789";
+        var cl = c.length;
+        var r = "";
+        for (var i = 0; i < length; i++) {
+          r += c[Math.floor(Math.random() * cl)];
+        }
+        return r;
+      }
 module.exports = router;

@@ -54,9 +54,7 @@ export default {
     }
   },
   methods: {
-    /**
-     * 編集のキャンセルして、mainビューをリストへ切り替える
-     */
+    /** 編集のキャンセルして、mainビューをリストへ切り替える */
     cancel: function() {
       this.$emit()
     },

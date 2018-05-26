@@ -1,28 +1,16 @@
-  <!-- リストコンテナ -->
+<!-- リストコンテナ -->
 <template>
-  <main role="main" class="container">
-  <div id="listContainer" class="container">
+  <main role="main">
+  <b-container>
     <div id="listSection" class="table-responsive">
-      <table id="list" class="table table-striped table-hover">
-        <thead>
-          <tr>
-            <th>date</th>
-            <th>name</th>
-            <th>shop</th>
-            <th>*</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(item, index) in items" v-bind:key="item.no">
-            <td>{{item.date}}</td>
-            <td>{{item.name}}</td>
-            <td>{{item.shop}}</td>
-            <td><button type='button' class='btn btn-sm btn-default' @click="deleteRow(index)"><i class="fas fa-minus-square"></i>delete</button></td>
-          </tr>
-        </tbody>
-      </table>
+      <b-table striped hover :items="items" :fields="fields">
+          <template slot="name"><a href="javascript:" @click="selectRow(item)">{{name}}</a></template>
+          <template slot="note" slot-scope="data">
+            <b-button default @click="index"><i class="fas fa-minus-square"></i>delete</b-button>
+          </template>
+      </b-table>
     </div>
-  </div>
+  </b-container>
   </main>
 </template>
 <script>
@@ -30,10 +18,19 @@ import Vue from "vue";
 export default {
   data() {
     return {
-      items: [{ date: "2018/01/01", name: "test", shop: "test" }]
+      items: [{ date: "2018/01/01", name: "test", shop: "test" }],
+      fields: {
+        date: { label: "date", sortable: true },
+        name: { label: "name", sortable: true },
+        shop: { label: "shop", sortable: true },
+        note: { label: "*", sortable: false }
+      }
     };
   },
   methods: {
+    selectRow: function() {
+      this.$emit('childs-event', 'hello!');
+    },
     deleteRow: function(index) {
       this.items.splice(index);
     },

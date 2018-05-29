@@ -16,7 +16,6 @@
     }
   },
   "exclude": [
-    "src/public/js/*.ts"
   ],
   "include": [
     "src/**/*"

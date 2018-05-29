@@ -1,15 +1,12 @@
 <template>
-  <div class="form-group">
-    <div class="col-sm-11">
-      <label class="control-label col-sm-1" style="padding:25px;">pictures:</label>
-    </div>
+  <b-form-group label="pictures" label-cols="sm-1">
     <div class="col-sm-11" style="overflow: hidden" id="imageGroup">
       <div id="imageBox" class="pictureSelectBox" draggable="false">
-        <span class="glyphicon glyphicon-upload"></span>
-        <input type="file" id="selectPicture" name="selectPicture" accept="image/jpeg, image/gif, image/png" class="inputFile" />
+        <i class="glyphicon glyphicon-upload"></i>
+        <b-form-file id="selectPicture" name="selectPicture" class="inputFile" accept="image/jpeg, image/gif, image/png" />
       </div>
     </div>
-  </div>
+  </b-form-group>
 </template>
 
 <script>

@@ -20,7 +20,8 @@
   </main>    
 </template>
 <script lang="ts">
-import Vue from 'vue'
+import Vue from "vue";
+import axios from "axios";
 export default Vue.extend({
   data() {
     return {
@@ -29,20 +30,17 @@ export default Vue.extend({
   },
   props: ["targetItem"],
   methods: {
-    regist: function() {
-      fetch('./memos', {method:'POST'}).then((res) => res.json()).then(
-        (v) => {
-          this.errorMessage = undefined;
-          this.$emit("change", "list-component");
-        }
-      ).catch((r) => {
-          this.errorMessage = "登録が失敗しました。";
-      });
+    regist: async function() {
+      await axios
+        .post("./api/memos")
+        .catch(res => (this.errorMessage = "登録が失敗しました。"));
+      this.errorMessage = undefined;
+      this.$emit("change", "list-component");
     },
     cancel: function() {
       this.errorMessage = undefined;
       this.$emit("change", "list-component");
     }
-  }  
-})
+  }
+});
 </script>

@@ -15,11 +15,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from "vue";
+import axios from "axios";
 export default Vue.extend({
   data() {
     return {
-      items: [{ date: "2018/01/01", name: "test", shop: "test" }],
+      items: [],
       fields: {
         date: { label: "date", sortable: true },
         name: { label: "name", sortable: true },
@@ -28,31 +29,23 @@ export default Vue.extend({
       }
     };
   },
-  props:['targetItem'],
+  props: ["targetItem"],
+  created: function() {
+    this.showListContainer();
+  },
   methods: {
-    selectRow: function(row:any) {
-      this.$emit('select', row.item);
+    selectRow: function(row: any) {
+      this.$emit("select", row.item);
     },
-    deleteRow: function(index:any) {
+    deleteRow: function(index: any) {
       this.items.splice(index);
     },
-    showViewModal: function(index:any) {
+    showViewModal: function(index: any) {
       this.parentNode.getAttribute("data-id");
     },
     showListContainer: function() {
-      var request = new XMLHttpRequest();
-      request.onreadystatechange = function() {
-        if (this.readyState != 4 || this.status != 200) {
-          return;
-        }
-        if (!this.response) {
-          return;
-        }
-      };
-
-      request.open("GET", "./memos", true);
-      request.send();
+      axios.get("./api/memos").then(res => (this.items = res.data));
     }
   }
-})
+});
 </script>

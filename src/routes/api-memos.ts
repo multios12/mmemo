@@ -1,32 +1,33 @@
 import express from 'express';
-import NeDB from 'nedb';
-import settings from '../config/settings';
+import db from '../db'
 
 var router = express.Router();
-var memos = new NeDB({ filename: settings.MemosDBPath(), autoload: true });
 
 router.get('/', (req, res) => {
-    var q = req.query.id ? { '_id': req.query.id } : {};
-    memos.find(q, (err: any, docs: any) => res.json(docs));
+    const sql = "SELECT * FROM memos";
+    db.all(sql, (err: Error, rows: any[]) => res.json(rows));
 });
 
-router.post('/', (req, res) => {
-    if (!req.body) return res.sendStatus(400);
-
-    var filter = req.body._id ? { '_id': req.body._id } : undefined;
-    delete req.body._id;
-
-    if (filter) {
-        memos.update(filter, req.body, undefined, () => res.sendStatus(200));
-    } else {
-        memos.insert(req.body);
-        res.sendStatus(200);
-    }
+router.get('/:id', (req, res) => {
+    const sql = "SELECT * FROM memos WHERE id = ?";
+    db.get(sql, [req.params.id], (err: Error, row: any) => res.json(row));
 });
 
-router.delete('/', (req, res) => {
-    if (!req.query) return res.sendStatus(400);
-    memos.remove({ '_id': req.query._id }, () => res.sendStatus(200));
+router.put('/', (req, res) => {
+    var b = req.body;
+    const sql = "INSERT INTO memos (name, date, shop, page, play, talk) VALUES (?, ?, ?, ?, ?, ?)";
+    db.run(sql, [b.name, b.date, b.shop, b.page, b.play, b.talk], (err: Error) => res.status(200));
+});
+
+router.post('/:id', (req, res) => {
+    const b = req.body;
+    var sql ="UPDATE memos SET name=?, date =?, shop=?, page=?, play=?, talk=? WHERE id = ?"
+    db.run(sql,[b.name, b.date, b.shop, b.page, b.play, b.talkb,req.params.id], (err) => res.status(200));
+});
+
+router.delete('/:id', (req, res) => {
+    var sql = "DELETE FROM memos WHERE id=?";
+    db.run(sql, req.params.id, (err) => res.status(200));
 });
 
 module.exports = router;

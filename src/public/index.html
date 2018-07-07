@@ -16,8 +16,8 @@
 <body>
   
   <div id="app">
-      <app-nav     :settings="settings" :balance="balance" @month-changed="monthChanged" @date-changed="dateChanged"></app-nav>
-      <router-view :settings="settings" @balance-changed="balanceClicked"></router-view>
+      <app-nav     :settings="settings"></app-nav>
+      <router-view :settings="settings"></router-view>
   </div>
     <!-- <app-main id="app"></app-main> -->
   <script src="script.js"></script>

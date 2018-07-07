@@ -3,8 +3,8 @@
   <main role="main">
   <b-container>
     <div class="table-responsive">
-      <b-table striped hover :items="items" :fields="fields">
-          <template slot="name" slot-scope="data"><a href="javascript:" @click="selectRow(data)">{{data.value}}</a></template>
+      <b-table striped hover :items="items" :fields="fields" @row-clicked="rowClicked">
+          <template slot="name" slot-scope="data">{{data.value}}</template>
           <template slot="note" slot-scope="data">
             <b-button default @click="deleteRow(data.item)"><i class="fas fa-minus-square"></i>delete</b-button>
           </template>
@@ -17,6 +17,8 @@
 <script lang="ts">
 import Vue from "vue";
 import axios from "axios";
+import router from '../router'
+
 export default Vue.extend({
   data() {
     return {
@@ -25,20 +27,20 @@ export default Vue.extend({
         date: { label: "date", sortable: true },
         name: { label: "name", sortable: true },
         shop: { label: "shop", sortable: true },
-        note: { label: "*", sortable: false }
+        note: { label: "    ", sortable: false }
       }
     };
   },
-  props: ["targetItem"],
   created: function() {
     this.showListContainer();
   },
   methods: {
-    selectRow: function(row: any) {
-      this.$emit("select", row.item);
+    rowClicked: function(item: any, index: number, event: any) {
+      router.push(`/${item.id}/`);
     },
-    deleteRow: function(index: any) {
-      this.items.splice(index);
+    deleteRow: async function(index: any) {
+      await axios.delete(`./api/memos/${this.items[index]}`);
+      this.showListContainer();
     },
     showViewModal: function(index: any) {
       this.parentNode.getAttribute("data-id");

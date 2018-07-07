@@ -16,10 +16,7 @@ const app = new Vue({
     router,
     components: { "app-nav": navComponent },
     data: {
-        settings: {},
-        selectedMonth: null,
-        selectedDate: null,
-        balance: 0
+        settings: {}
     },
     created: function () {
         var self = this;
@@ -29,14 +26,5 @@ const app = new Vue({
         });
     },
     methods: {
-        monthChanged: function (value: string) {
-            this.selectedMonth = value;
-        },
-        dateChanged: function (value: string) {
-            this.selectedDate = value;
-        },
-        balanceClicked: function (value: number) {
-            this.balance = value;
-        }
     }
 }).$mount('#app')

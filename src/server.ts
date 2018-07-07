@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 
-/**
- * Module dependencies.
- */
-
+/** Module dependencies. */
 var app = require('./app');
 var debug = require('debug')('bootstraptemplate:server');
 var http = require('http');
@@ -77,10 +74,7 @@ function onError(error: any) {
   }
 }
 
-/**
- * Event listener for HTTP server "listening" event.
- */
-
+/** Event listener for HTTP server "listening" event. */
 function onListening() {
   var addr = server.address();
   var bind = typeof addr === 'string'

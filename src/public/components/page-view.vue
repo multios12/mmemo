@@ -1,4 +1,3 @@
-<!-- ビューコンテナ -->
 <template>
   <main role="main" class="container">
     <b-card title="view" v-model="targetItem">
@@ -9,23 +8,37 @@
       <b-form-group label="play"     >{{targetItem.play}}</b-form-group>
       <b-form-group label="talk"     >{{targetItem.talk}}</b-form-group>
       <b-card-footer>
-        <b-button>edit</b-button>
-        <b-button>close</b-button>
+        <router-link class="btn btn-primary active"   to="./edit">edit</router-link>
+        <router-link class="btn btn-secondary active" to="/">close</router-link>
       </b-card-footer>
     </b-card>
   </main>
 </template>
 
 <script lang="ts">
+import axios,{ AxiosResponse } from "axios";
 import Vue from "vue";
+import router from "../router";
 export default Vue.extend({
   data() {
-    return {};
+    return {
+      targetItem: {}
+    };
   },
-  props:['targetItem'],
+  created: function() {
+    this.show();
+  },
   methods: {
-    cancel: () => this.$emit(),
-    save: () => this.$emit()
-  }
-});
+    show: function() {
+      console.log("show");
+      var self = this;
+      axios.get(`../api/memos/${this.$route.params.id}`)
+        .then(res => {
+          console.log(res);
+          self.targetItem = res.data;
+        })
+        .catch(res => this.errorMessage = "読み込みに失敗しました。");
+      }
+    }
+  });
 </script>

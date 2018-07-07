@@ -6,9 +6,9 @@
       <b-form id="editForm" name="editForm" class="form-horizontal" data-toggle="validator" role="form">
         <input name="_id" type="hidden" value="" />
         <b-form-group label="name"     ><b-input required v-model="targetItem.name"/></b-form-group>
-        <b-form-group label="date"     ><b-input required v-model="targetItem.date" type="date"/></b-form-group>
         <b-form-group label="shop"     ><b-input required v-model="targetItem.shop"/></b-form-group>
         <b-form-group label="home page"><b-input required v-model="targetItem.page"/></b-form-group>
+        <b-form-group label="date"     ><b-input required v-model="targetItem.date" type="date"/></b-form-group>
         <b-form-group label="play"     ><b-textarea       v-model="targetItem.play"/></b-form-group>
         <b-form-group label="talk"     ><b-textarea       v-model="targetItem.talk"/></b-form-group>
         <div class="form-footer">
@@ -22,6 +22,7 @@
 <script lang="ts">
 import Vue from "vue";
 import axios from "axios";
+import router from "../router";
 export default Vue.extend({
   data() {
     return {
@@ -29,17 +30,21 @@ export default Vue.extend({
       targetItem: {},
     };
   },
-  watch: { $route: "show" },
+  created: function() {
+    this.show();
+  },
   methods: {
-    show: async function() {
+    show: function() {
+      var self = this;
       var url: string = this.$route.path;
       if (url == '/add') {
         this.targetItem = {};
       } else {
-        var res = await axios.get(`./api/memos/${this.$route.params.id}`)
+        var res = axios.get(`./api/memos/${this.$route.params.id}`)
+          .then(res => {
+            self.targetItem = res.data;
+          })
           .catch(res => (this.errorMessage = "読み込みに失敗しました。"));
-        
-        this.targetItem = res.toString();
       }
     },
     regist: async function() {
@@ -54,6 +59,7 @@ export default Vue.extend({
           .catch(res => (this.errorMessage = "登録が失敗しました。"));
       }
       this.errorMessage = undefined;
+      router.push('/');
     },
   }
 });

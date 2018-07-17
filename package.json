@@ -20,14 +20,13 @@
   "dependencies": {
     "axios": "0.18.0",
     "bootstrap-vue": "2.0.0-rc.11",
-    "compression": "1.7.2",
-    "cookie-parser": "1.4.3",
+    "compression": "1.7.3",
     "debug": "2.6.9",
     "express": "4.16.3",
     "http-errors": "1.6.3",
-    "moment": "2.22.2",
     "morgan": "1.9.0",
-    "sqlite3": "4.0.1",
+    "moment": "2.22.2",
+    "sqlite3": "4.0.2",
     "vue": "2.5.16",
     "vue-router": "3.0.1"
   },

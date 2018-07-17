@@ -8,7 +8,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, './dist/public'),
     publicPath: '/',
-    filename: 'build.js'
+    filename: 'script.js'
   },
   module: {
     rules: [
@@ -25,7 +25,7 @@ module.exports = {
   ],
   resolve: {
     alias: { 'vue$': 'vue/dist/vue.esm.js' },
-    extensions: ['*', '.js', '.vue', '.json']
+    extensions: ['*','.js', '.ts', '.vue', '.json']
   },
   externals: {
     // "vue": "Vue",

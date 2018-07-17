@@ -18,6 +18,11 @@ const app = new Vue({
         settings: {}
     },
     created: function () {
+        var self = this;
+        axios.get("./settings").then(value => {
+            self.settings = value.data
+            self.selectedMonth = moment(new Date()).format("YYYY-MM");
+        });
     },
     methods: {
     }

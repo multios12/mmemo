@@ -45,5 +45,5 @@
     "vue-template-compiler": "2.5.16",
     "webpack": "4.15.1",
     "webpack-cli": "3.0.8"
-}
+  }
 }

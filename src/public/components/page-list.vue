@@ -16,7 +16,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import axios from "axios";
+import axios from "../axiosForApi";
 import router from '../router'
 
 export default Vue.extend({

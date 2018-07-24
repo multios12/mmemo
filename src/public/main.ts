@@ -1,6 +1,5 @@
 import Vue from "vue";
 import BootstrapVue from "bootstrap-vue";
-import axios from "axios";
 
 import 'bootstrap/dist/css/bootstrap.css'
 //import './bootstrap.min.css'
@@ -14,16 +13,11 @@ Vue.use(BootstrapVue);
 const app = new Vue({
     router,
     components: { "app-nav": navComponent },
-    data: {
-        settings: {}
+    data: { 
+        settings: {},
+        isNav:true 
     },
-    created: function () {
-        var self = this;
-        axios.get("./settings").then(value => {
-            self.settings = value.data
-            self.selectedMonth = moment(new Date()).format("YYYY-MM");
-        });
+    created:function(){
+        this.isNav = this.$route.path != '/login';
     },
-    methods: {
-    }
 }).$mount('#app')

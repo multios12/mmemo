@@ -35,7 +35,7 @@ export default Vue.extend({
       axios
         .get(`../api/memos/${this.$route.params.id}`)
         .then(res => (self.targetItem = res.data))
-        .catch(res => (this.errorMessage = "読み込みに失敗しました。"));
+        .catch(r => router.push('/login'));
     }
   }
 });

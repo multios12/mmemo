@@ -57,7 +57,7 @@ export function verifyMiddleware(req: express.Request, res: express.Response, ne
  * @param payload トークンを作成する値
  */
 export function sign(payload: object) {
-    return jwt.sign(payload, secretKey);
+    return jwt.sign(payload, secretKey, {expiresIn: '1d'});
 }
 
 /**

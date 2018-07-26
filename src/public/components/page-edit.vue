@@ -41,10 +41,8 @@ export default Vue.extend({
         this.targetItem = {};
       } else {
         var res = axios.get(`./api/memos/${this.$route.params.id}`)
-          .then(res => {
-            self.targetItem = res.data;
-          })
-          .catch(res => (this.errorMessage = "読み込みに失敗しました。"));
+          .then(res => self.targetItem = res.data)
+          .catch(r => router.push('/login'));
       }
     },
     regist: async function() {
@@ -56,7 +54,7 @@ export default Vue.extend({
       } else {
         await axios
           .post(`./api/memos/${self.targetItem.id}`, this.targetItem)
-          .catch(res => (this.errorMessage = "登録が失敗しました。"));
+          .catch(r => router.push('/login'));
       }
       this.errorMessage = undefined;
       router.push('/');

@@ -1,11 +1,11 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
+import userStore from './userStore';
+
 import editComponent from './components/page-edit.vue';
 import loginComponent from './components/page-login.vue';
 import mainComponent from './components/page-list.vue';
 import viewComponent from './components/page-view.vue';
-import auth from './auth';
-import Axios from '../../node_modules/axios';
 
 Vue.use(VueRouter);
 
@@ -19,33 +19,21 @@ var routes: any = [
 
 var router = new VueRouter({ routes: routes });
 
-// /**
-//  * グローバルナビゲーションガード beforeイベント
-//  */
-// router.beforeEach(async (to, from, next) => {
-//     // requireAuthメタフィールドによって、認証が必要か否かを判断する
-//     if (!to.matched.some(record => record.meta.requiresAuth)) {
-//         next();
-//         return
-//     }
+/**
+ * グローバルナビゲーションガード beforeイベント
+ */
+router.beforeEach(async (to, from, next) => {
+    // localStorageにtokenが保存されていなければ、ログイン画面を表示する
+    if (to.path == '/logout') {
+        userStore.logout();
+        next({ path: '/login' });
+        return
+    } else if (!userStore.token() && (to.path != '/login')) {
+        next({ path: '/login' });
+        return
+    }
 
-
-//     // 認証が必要であれば、ログインページにリダイレクトする
-//     if (!auth.loggedIn) {
-//         var url = "/api/login";
-//         console.log("開始");
-//         var response = await Axios.get(url);
-
-//         console.log(response.status);
-//         if (response.status = 200) {
-//             next();
-//             return
-//         }
-
-//         next({ path: '/login', query: { redirect: to.fullPath } });
-//     } else {
-//         next();
-//     }
-// });
+    next();
+});
 
 export default router;

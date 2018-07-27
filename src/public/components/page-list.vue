@@ -6,7 +6,7 @@
       <b-table striped hover :items="items" :fields="fields" @row-clicked="rowClicked">
           <template slot="name" slot-scope="data">{{data.value}}</template>
           <template slot="note" slot-scope="data">
-            <b-button default @click="deleteRow(data.item)"><i class="fas fa-minus-square"></i>delete</b-button>
+            <b-button default @click="deleteRow(data.item)" size="sm"><i class="fas fa-minus-square"></i>delete</b-button>
           </template>
       </b-table>
     </div>
@@ -16,7 +16,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import axios from "axios";
+import axios from "../axiosForApi";
 import router from '../router'
 
 export default Vue.extend({
@@ -46,7 +46,7 @@ export default Vue.extend({
       this.parentNode.getAttribute("data-id");
     },
     showListContainer: function() {
-      axios.get("./api/memos").then(res => (this.items = res.data));
+      axios.get("./api/memos").then(res => this.items = res.data).catch(r => router.push('/login'));
     }
   }
 });

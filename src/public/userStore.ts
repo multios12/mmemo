@@ -2,25 +2,29 @@ import axios from 'axios';
 
 /** 認証オブジェクト */
 var auth = {
-    /** 認証が完了し、ログイン済みであればtrueを返す */
-    loggedIn: false,
+    token: function() {
+        return localStorage.getItem('token');
+    },
     /** 認証とログイン処理を実行する */
     login: async function (username: string, password: string) {
         var url = `api/login`;
         var body = { username: username, password: password }
-        console.log("auth");
-
         var response = await axios.post(url, body);
+        localStorage.removeItem('token');
 
-        console.log("auth=" + response.status);
+        var loggedIn = response.data.token != undefined;
 
-        this.loggedIn = response.status == 200
-        return this.loggedIn;
+        if (loggedIn) {
+            localStorage.setItem('token', response.data.token);
+            console.log(`token:${response.data.token}`)
+        }
+
+        return loggedIn;
     },
     /** ログアウト処理を実行する */
     logout: function () {
-        this.loggedIn = false
-    }
+        localStorage.removeItem('token');
+    },
 };
 
 export default auth;

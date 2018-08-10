@@ -4,8 +4,6 @@ import path from 'path';
 import {verifyMiddleware} from './auth';
 var app = express();
 
-app.use(require('morgan')('dev'));
-app.use(require('compression')());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

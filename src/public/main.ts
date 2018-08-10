@@ -1,5 +1,7 @@
 import Vue from "vue";
 import BootstrapVue from "bootstrap-vue";
+import axios from "axios";
+import moment from "moment";
 
 import 'bootstrap/dist/css/bootstrap.css'
 //import './bootstrap.min.css'

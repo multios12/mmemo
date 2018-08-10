@@ -19,7 +19,7 @@ module.exports = {
     ],
   },
   plugins: [
-    new CopyWebpackPlugin([{ from: "./src/*.html", to: "[name].[ext]" }]),
+    new CopyWebpackPlugin([{ from: "./src/public/*.html", to: "[name].[ext]" }]),
     new webpack.ProvidePlugin({ $: 'jquery', jQuery: 'jquery', 'window.jQuery': 'jquery', Popper: ['popper.js', 'default'] }),
     new VueLoaderPlugin(),
   ],
@@ -28,11 +28,10 @@ module.exports = {
     extensions: ['*','.js', '.ts', '.vue', '.json']
   },
   externals: {
-    // "vue": "Vue",
-    // "bootstrap-vue": "Bootstrap-vue",
     "moment": "moment",
     "@fortawesome/": "@fortawesome/fontawesome",
     "@fortawesome/fontawesome-free-solid": "@fortawesome/fontawesome-free-solid"
   },
   performance: { hints: false },
+  cache:true,
 }

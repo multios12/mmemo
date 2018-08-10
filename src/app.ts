@@ -3,18 +3,11 @@ import fs from 'fs';
 import path from 'path';
 var app = express();
 
-app.use(require('morgan')('dev'));
-app.use(require('compression')());
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-var sessionkey = { secret: 'secret', resave: false, saveUninitialized: false, cookie: { maxage: 1000 * 60 * 3600 } };
-//app.use(require("express-session")(sessionkey));
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/', require('./routes/api-login'));
-
-// 以下、認証が必要なURL
 app.use('/api/memos', require('./routes/api-memos'));
 
 app.use(function (req, res, next) { next(require('http-errors')(404)) });

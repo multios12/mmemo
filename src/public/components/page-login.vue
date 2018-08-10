@@ -3,7 +3,13 @@
 	<div class="wrapper">
 		<form action="/" name="Login_Form" class="form-signin">       
 		    <h3 class="form-signin-heading">hmemo</h3>
-			  <hr ><br>
+			  <hr >
+        <b-alert variant="danger"
+          dismissible
+          :show="showDismissibleAlert"
+          @dismissed="showDismissibleAlert=false">
+          username/password invalid.
+        </b-alert>
         <b-input  type="text"     v-model="username" placeholder="Username" required="" autofocus></b-input>
         <b-input  type="password" v-model="password" placeholder="Password" required=""></b-input>
         <b-button variant="primary" block @click="login" size="lg">Login</b-button>
@@ -14,7 +20,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import auth from "../auth";
+import auth from "../userStore";
 import axios from "axios";
 import router from "../router";
 
@@ -22,26 +28,26 @@ export default Vue.extend({
   data() {
     return {
       username: "",
-      password: ""
+      password: "",
+      showDismissibleAlert: false
     };
   },
   methods: {
     login: async function() {
       var result = await auth.login(this.username, this.password);
-      if(result) {
-        console.log("resultaa");
-      router.push('/');
+      this.showDismissibleAlert = !result;
+
+      if (result) {
+        router.push("/");
       }
-        console.log("resultbb");
-      return false;
     }
   }
 });
 </script>
 <style scoped>
-.wrapper {    
-	margin-top: 80px;
-	margin-bottom: 20px;
+.wrapper {
+  margin-top: 80px;
+  margin-bottom: 20px;
 }
 
 .form-signin {
@@ -49,11 +55,11 @@ export default Vue.extend({
   padding: 30px 38px 66px;
   margin: 0 auto;
   background-color: #eee;
-  border: 3px dotted rgba(0,0,0,0.1);  
-  }
+  border: 3px dotted rgba(0, 0, 0, 0.1);
+}
 
 .form-signin-heading {
-  text-align:center;
+  text-align: center;
   margin-bottom: 30px;
 }
 
@@ -81,9 +87,81 @@ input[type="password"] {
   border-top: 0;
   background: #c4e17f;
   border-radius: 5px;
-  background-image: -webkit-linear-gradient(left, #c4e17f, #c4e17f 12.5%, #f7fdca 12.5%, #f7fdca 25%, #fecf71 25%, #fecf71 37.5%, #f0776c 37.5%, #f0776c 50%, #db9dbe 50%, #db9dbe 62.5%, #c49cde 62.5%, #c49cde 75%, #669ae1 75%, #669ae1 87.5%, #62c2e4 87.5%, #62c2e4);
-  background-image: -moz-linear-gradient(left, #c4e17f, #c4e17f 12.5%, #f7fdca 12.5%, #f7fdca 25%, #fecf71 25%, #fecf71 37.5%, #f0776c 37.5%, #f0776c 50%, #db9dbe 50%, #db9dbe 62.5%, #c49cde 62.5%, #c49cde 75%, #669ae1 75%, #669ae1 87.5%, #62c2e4 87.5%, #62c2e4);
-  background-image: -o-linear-gradient(left, #c4e17f, #c4e17f 12.5%, #f7fdca 12.5%, #f7fdca 25%, #fecf71 25%, #fecf71 37.5%, #f0776c 37.5%, #f0776c 50%, #db9dbe 50%, #db9dbe 62.5%, #c49cde 62.5%, #c49cde 75%, #669ae1 75%, #669ae1 87.5%, #62c2e4 87.5%, #62c2e4);
-  background-image: linear-gradient(to right, #c4e17f, #c4e17f 12.5%, #f7fdca 12.5%, #f7fdca 25%, #fecf71 25%, #fecf71 37.5%, #f0776c 37.5%, #f0776c 50%, #db9dbe 50%, #db9dbe 62.5%, #c49cde 62.5%, #c49cde 75%, #669ae1 75%, #669ae1 87.5%, #62c2e4 87.5%, #62c2e4);
+  background-image: -webkit-linear-gradient(
+    left,
+    #c4e17f,
+    #c4e17f 12.5%,
+    #f7fdca 12.5%,
+    #f7fdca 25%,
+    #fecf71 25%,
+    #fecf71 37.5%,
+    #f0776c 37.5%,
+    #f0776c 50%,
+    #db9dbe 50%,
+    #db9dbe 62.5%,
+    #c49cde 62.5%,
+    #c49cde 75%,
+    #669ae1 75%,
+    #669ae1 87.5%,
+    #62c2e4 87.5%,
+    #62c2e4
+  );
+  background-image: -moz-linear-gradient(
+    left,
+    #c4e17f,
+    #c4e17f 12.5%,
+    #f7fdca 12.5%,
+    #f7fdca 25%,
+    #fecf71 25%,
+    #fecf71 37.5%,
+    #f0776c 37.5%,
+    #f0776c 50%,
+    #db9dbe 50%,
+    #db9dbe 62.5%,
+    #c49cde 62.5%,
+    #c49cde 75%,
+    #669ae1 75%,
+    #669ae1 87.5%,
+    #62c2e4 87.5%,
+    #62c2e4
+  );
+  background-image: -o-linear-gradient(
+    left,
+    #c4e17f,
+    #c4e17f 12.5%,
+    #f7fdca 12.5%,
+    #f7fdca 25%,
+    #fecf71 25%,
+    #fecf71 37.5%,
+    #f0776c 37.5%,
+    #f0776c 50%,
+    #db9dbe 50%,
+    #db9dbe 62.5%,
+    #c49cde 62.5%,
+    #c49cde 75%,
+    #669ae1 75%,
+    #669ae1 87.5%,
+    #62c2e4 87.5%,
+    #62c2e4
+  );
+  background-image: linear-gradient(
+    to right,
+    #c4e17f,
+    #c4e17f 12.5%,
+    #f7fdca 12.5%,
+    #f7fdca 25%,
+    #fecf71 25%,
+    #fecf71 37.5%,
+    #f0776c 37.5%,
+    #f0776c 50%,
+    #db9dbe 50%,
+    #db9dbe 62.5%,
+    #c49cde 62.5%,
+    #c49cde 75%,
+    #669ae1 75%,
+    #669ae1 87.5%,
+    #62c2e4 87.5%,
+    #62c2e4
+  );
 }
 </style>

@@ -16,7 +16,8 @@
 </template>
 
 <script lang="ts">
-import axios,{ AxiosResponse } from "axios";
+import axios from "../axiosForApi";
+import { AxiosResponse } from "axios";
 import Vue from "vue";
 import router from "../router";
 export default Vue.extend({
@@ -30,15 +31,12 @@ export default Vue.extend({
   },
   methods: {
     show: function() {
-      console.log("show");
       var self = this;
-      axios.get(`../api/memos/${this.$route.params.id}`)
-        .then(res => {
-          console.log(res);
-          self.targetItem = res.data;
-        })
-        .catch(res => this.errorMessage = "読み込みに失敗しました。");
-      }
+      axios
+        .get(`../api/memos/${this.$route.params.id}`)
+        .then(res => (self.targetItem = res.data))
+        .catch(r => router.push('/login'));
     }
-  });
+  }
+});
 </script>

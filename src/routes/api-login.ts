@@ -1,17 +1,11 @@
-import { sign } from '../auth';
-import express from 'express';
-import db from '../db';
-var router = express.Router();
+import express from "express";
+import { sign } from "../auth";
 
-router.post('/login', (req: express.Request, res: express.Response) => {
+const router = express.Router();
 
-    if (req.body.username != process.env.username || req.body.password != process.env.password) {
-        res.json({token:undefined});
-        return
-    }
-
-    var token = sign({ username: req.body.username });
-    res.json({ token: token });
+router.post("/login", (req: express.Request, res: express.Response) => {
+    const token = sign(req.body.username, req.body.password);
+    res.json({ token });
 });
 
 module.exports = router;

@@ -1,25 +1,24 @@
-import Vue from "vue";
 import BootstrapVue from "bootstrap-vue";
-import axios from "axios";
-import moment from "moment";
+import Vue from "vue";
 
-import 'bootstrap/dist/css/bootstrap.css'
-//import './bootstrap.min.css'
-import 'bootstrap-vue/dist/bootstrap-vue.css'
+// import './bootstrap.min.css'
+import "bootstrap-vue/dist/bootstrap-vue.css";
+import "bootstrap/dist/css/bootstrap.css";
 
-import navComponent from './components/app-nav.vue';
-import router from './router';
+import navComponent from "./components/app-nav.vue";
+import router from "./router";
 
 Vue.use(BootstrapVue);
 
 const app = new Vue({
     router,
+    // tslint:disable-next-line:object-literal-sort-keys
     components: { "app-nav": navComponent },
-    data: { 
+    data: {
+        isNav: true,
         settings: {},
-        isNav:true 
     },
-    created:function(){
-        this.isNav = this.$route.path != '/login';
+    created() {
+        this.isNav = this.$route.path !== "/login";
     },
-}).$mount('#app')
+}).$mount("#app");

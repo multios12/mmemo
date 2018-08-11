@@ -10,7 +10,7 @@
             "name": "プログラムの起動",
             "program": "${workspaceFolder}\\dist\\server.js",
             "env": {
-                "username": "test",
+                "userid": "test",
                 "password": "test"
             }
         }

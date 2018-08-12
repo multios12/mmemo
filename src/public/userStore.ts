@@ -15,7 +15,6 @@ const auth = {
 
         if (loggedIn) {
             localStorage.setItem("token", response.data.token);
-            console.log(`token:${response.data.token}`);
         }
 
         return loggedIn;

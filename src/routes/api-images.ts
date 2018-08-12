@@ -7,7 +7,6 @@ router.get("/:id", (req, res) => {
     if (!req.params.id) { return res.sendStatus(404); }
 
     const idPath = Settings.CreateIdPath(req.params.id);
-    console.log(idPath);
     if (!fs.existsSync(idPath)) { return res.sendStatus(404); }
     res.send(fs.readdirSync(idPath));
 });

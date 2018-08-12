@@ -31,12 +31,7 @@ export function verify(token: string, callback: jwt.VerifyCallback) {
  */
 export function verifyMiddleware(req: express.Request, res: express.Response, next: FunctionConstructor) {
 
-    if (req.path === "/api/login") {
-        next();
-        return;
-    }
-
-    if ((req.path === "/" || req.path === "/script.js")) {
+    if (req.path === "/api/login" || req.path === "/" || req.path === "/script.js") {
         next();
         return;
     }
@@ -45,6 +40,12 @@ export function verifyMiddleware(req: express.Request, res: express.Response, ne
     token = token ? token.replace("Bearer ", "") : token;
 
     verify(token, (err: Error, decoded: object) => {
+        if (err !== undefined && err.name === "JsonWebTokenError") {
+            console.log(`認証未完了　　　:${err.message}:token ${token}`);
+        } else if (err !== undefined) {
+            console.log(`認証エラー　　　:${err.message}:token ${token}`);
+        }
+
         if (err && req.path.indexOf("/api") > -1) {
             res.sendStatus(401);
             return;
@@ -58,13 +59,13 @@ export function verifyMiddleware(req: express.Request, res: express.Response, ne
  * 指定された値からトークンを作成する
  * @param payload トークンを作成する値
  */
-export function sign(userid: string, password: string) {
-    if (userid !== process.env.userid || password !== process.env.password) {
-        console.log(`認証失敗　　　　:${userid}`);
+export function sign(username: string, password: string) {
+    if (username !== process.env.username || password !== process.env.password) {
+        console.log(`認証失敗　　　　:${username}`);
         return undefined;
     }
 
-    return jwt.sign({ userid }, secretKey, { expiresIn: "1d" });
+    return jwt.sign({ username }, secretKey, { expiresIn: "1d" });
 }
 
 /**

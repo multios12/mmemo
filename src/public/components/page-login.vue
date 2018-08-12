@@ -10,8 +10,8 @@
           @dismissed="showDismissibleAlert=false">
           username/password invalid.
         </b-alert>
-        <b-input  type="text"     v-model="username" placeholder="Username" required="" autofocus></b-input>
-        <b-input  type="password" v-model="password" placeholder="Password" required=""></b-input>
+        <b-input  type="text"     v-model="username" placeholder="Username" required autocomplete autofocus></b-input>
+        <b-input  type="password" v-model="password" placeholder="Password" required autocomplete></b-input>
         <b-button variant="primary" block @click="login" size="lg">Login</b-button>
 		</form>			
 	</div>
@@ -38,7 +38,8 @@ export default Vue.extend({
       this.showDismissibleAlert = !result;
 
       if (result) {
-        router.push("/");
+        document.querySelector("form").submit();
+        // router.push("/");
       }
     }
   }

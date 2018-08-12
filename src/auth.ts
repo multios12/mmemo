@@ -1,24 +1,26 @@
-import express from 'express';
-import fs from 'fs';
-import jwt from 'jsonwebtoken';
-import path from 'path';
+import express from "express";
+import fs from "fs";
+import jwt from "jsonwebtoken";
+import path from "path";
+
 /** 秘密鍵ファイルパス */
-var keyFilePath = path.join(process.cwd(), './data/secretKey');
-/** 秘密鍵文字列 */
-var secretKey: Buffer;
+const keyFilePath = path.join(process.cwd(), "./data/secretKey");
 
 // 秘密鍵を読み込む。ファイルが存在していなければ作成する
 if (!fs.existsSync(keyFilePath)) {
+    console.log(`認証キー新規作成:${keyFilePath}`);
     fs.writeFileSync(keyFilePath, createRandomString(20));
 }
-secretKey = fs.readFileSync(keyFilePath);
+
+/** 秘密鍵文字列 */
+const secretKey: Buffer = fs.readFileSync(keyFilePath);
 
 /**
  * 指定されたトークンを検証する
  * @param token トークン
  */
 export function verify(token: string, callback: jwt.VerifyCallback) {
-    return jwt.verify(token, secretKey, callback)
+    return jwt.verify(token, secretKey, callback);
 }
 
 /**
@@ -27,25 +29,26 @@ export function verify(token: string, callback: jwt.VerifyCallback) {
  * @param res レスポンス
  * @param next NextFunction
  */
-export function verifyMiddleware(req: express.Request, res: express.Response, next: Function) {
+export function verifyMiddleware(req: express.Request, res: express.Response, next: FunctionConstructor) {
 
-    if (req.path == '/api/login') {
+    if (req.path === "/api/login" || req.path === "/" || req.path === "/script.js") {
         next();
-        return
+        return;
     }
 
-    if ((req.path == '/' || req.path == '/script.js')) {
-        next();
-        return
-    }
+    let token = req.headers.authorization;
+    token = token ? token.replace("Bearer ", "") : token;
 
-    var token = req.headers.authorization;
-    token = token ? token.replace('Bearer ', '') : token;
+    verify(token, (err: Error, decoded: object) => {
+        if (err !== undefined && err.name === "JsonWebTokenError") {
+            console.log(`認証未完了　　　:${err.message}:token ${token}`);
+        } else if (err !== undefined) {
+            console.log(`認証エラー　　　:${err.message}:token ${token}`);
+        }
 
-    verify(token, function (err: Error, decoded: object) {
-        if (err && req.path.indexOf('/api') > -1) {
+        if (err && req.path.indexOf("/api") > -1) {
             res.sendStatus(401);
-            return
+            return;
         }
 
         next();
@@ -56,8 +59,13 @@ export function verifyMiddleware(req: express.Request, res: express.Response, ne
  * 指定された値からトークンを作成する
  * @param payload トークンを作成する値
  */
-export function sign(payload: object) {
-    return jwt.sign(payload, secretKey, {expiresIn: '1d'});
+export function sign(username: string, password: string) {
+    if (username !== process.env.username || password !== process.env.password) {
+        console.log(`認証失敗　　　　:${username}`);
+        return undefined;
+    }
+
+    return jwt.sign({ username }, secretKey, { expiresIn: "1d" });
 }
 
 /**
@@ -65,11 +73,11 @@ export function sign(payload: object) {
  * @param len 作成する文字列の長さ
  */
 function createRandomString(len: number) {
-    var str = "abcdefghijklmnopqrstuvwxyz";
-    var strLen = str.length;
-    var result = "";
+    const str = "abcdefghijklmnopqrstuvwxyz";
+    const strLen = str.length;
+    let result = "";
 
-    for (var i = 0; i < len; i++) {
+    for (let i = 0; i < len; i++) {
         result += str[Math.floor(Math.random() * strLen)];
     }
 

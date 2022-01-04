@@ -28,8 +28,7 @@ export default class EditView extends Vue {
   public showListContainer() {
     axios
       .get("./memos")
-      .then(res => (this.items = res.data))
-      .catch(r => router.push("/login"));
+      .then(res => (this.items = res.data));
   }
 }
 </script>

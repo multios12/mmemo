@@ -28,8 +28,7 @@ export default class viewView extends Vue {
     const self = this;
     axios
       .get(`../api/memos/${this.$route.params.id}`)
-      .then(res => (self.targetItem = res.data))
-      .catch(r => router.push("/login"));
+      .then(res => (self.targetItem = res.data));
   }
 }
 </script>

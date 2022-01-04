@@ -77,8 +77,7 @@ export default class Edit extends Vue {
     } else {
       const res = axios
         .get(`./memos/${this.$route.params.id}`)
-        .then(res => (self.targetItem = res.data))
-        .catch(r => router.push("/login"));
+        .then(res => (self.targetItem = res.data));
     }
   }
   public async regist() {
@@ -89,8 +88,7 @@ export default class Edit extends Vue {
         .catch(res => (this.errorMessage = "登録が失敗しました。"));
     } else {
       await axios
-        .post(`./memos/${self.targetItem.id}`, this.targetItem)
-        .catch(r => router.push("/login"));
+        .post(`./memos/${self.targetItem.id}`, this.targetItem);
     }
     this.errorMessage = "";
     router.push("/");

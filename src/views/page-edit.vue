@@ -1,10 +1,9 @@
 <!-- 編集コンテナ -->
 <template>
-  <v-container>
+    <v-flex xs12 sm8 offset-sm2 pb-4>
     <v-alert v-if="errorMessage" type="error" transition="scale-translation">{{
       errorMessage
     }}</v-alert>
-    <v-flex xs12 sm8 offset-sm2 pb-4>
       <v-card>
         <v-container>
           <v-form
@@ -14,23 +13,19 @@
             role="form"
           >
             <v-text-field name="_id" type="hidden" value="" />
-            <v-text-field label="name" required v-model="targetItem.name" />
-            <v-text-field label="shop" required v-model="targetItem.shop" />
-            <v-text-field
-              label="home page"
-              required
-              v-model="targetItem.page"
-            />
+            <v-text-field label="name" required v-model="item.name" />
+            <v-text-field label="shop" required v-model="item.shop" />
+            <v-text-field label="home page" required v-model="item.page" />
             <v-text-field
               label="date"
               required
-              v-model="targetItem.date"
+              v-model="item.date"
               type="date"
             />
-            <v-text-field label="play" v-model="targetItem.play" />
-            <v-text-field label="talk" v-model="targetItem.talk" />
+            <v-textarea label="play" v-model="item.play" />
+            <v-textarea label="talk" v-model="item.talk" />
             <v-card-actions>
-              <v-btn variant="primary" @click="regist"
+              <v-btn color="primary" @click="regist"
                 ><i class="far fa-check-circle"></i>OK</v-btn
               >
               <v-btn to="/">cancel</v-btn>
@@ -39,7 +34,6 @@
         </v-container>
       </v-card>
     </v-flex>
-  </v-container>
 </template>
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
@@ -48,7 +42,7 @@ import router from "../router";
 @Component
 export default class Edit extends Vue {
   private errorMessage: string = "";
-  private targetItem: {
+  private item: {
     id: string;
     name: string;
     date: string;
@@ -65,30 +59,29 @@ export default class Edit extends Vue {
     const self = this;
     const url: string = this.$route.path;
     if (url == "/add") {
-      this.targetItem = {
+      this.item = {
         id: "",
         name: "",
         date: "",
         shop: "",
         page: "",
         play: "",
-        talk: ""
+        talk: "",
       };
     } else {
       const res = axios
         .get(`./memos/${this.$route.params.id}`)
-        .then(res => (self.targetItem = res.data));
+        .then((res) => (self.item = res.data));
     }
   }
   public async regist() {
     const self = this;
-    if (!this.targetItem.id) {
+    if (!this.item.id) {
       await axios
-        .put("./memos", this.targetItem)
-        .catch(res => (this.errorMessage = "登録が失敗しました。"));
+        .put("./memos", this.item)
+        .catch((res) => (this.errorMessage = "登録が失敗しました。"));
     } else {
-      await axios
-        .post(`./memos/${self.targetItem.id}`, this.targetItem);
+      await axios.post(`./memos/${self.item.id}`, this.item);
     }
     this.errorMessage = "";
     router.push("/");

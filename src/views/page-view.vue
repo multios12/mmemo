@@ -1,26 +1,30 @@
 <template>
-  <b-card title="view" v-model="targetItem">
-    <b-form-group label="name">{{ targetItem.name }}</b-form-group>
-    <b-form-group label="date">{{ targetItem.date }}</b-form-group>
-    <b-form-group label="shop">{{ targetItem.shop }}</b-form-group>
-    <b-form-group label="home page">{{ targetItem.page }}</b-form-group>
-    <b-form-group label="play">{{ targetItem.play }}</b-form-group>
-    <b-form-group label="talk">{{ targetItem.talk }}</b-form-group>
-    <b-card-footer>
-      <router-link class="btn btn-primary active" to="./edit">edit</router-link>
-      <router-link class="btn btn-secondary active" to="/">close</router-link>
-    </b-card-footer>
-  </b-card>
+  <v-flex xs12 sm8 offset-sm2 pb-4>
+    <v-card v-model="item">
+      <v-card-title>{{ item.name }}</v-card-title>
+      <v-card-subtitle>{{ item.date }}</v-card-subtitle>
+      <v-card-text>
+        <v-text-field name="_id" type="hidden" value="" />
+        <v-text-field label="shop" filled disabled v-model="item.shop" />
+        <v-text-field label="home page" filled disabled v-model="item.page" />
+        <v-textarea label="play" filled disabled v-model="item.play" />
+        <v-textarea label="talk" filled disabled v-model="item.talk" />
+      </v-card-text>
+      <v-card-actions>
+        <v-btn color="primary" to="./edit">edit</v-btn>
+        <v-btn to="/">close</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-flex>
 </template>
 
 <script lang="ts">
 import axios from "../axiosForApi";
-import { AxiosResponse } from "axios";
 import { Component, Prop, Vue } from "vue-property-decorator";
 import router from "../router";
 @Component
 export default class viewView extends Vue {
-  private targetItem: {} = {};
+  private item: {} = {};
   private created() {
     this.show();
   }
@@ -28,7 +32,7 @@ export default class viewView extends Vue {
     const self = this;
     axios
       .get(`../api/memos/${this.$route.params.id}`)
-      .then(res => (self.targetItem = res.data));
+      .then((res) => (self.item = res.data));
   }
 }
 </script>

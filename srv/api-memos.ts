@@ -16,18 +16,18 @@ router.get("/:id", (req, res) => {
 router.put("/", (req, res) => {
     const b = req.body;
     const sql = "INSERT INTO memos (name, date, shop, page, play, talk) VALUES (?, ?, ?, ?, ?, ?)";
-    db.run(sql, [b.name, b.date, b.shop, b.page, b.play, b.talk], (err: Error) => res.status(200));
+    db.run(sql, [b.name, b.date, b.shop, b.page, b.play, b.talk], (err: Error) => res.status(200).end());
 });
 
 router.post("/:id", (req, res) => {
     const b = req.body;
     const sql = "UPDATE memos SET name=?, date =?, shop=?, page=?, play=?, talk=? WHERE id = ?";
-    db.run(sql, [b.name, b.date, b.shop, b.page, b.play, b.talkb, req.params.id], (err) => res.status(200));
+    db.run(sql, [b.name, b.date, b.shop, b.page, b.play, b.talkb, req.params.id], (err) => res.status(200).end());
 });
 
 router.delete("/:id", (req, res) => {
     const sql = "DELETE FROM memos WHERE id=?";
-    db.run(sql, req.params.id, (err) => res.status(200));
+    db.run(sql, req.params.id, (err) => res.status(200).end());
 });
 
 export default router;

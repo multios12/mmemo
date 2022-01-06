@@ -1,23 +1,16 @@
 <template>
   <v-app>
     <app-nav />
-    <v-content>
+    <v-main>
       <router-view />
-    </v-content>
+    </v-main>
   </v-app>
 </template>
 
 <script lang="ts">
-import Vue from "vue";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import appNav from "./components/app-nav.vue";
 
-export default Vue.extend({
-  name: "App",
-  components: {
-    appNav
-  },
-  data: () => ({
-    //
-  })
-});
+@Component({ components: { appNav } })
+export default class App extends Vue {}
 </script>

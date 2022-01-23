@@ -15,18 +15,21 @@ import (
 var static embed.FS
 
 func main() {
+	// 環境変数またはコマンドライン引数の読み込み
 	modules.Filename = *flag.String("filename", "db", "sqlite db file")
 	port := flag.String("port", ":3000", "server port")
 	flag.Parse()
 
+	// DB初期化
 	modules.DbInit()
 
+	// ルーティング
 	router := gin.Default()
 
+	// ルーティング for 静的リソース
 	var f = func(c *gin.Context) {
 		c.FileFromFS("static"+c.Request.URL.Path, http.FS(static))
 	}
-
 	router.GET("/", f)
 	router.GET("/favicon.ico", f)
 	router.GET("/:dir/:file", f)
@@ -36,6 +39,7 @@ func main() {
 		createResponse(c, memos, err)
 	})
 
+	// ルーティング for API
 	router.GET("/api/memos/:id", func(c *gin.Context) {
 		memos, err := modules.RowsToMemo(c.Param("id"))
 		createResponse(c, memos, err)
@@ -54,6 +58,7 @@ func main() {
 		var b modules.Memo
 		err := c.ShouldBindJSON(&b)
 		if err == nil {
+			b.Id = c.Param("id")
 			modules.UpsertMemo(b)
 		}
 		createResponse(c, nil, err)
@@ -72,9 +77,5 @@ func createResponse(c *gin.Context, memos []modules.Memo, err error) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if memos == nil {
-		c.Status(http.StatusOK)
-	} else {
-		c.JSON(http.StatusOK, memos)
-	}
+	c.JSON(http.StatusOK, memos)
 }

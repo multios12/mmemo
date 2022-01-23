@@ -61,7 +61,7 @@ func RowsToMemo(id string) ([]Memo, error) {
 func UpsertMemo(b Memo) (err error) {
 	Db, err := sql.Open("sqlite", Filename)
 	if err == nil {
-		if b.Id == "" {
+		if b.Id == "" || b.Id == "undefined" {
 			const sql = "INSERT INTO memos (name, date, shop, page, play, talk) VALUES (?, ?, ?, ?, ?, ?)"
 			_, err = Db.Exec(sql, b.Name, b.Date, b.Shop, b.Page, b.Play, b.Talk)
 		} else {

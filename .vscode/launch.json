@@ -5,29 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "chrome",
+            "name": "debug react",
+            "type": "pwa-chrome",
             "request": "launch",
-            "name": "vuejs: chrome",
-            "url": "http://localhost:8080",
-            "webRoot": "${workspaceFolder}/src",
-            "breakOnLoad": true,
-            "sourceMapPathOverrides": {
-                "webpack:///src/*": "${webRoot}/*"
-            },
-            "preLaunchTask": "yarn-serve"
-        },
-        {
-            "type": "firefox",
-            "request": "launch",
-            "name": "vuejs: firefox",
-            "url": "http://localhost:8080",
-            "webRoot": "${workspaceFolder}/src",
-            "pathMappings": [
-                {
-                    "url": "webpack:///src/",
-                    "path": "${webRoot}/"
-                }
-            ]
+            "reAttach": true,
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "react-start",
+            "postDebugTask": "terminate-react-start",
         },
         {
             "name": "go API Server",
@@ -35,6 +20,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "srv/main.go",
+            "args": ["-port", ":3001"]
         }
     ]
 }

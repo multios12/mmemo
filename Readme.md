@@ -9,9 +9,15 @@ vscode上での実行を前提。chromeを利用
 1. 実行とデバッグで「go API Server」を選択、実行
 2. 実行とデバッグで「debug react」を選択、実行
 
+## ビルド for Windows
+> ./build.cmd
+
+## ビルド for Linux
+> ./build-linux.cmd
+
 -------------------------------------------------------------
 
-## initialize setting
+## nitialize setting
 > npm i -g yarn create-react-app
 
 ## create new react project
@@ -22,3 +28,4 @@ vscode上での実行を前提。chromeを利用
 > cd srv
 > go mod init main
 > go get github.com/gin-gonic/gin
+> go get github.com/go-playground/validator/v10

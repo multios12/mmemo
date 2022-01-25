@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	_ "modernc.org/sqlite"
 
 	modules "github.com/multios12/hmemo/modules"
@@ -32,7 +33,7 @@ func main() {
 	}
 	router.GET("/", f)
 	router.GET("/favicon.ico", f)
-	router.GET("/:dir/:file", f)
+	router.GET("/static/:dir/:file", f)
 
 	router.GET("/api/memos", func(c *gin.Context) {
 		memos, err := modules.RowsToMemo("")
@@ -58,8 +59,12 @@ func main() {
 		var b modules.Memo
 		err := c.ShouldBindJSON(&b)
 		if err == nil {
-			b.Id = c.Param("id")
-			modules.UpsertMemo(b)
+			validate := validator.New() //インスタンス生成
+			err = validate.Struct(b)
+			if err == nil {
+				b.Id = c.Param("id")
+				modules.UpsertMemo(b)
+			}
 		}
 		createResponse(c, nil, err)
 	})

@@ -6,7 +6,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 const ListView = () => {
     const [memos, setMemos] = useState([])
-
     const showList = () => {
         axios.get("/api/memos").then(r => {
             if (r.data != undefined) {
@@ -17,9 +16,7 @@ const ListView = () => {
 
     useEffect(showList, [])
 
-    const deleteMemo = (id: string) => {
-        axios.delete(`/api/memos/${id}`).then(r => showList())
-    }
+    const deleteMemo = (id: string) => { axios.delete(`/api/memos/${id}`).then(r => showList())}
 
     const createListItems = (i: { id: string, name: string, shop: string, date: string }) => {
         return <ListItem key={i.id}>{i.date} <Link to={`/memos/${i.id}`}>{i.name}</Link> {i.shop}

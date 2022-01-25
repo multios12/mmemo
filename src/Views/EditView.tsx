@@ -1,70 +1,94 @@
-import { Button, Card, CardActions, CardContent, Grid, TextField } from "@mui/material";
+import { Alert, Backdrop, Button, Card, CardActions, CardContent, CircularProgress, Grid, Snackbar, TextField } from "@mui/material";
 import { Box } from "@mui/system";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+
+type memoType = {
+  id: string | undefined,
+  name: string,
+  shop: string,
+  page: string,
+  date: string,
+  play: string,
+  talk: string,
+}
 
 const EditView = () => {
+  const m: memoType = { id: undefined, name: "", shop: "", page: "", date: new Date().toISOString().substring(0, 10), play: "", talk: "" }
   const { id } = useParams();
-  const [name, setName] = useState("")
-  const [shop, setShop] = useState("")
-  const [page, setPage] = useState("")
-  const [date, setDate] = useState("")
-  const [play, setPlay] = useState("")
-  const [talk, setTalk] = useState("")
-  var errorMessage: string = ""
+  const [memo, setMemo] = useState(m);
+  const [isErr, setIsErr] = useState(false)
+  const [errMessage, setErrMessage] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate();
 
   useEffect(() => {
+    if ((id == undefined) || (id == "")) {
+      return
+    }
+    setIsLoading(true)
     axios.get(`/api/memos/${id}`).then(r => {
       if (r.data != undefined) {
-        setName(r.data[0].name || "");
-        setShop(r.data[0].shop || "");
-        setPage(r.data[0].Page || "");
-        setDate(r.data[0].date || "");
-        setPlay(r.data[0].play || "");
-        setTalk(r.data[0].talk || "");
+        setMemo(r.data[0]);
       }
-    })
+    }).finally(() => setIsLoading(false))
   }, [])
 
   const regist = () => {
+    setIsLoading(true)
     if (id == "") {
-      axios.put("../api/memos", { name, shop, page, date, play, talk })
-        .catch(res => (errorMessage = "登録が失敗しました。"));
+      axios.put("../api/memos", memo)
+        .then(r => navigate("/"))
+        .catch(res => {
+          setErrMessage(res.response.data.error)
+          setIsErr(true)
+        }).finally(() => { setIsLoading(false) });
     } else {
-      axios.post(`../api/memos/${id}`, { name, shop, page, date, play, talk })
-        .catch(res => (errorMessage = "登録が失敗しました。"));
+      axios.post(`../api/memos/${id}`, memo)
+        .then(r => navigate("/"))
+        .catch(res => {
+          setErrMessage(res.response.data.error)
+          setIsErr(true)
+        }).finally(() => { setIsLoading(false) });
     }
-    navigate("/");
+
   }
 
-  return <Card>
+  return <Card >
     <CardContent>
+      <Snackbar open={isErr} autoHideDuration={4000} onClose={() => setIsErr(false)}>
+        <Alert onClose={() => setIsErr(false)} severity="error">{errMessage}</Alert>
+      </Snackbar>
+      <Backdrop open={isLoading} onClick={() => setIsLoading(false)}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
       <Grid container spacing={1}>
         <Grid item xs={12}>
-          <TextField label="name" variant="filled" onChange={e => setName(e.target.value)} fullWidth value={name} />
+          <TextField fullWidth label="name" variant="filled" value={memo.name} onChange={e => setMemo({ ...memo, name: e.target.value })}
+            error={!memo.name && !isLoading} helperText={!memo.name && "input required"} />
         </Grid>
         <Grid item xs={12}>
           <Box display="flex" justifyContent="space-between">
-            <TextField label="shop" variant="filled" onChange={e => setShop(e.target.value)} fullWidth value={shop} />
-            <TextField label="home page" variant="filled" onChange={e => setPage(e.target.value)} fullWidth value={page} />
+            <TextField fullWidth sx={{ mr: 1 }} label="shop" variant="filled" value={memo.shop} onChange={e => setMemo({ ...memo, shop: e.target.value })} />
+            <TextField fullWidth label="home page" variant="filled" onChange={e => setMemo({ ...memo, page: e.target.value })} value={memo.page} type="url" />
           </Box>
         </Grid>
         <Grid item xs={12}>
-          date<TextField variant="filled" type="date" onChange={e => setDate(e.target.value)} fullWidth value={date} />
+          <TextField fullWidth label="date" variant="filled" type="date" value={memo.date} onChange={e => setMemo({ ...memo, date: e.target.value })}
+            error={!memo.date && !isLoading} helperText={!memo.date ? "input required" : ""} />
         </Grid>
         <Grid item xs={12}>
-          <TextField multiline label="play" variant="filled" onChange={e => setPlay(e.target.value)} fullWidth value={play} />
+          <TextField multiline fullWidth label="play" variant="filled" value={memo.play} onChange={e => setMemo({ ...memo, play: e.target.value })} />
         </Grid>
         <Grid item xs={12}>
-          <TextField multiline label="talk" variant="filled" onChange={e => setTalk(e.target.value)} fullWidth value={talk} />
+          <TextField multiline fullWidth label="talk" variant="filled" value={memo.talk} onChange={e => setMemo({ ...memo, talk: e.target.value })} />
         </Grid>
       </Grid>
     </CardContent>
     <CardActions>
-      <Button onClick={regist}>Ok</Button>
-      <Link to="/"><Button>Cancel</Button></Link>
+      <Button variant="contained" color="primary" disabled={isLoading} onClick={regist}>Ok</Button>
+      <Button variant="contained" onClick={() => navigate("/")}>Cancel</Button>
     </CardActions>
   </Card>
 }

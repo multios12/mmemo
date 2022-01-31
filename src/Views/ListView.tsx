@@ -8,7 +8,7 @@ const ListView = () => {
     const [memos, setMemos] = useState([])
     const showList = () => {
         axios.get("/api/memos").then(r => {
-            if (r.data != undefined) {
+            if (r.data !== undefined) {
                 setMemos(r.data)
             }
         })

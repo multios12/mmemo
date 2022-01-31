@@ -14,7 +14,7 @@ type memoType = {
   talk: string,
 }
 
-const EditView = () => {
+export default function EditView() {
   const m: memoType = { id: undefined, name: "", shop: "", page: "", date: new Date().toISOString().substring(0, 10), play: "", talk: "" }
   const { id } = useParams();
   const [memo, setMemo] = useState(m);
@@ -24,12 +24,12 @@ const EditView = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if ((id == undefined) || (id == "")) {
+    if ((id === undefined) || (id === "")) {
       return
     }
     setIsLoading(true)
     axios.get(`/api/memos/${id}`).then(r => {
-      if (r.data != undefined) {
+      if (r.data !== undefined) {
         setMemo(r.data[0]);
       }
     }).finally(() => setIsLoading(false))
@@ -37,7 +37,7 @@ const EditView = () => {
 
   const regist = () => {
     setIsLoading(true)
-    if (id == "") {
+    if (id === "") {
       axios.put("../api/memos", memo)
         .then(r => navigate("/"))
         .catch(res => {
@@ -55,7 +55,7 @@ const EditView = () => {
 
   }
 
-  return <Card >
+  return <Card>
     <CardContent>
       <Snackbar open={isErr} autoHideDuration={4000} onClose={() => setIsErr(false)}>
         <Alert onClose={() => setIsErr(false)} severity="error">{errMessage}</Alert>
@@ -88,9 +88,8 @@ const EditView = () => {
     </CardContent>
     <CardActions>
       <Button variant="contained" color="primary" disabled={isLoading} onClick={regist}>Ok</Button>
-      <Button variant="contained" onClick={() => navigate("/")}>Cancel</Button>
+      <Button variant="contained" color="inherit" onClick={() => navigate("/")}>Cancel</Button>
     </CardActions>
   </Card>
 }
 
-export default EditView

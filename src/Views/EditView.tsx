@@ -28,7 +28,7 @@ export default function EditView() {
       return
     }
     setIsLoading(true)
-    axios.get(`/api/memos/${id}`).then(r => {
+    axios.get(`../api/memos/${id}`).then(r => {
       if (r.data !== undefined) {
         setMemo(r.data[0]);
       }

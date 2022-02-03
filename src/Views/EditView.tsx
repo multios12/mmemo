@@ -28,7 +28,7 @@ export default function EditView() {
       return
     }
     setIsLoading(true)
-    axios.get(`../api/memos/${id}`).then(r => {
+    axios.get(`./api/memos/${id}`).then(r => {
       if (r.data !== undefined) {
         setMemo(r.data[0]);
       }
@@ -38,14 +38,14 @@ export default function EditView() {
   const regist = () => {
     setIsLoading(true)
     if (id === "") {
-      axios.put("../api/memos", memo)
+      axios.put("./api/memos", memo)
         .then(r => navigate("/"))
         .catch(res => {
           setErrMessage(res.response.data.error)
           setIsErr(true)
         }).finally(() => { setIsLoading(false) });
     } else {
-      axios.post(`../api/memos/${id}`, memo)
+      axios.post(`./api/memos/${id}`, memo)
         .then(r => navigate("/"))
         .catch(res => {
           setErrMessage(res.response.data.error)

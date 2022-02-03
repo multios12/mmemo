@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 import TopBar from './Components/TopBar'
 import './App.css';
 import ListView from './Views/ListView';

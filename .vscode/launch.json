@@ -8,7 +8,6 @@
             "name": "debug react",
             "type": "pwa-chrome",
             "request": "launch",
-            "reAttach": true,
             "url": "http://localhost:3000",
             "webRoot": "${workspaceFolder}",
             "preLaunchTask": "react-start",

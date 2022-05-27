@@ -15,6 +15,7 @@
 /srv/static/favicon.ico
 /srv/static/index.html
 /srv/static/asset-manifest.json
+/srv/__debug_bin
 /dist
 
 # misc

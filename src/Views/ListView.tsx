@@ -3,7 +3,6 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Box } from "@mui/system";
-import { Link } from "react-router-dom";
 
 const ListView = () => {
   const [memos, setMemos] = useState([])

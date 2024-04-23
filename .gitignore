@@ -1,30 +1,14 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-/srv/db
-
-# production
-/build
-/srv/static/*/*
-/srv/static/favicon.ico
-/srv/static/index.html
-/srv/static/asset-manifest.json
-/srv/__debug_bin
+/data
 /dist
-
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+/front/build
+/front/dist
+/front/node_modules
+/front/package-lock.json
+/sail
+/cmd/mmemo/__debug_bin*
+/__debug_bin
+/__debug_bin.exe
+/static/static
+/cmd/mmemo/static/*.html
+/cmd/mmemo/static/favicon.ico
+/cmd/mmemo/static/asset-manifest.json

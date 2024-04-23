@@ -1,0 +1,53 @@
+<script lang="ts">
+  import "bulma/css/bulma.css";
+  import Router, { location, link } from "svelte-spa-router";
+  import DiaryList from "./routes/DiaryList.svelte";
+  import DiaryEdit from "./routes/DiaryDetail.svelte";
+  import HMemoList from "./routes/HMemoList.svelte";
+  import HMemoEdit from "./routes/HMemoDetail.svelte";
+  let page = "";
+
+  const routes = {
+    "/":  DiaryList,
+    "/d/": DiaryList,
+    "/d/:id": DiaryEdit,
+    "/d/add": DiaryEdit,
+    "/h/": HMemoList,
+    "/h/:id": HMemoEdit,
+    "/h/add": HMemoEdit,
+  };
+
+  $: {
+    if ($location.indexOf("/d") >= 0) {
+      page = "d";
+    } else if ($location.indexOf("/h") >= 0) {
+      page = "h";
+    } else {
+      page = "d";
+    }
+  }
+</script>
+
+<nav class="navbar is-dark" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="/" use:link>memo</a>
+  </div>
+  <div class="tabs is-boxed">
+    <ul>
+      <li class:is-active={page == "d"}>
+        <a class="navbar-item" href="/d/" use:link>diary</a>
+      </li>
+      <li class:is-active={page == "h"}>
+        <a class="navbar-item" href="/h/" use:link>memo</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+<main>
+  <div class="box">
+    <Router {routes} />
+  </div>
+</main>
+
+<style>
+</style>

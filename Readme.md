@@ -29,7 +29,7 @@ vscode上での実行を前提。chromeを利用
 > npm i -g yarn create-react-app
 
 ## create new react project
-> create-react-app --typescript
+> create-react-app --typescvript
 
 ## create new go project
 > mkdir srv

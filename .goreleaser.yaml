@@ -16,7 +16,7 @@ version: 1
     #- go generate ./...
 
 builds:
-  - dir: ./cmd/sail
+  - dir: ./cmd/mmemo
     env:
     - CGO_ENABLED=0
     goos:

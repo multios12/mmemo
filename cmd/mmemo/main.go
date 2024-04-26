@@ -3,11 +3,12 @@ package main
 import (
 	"embed"
 	"flag"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
-	_ "modernc.org/sqlite"
 
 	"github.com/multios12/mmemo/pkg/diary"
+	"github.com/multios12/mmemo/pkg/memo"
 )
 
 //go:embed static/*
@@ -28,10 +29,19 @@ func main() {
 	// ルーティング
 	router := gin.Default()
 
+	router.GET("/", getStatic)
+	router.GET("/index.html", getStatic)
+	router.GET("/favicon.ico", getStatic)
+
 	// モジュールの初期化
-	println("test")
-	//memo.Initial(router, dataPath)
+	memo.Initial(router, dataPath)
 	diary.Initial(router, dataPath)
 
 	router.Run(port)
+}
+
+// スタティックリソース GET API
+func getStatic(c *gin.Context) {
+	p := "static" + c.Request.URL.Path
+	c.FileFromFS(p, http.FS(static))
 }

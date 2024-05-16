@@ -8,7 +8,7 @@
   let page = "";
 
   const routes = {
-    "/":  DiaryList,
+    "/": DiaryList,
     "/d/": DiaryList,
     "/d/:id": DiaryEdit,
     "/d/add": DiaryEdit,

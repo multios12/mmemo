@@ -1,6 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte";
   import { location, pop, push } from "svelte-spa-router";
+
+  import RichInput from "../components/RichInput/RichInput.svelte";
   import TagsInput from "../components/TagsInput.svelte";
   import type { detailType } from "../models/diaryModels.js";
 
@@ -9,7 +11,7 @@
   const dispatch = createEventDispatcher();
   let Outline = "";
   let Detail = "";
-  let Tags : string[] = [];
+  let Tags: string[] = [];
   let isDayEdit: boolean;
 
   onMount(async () => {
@@ -102,7 +104,9 @@
       <div class="control">
         <TagsInput bind:items={Tags} />
       </div>
-      <textarea class="textarea" placeholder="detail" bind:value={Detail} />
+      <div class="control">
+        <RichInput bind:value={Detail} />
+      </div>
     </div>
   </section>
   <footer class="card-footer">

@@ -41,3 +41,14 @@ vscode上での実行を前提。chromeを利用
 wget https://golang.org/dl/go1.22.2.linux-amd64.tar.gz
 tar -C /usr/local -xzf go1.22.2.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
+
+### git comment
+add   :新規機能追加
+update:機能修正（バグ修正以外）
+fix   :バグ修正
+remove:削除
+update: dependencies
+  外部モジュール更新
+
+
+git tag -a v0.9.0 -m ''; git push origin --tags

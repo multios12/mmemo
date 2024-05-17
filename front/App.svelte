@@ -8,7 +8,7 @@
   let page = "";
 
   const routes = {
-    "/": DiaryList,
+    "/":  DiaryList,
     "/d/": DiaryList,
     "/d/:id": DiaryEdit,
     "/d/add": DiaryEdit,
@@ -26,21 +26,45 @@
       page = "d";
     }
   }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // Get all "navbar-burger" elements
+    const $navbarBurgers = Array.prototype.slice.call(
+      document.querySelectorAll(".navbar-burger"),
+      0,
+    );
+
+    // Add a click event on each of them
+    $navbarBurgers.forEach((el) => {
+      el.addEventListener("click", () => {
+        // Get the target from the "data-target" attribute
+        const target = el.dataset.target;
+        const _target = <HTMLElement>document.getElementById(target);
+
+        // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+        el.classList.toggle("is-active");
+        _target.classList.toggle("is-active");
+      });
+    });
+  });
 </script>
 
-<nav class="navbar is-dark" aria-label="main navigation">
+<nav class="navbar is-transparent is-dark">
   <div class="navbar-brand">
-    <a class="navbar-item" href="/" use:link>memo</a>
+    <a class="navbar-item is-unselectable" href="/" use:link>memo</a>
+    <div class="navbar-burger js-burger" data-target="navbarMMemo">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
   </div>
-  <div class="tabs is-boxed">
-    <ul>
-      <li class:is-active={page == "d"}>
-        <a class="navbar-item" href="/d/" use:link>diary</a>
-      </li>
-      <li class:is-active={page == "h"}>
-        <a class="navbar-item" href="/h/" use:link>memo</a>
-      </li>
-    </ul>
+
+  <div id="navbarMMemo" class="navbar-menu">
+    <div class="navbar-start">
+      <a class="navbar-item is-unselectable" href="/d/" use:link> diary </a>
+      <a class="navbar-item is-unselectable" href="/h/" use:link> memo </a>
+    </div>
   </div>
 </nav>
 <main>

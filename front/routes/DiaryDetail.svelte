@@ -1,10 +1,9 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte";
   import { location, pop, push } from "svelte-spa-router";
-
-  import RichInput from "../components/RichInput/RichInput.svelte";
   import TagsInput from "../components/TagsInput.svelte";
   import type { detailType } from "../models/diaryModels.js";
+  import RichInput from "../components/RichInput/RichInput.svelte";
 
   export let params: { id: string | undefined } = { id: undefined };
   let editDay: string | null;
@@ -75,7 +74,7 @@
   };
 </script>
 
-<div class="card px-10" class:is-active={editDay != null}>
+<div class="card" class:is-active={editDay != null}>
   <header class="card-header sp-panel-heading">
     <input
       type="date"
@@ -92,7 +91,7 @@
       </button>
     {/if}
   </header>
-  <section class="card-content">
+  <section class="card-content p-0">
     <!-- Card Content -->
     <input
       type="text"
@@ -104,7 +103,7 @@
       <div class="control">
         <TagsInput bind:items={Tags} />
       </div>
-      <div class="control">
+      <div class="control py-2">
         <RichInput bind:value={Detail} />
       </div>
     </div>

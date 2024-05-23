@@ -8,9 +8,9 @@
   import HMemoEdit from "./routes/MemoDetail.svelte";
   import { onMount } from "svelte";
   import type { settingType } from "models/memoModels";
+  import { settingsStore } from "./store";
   let page = "";
 
-  let settings: settingType;
   let routes: RouteDefinition = {
     "/": DiaryList,
     "/d/:id": DiaryEdit,
@@ -19,11 +19,12 @@
     "/:category/:id": HMemoEdit,
     "/:category/add": HMemoEdit,
   };
+  let settings: settingType;
 
   onMount(async () => {
-    console.log("aaa");
     const r = await fetch("./api/memos");
     settings = <settingType>await r.json();
+    settingsStore.update((s) => settings);
   });
 
   $: {

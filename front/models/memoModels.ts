@@ -13,5 +13,6 @@ export type settingType = {
         UseTag: boolean,
         // テンプレート
         Template: string,
+        Fields: {}
     }[]
 }

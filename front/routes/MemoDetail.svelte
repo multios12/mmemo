@@ -3,6 +3,7 @@
   import type { memoType } from "../models/memoModels";
   import { onMount } from "svelte";
   import RichInput from "../components/RichInput/RichInput.svelte";
+  import { settingsStore } from "../store";
 
   const m: memoType = {
     Id: undefined,
@@ -19,6 +20,17 @@
   let errMessage = "";
   let isLoading = false;
   let changedValue: string;
+  let template: string;
+
+  onMount(async () => {
+    settingsStore.subscribe((s) => {
+      s.Categories.forEach((c) => {
+        if (c.Key == params.category) {
+          template = c.Template;
+        }
+      });
+    });
+  });
 
   const sendClick = () => {
     isLoading = true;
@@ -56,6 +68,7 @@
 
   onMount(async () => {
     if (params.id === "add") {
+      memo.Value = template;
       return;
     }
     isLoading = true;

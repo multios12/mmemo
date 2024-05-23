@@ -1,37 +1,41 @@
 <script lang="ts">
-  import { pop, push } from "svelte-spa-router";
-  import type { memoType } from "../models/memoModels.js";
+  import { pop } from "svelte-spa-router";
+  import type { memoType } from "../models/memoModels";
   import { onMount } from "svelte";
+  import RichInput from "../components/RichInput/RichInput.svelte";
 
   const m: memoType = {
     Id: undefined,
     Name: "",
-    Shop: "",
-    Page: "",
     Date: new Date().toISOString().substring(0, 10),
-    Play: "",
-    Talk: "",
+    Value: "",
   };
 
-  export let params: { id: string | undefined } = { id: undefined };
+  // ルーティングパラメータ
+  export let params: { id: string | undefined; category: string | undefined } =
+    { id: undefined, category: undefined };
   let memo = m;
   let isErr = false;
   let errMessage = "";
   let isLoading = false;
+  let changedValue: string;
 
   const sendClick = () => {
     isLoading = true;
-    let url = "./api/memos";
+    let url = `./api/memos/${params.category}`;
     url += params.id === "add" ? "" : `/${params.id}`;
     let o = {};
+    memo.Value = changedValue;
+    console.log(changedValue);
     if (params.id === "add") {
       console.log(memo);
       o = { method: "put", body: JSON.stringify(memo) };
     } else {
       o = { method: "post", body: JSON.stringify(memo) };
     }
+
     fetch(url, o)
-      .then(() => push("/h/"))
+      .then(pop)
       .catch((res) => {
         errMessage = res.response.data.error;
         isErr = true;
@@ -41,8 +45,11 @@
       });
   };
 
+  /** キャンセル クリックイベント */
+  const cancelClick = () => pop();
+
   const deleteClick = async () => {
-    let url = `./api/memos/${params.id}`;
+    let url = `./api/memos/${params.category}/${params.id}`;
     await fetch(url, { method: "delete" });
     pop();
   };
@@ -52,15 +59,19 @@
       return;
     }
     isLoading = true;
-    const r = await fetch(`./api/memos/${params.id}`);
+    const r = await fetch(`./api/memos/${params.category}/${params.id}`);
     const v = await r.json();
     memo = v[0];
     isLoading = false;
   });
+
+  const onTextChange = (e: CustomEvent<string>) => {
+    changedValue = e.detail;
+  };
 </script>
 
-<div class="card px-10">
-  <header class="card-header">
+<div class="card">
+  <header class="card-header sp-panel-heading">
     <p class="card-header-title" />
     <button
       class="button is-inverted is-small has-text-danger sp-right"
@@ -69,7 +80,8 @@
       <i class="material-icons">delete</i>
     </button>
   </header>
-  <div class="card-content">
+
+  <section class="card-content p-0">
     {#if errMessage != ""}
       <div class="notification is-danger">{errMessage}</div>
     {/if}
@@ -87,6 +99,11 @@
         </div>
       </div>
     </div>
+    <div class="field">
+      <label class="label" for="value"> value </label>
+      <RichInput bind:value={memo.Value} on:textChange={onTextChange} />
+    </div>
+    <!--
     <div class="columns m-0">
       <div class="field column">
         <label class="label" for="shop">shop</label>
@@ -113,17 +130,20 @@
         <textarea class="textarea" name="talk" bind:value={memo.Talk} />
       </div>
     </div>
-    <footer class="card-footer">
-      <div class="card-footer-item">
-        <button
-          class="button is-primary mx-5"
-          class:is-loading={isLoading}
-          on:click={() => sendClick()}>ok</button
-        >
-        <button class="button is-light mx-5" on:click={() => push("/h/")}
-          >cancel</button
-        >
-      </div>
-    </footer>
-  </div>
+    -->
+  </section>
+
+  <footer class="card-footer">
+    <div class="card-footer-item buttons">
+      <button
+        class="button is-primary"
+        disabled={isLoading}
+        class:is-loading={isLoading}
+        on:click={sendClick}
+      >
+        ok
+      </button>
+      <button class="button" on:click={cancelClick}> cancel </button>
+    </div>
+  </footer>
 </div>

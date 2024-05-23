@@ -39,29 +39,50 @@
   <div class="level is-mobile">
     <div class="level-left">
       <div class="level-item">
-        <button class="button is-ghost" disabled={!canUndo} on:click={undo}>
+        <button
+          class="button is-ghost p-0"
+          disabled={!canUndo}
+          tabindex="-1"
+          on:click={undo}
+        >
           <i class="material-icons">undo</i>
         </button>
       </div>
       <div class="level-item">
-        <button class="button is-ghost" disabled={!canRedo} on:click={redo}>
+        <button
+          class="button is-ghost p-0"
+          disabled={!canRedo}
+          tabindex="-1"
+          on:click={redo}
+        >
           <i class="material-icons">redo</i>
         </button>
       </div>
 
       <div class="level-item">
-        <Dropdown items={paragraphs} key={para} on:change={onChange} />
+        <Dropdown
+          items={paragraphs}
+          key={para}
+          tabindex={-1}
+          on:change={onChange}
+        />
       </div>
 
       <div class="level-item">
-        <button id="boldButton" class="button is-ghost" on:click={formatBold}>
+        <button
+          id="boldButton"
+          class="button is-ghost p-0"
+          tabindex="-1"
+          on:click={formatBold}
+        >
           <i class="material-icons">format_bold</i>
         </button>
       </div>
       <div class="level-item">
         <button
           id="italicButton"
-          class="button is-ghost"
+          class="button is-ghost p-0"
+          tabindex="-1"
           on:click={formatItalic}
         >
           <i class="material-icons">format_italic</i>
@@ -70,7 +91,8 @@
       <div class="level-item">
         <button
           id="underButton"
-          class="button is-ghost"
+          class="button is-ghost p-0"
+          tabindex="-1"
           on:click={formatUnderline}
         >
           <i class="material-icons">format_underlined</i>
@@ -79,3 +101,9 @@
     </div>
   </div>
 </div>
+
+<style>
+  .level-left {
+    flex-direction: row;
+  }
+</style>

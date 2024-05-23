@@ -1,0 +1,20 @@
+{
+    "Diary": {
+        "Name": "日記"
+    },
+    "Categories": [
+        {
+            "Key": "sample",
+            "Name": "サンプル",
+            "UseDate": true,
+            "UseTag": true,
+            "Template": "## データ１\n----\n## データ2\n----",
+            "Fields": {
+                "Name": "名前",
+                "Date": "日付",
+                "Tags": "タグ",
+                "Value": "情報"
+            }
+        }
+    ]
+}

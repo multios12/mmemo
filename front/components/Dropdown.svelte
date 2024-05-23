@@ -9,6 +9,7 @@
   /** 表示値 */
   let value: string;
 
+  export let tabindex: number | null | undefined;
   /** ドロップダウン トグルイベント */
   const onToggle = () =>
     document.getElementById("dropdown")?.classList.toggle("is-active");
@@ -36,6 +37,7 @@
       aria-haspopup="true"
       aria-controls="dropdown-menu"
       id="para-button"
+      {tabindex}
       on:click={onToggle}
     >
       <span>{value}</span>

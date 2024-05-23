@@ -29,13 +29,15 @@
 
 <div class="field has-addons">
   <div class="control">
-    {#each items as i}<span class="tag is-rounded"
-        >{i}<button
-          class="delete is-small"
-          data-value={i}
-          on:click={deleteClick}
-        /></span
-      >{/each}
+    <div class="tags are-medium">
+      {#each items as i}<span class="tag is-rounded"
+          >{i}<button
+            class="delete"
+            data-value={i}
+            on:click={deleteClick}
+          /></span
+        >{/each}
+    </div>
   </div>
   <div class="control is-expanded">
     <input

@@ -2,8 +2,11 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"flag"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 
@@ -16,6 +19,9 @@ var static embed.FS
 
 var port string
 var dataPath string
+var setting memo.SettingModel
+
+const DEFAULT_SETTING_JSON string = "{\"Diary\": {\"Name\": \"日記\"},\"Categories\": [{\"Key\": \"sample\",\"Name\": \"サンプル\",\"UseDate\": true,\"UseTag\": true,\"Template\": \"## データ１\n----\n## データ2\n----\",\"Titles\": {\"Name\": \"名前\",\"Date\": \"日付\",\"Tags\": \"タグ\",\"Value\": \"情報\"}}]}"
 
 func init() {
 	// 環境変数またはコマンドライン引数の読み込み
@@ -26,6 +32,9 @@ func init() {
 }
 
 func main() {
+	// 設定ファイルの読み込み
+	loadSettingJson()
+
 	// ルーティング
 	router := gin.Default()
 
@@ -34,7 +43,7 @@ func main() {
 	router.GET("/favicon.ico", getStatic)
 
 	// モジュールの初期化
-	memo.Initial(router, dataPath)
+	memo.Initial(router, dataPath, setting)
 	diary.Initial(router, dataPath)
 
 	router.Run(port)
@@ -44,4 +53,23 @@ func main() {
 func getStatic(c *gin.Context) {
 	p := "static" + c.Request.URL.Path
 	c.FileFromFS(p, http.FS(static))
+}
+
+// 設定ファイルの読み込み
+func loadSettingJson() {
+	filename := filepath.Join(dataPath, "settings.json")
+	if _, err := os.Stat(filename); err != nil {
+		b, err := static.ReadFile("static/.default.settings.json")
+
+		if err != nil {
+			panic(err)
+		}
+		os.WriteFile(filename, b, os.ModePerm)
+	}
+
+	if b, err := os.ReadFile(filename); err != nil {
+		panic(err)
+	} else if err := json.Unmarshal(b, &setting); err != nil {
+		panic(err)
+	}
 }

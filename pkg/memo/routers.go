@@ -11,36 +11,46 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func Initial(router *gin.Engine, dataPath string) {
+var setting SettingModel
+
+func Initial(router *gin.Engine, dataPath string, s SettingModel) error {
+	setting = s
 	// DB初期化
-	err := dbOpen(dataPath)
-	if err != nil {
+	if err := dbOpen(dataPath); err != nil {
 		fmt.Sprintln(err)
-		return
+		return err
 	}
-	memos := find()
+	memos := findMemos("")
 	log.Println("info: memo[dataPath=" + filepath.Join(dataPath, "memo") + "]")
 	log.Println("info: memo[count=" + strconv.Itoa(len(memos)) + "]")
 
 	// ルーティング
-	router.GET("/api/memos", getMemos)
-	router.GET("/api/memos/:id", getMemosId)
-	router.PUT("/api/memos", putMemos)
-	router.POST("/api/memos/:id", postMemosId)
-	router.DELETE("/api/memos/:id", deleteMemosId)
+	router.GET("/api/memos", getSetting)
+	router.GET("/api/memos/:category", getMemos)
+	router.GET("/api/memos/:category/:id", getMemosId)
+	router.PUT("/api/memos/:category", putMemos)
+	router.POST("/api/memos/:category/:id", postMemosId)
+	router.DELETE("/api/memos/:category/:id", deleteMemosId)
+
+	return nil
 }
+
+func getSetting(c *gin.Context) {
+	c.JSON(http.StatusOK, setting)
+}
+
 func getMemos(c *gin.Context) {
 	var memos []Memo
 	if len(c.Query("month")) == 0 {
-		memos = find()
+		memos = findMemos(c.Param("category"))
 	} else {
-		memos = findByMonth(c.Query("month"))
+		memos = findMemosByMonth(c.Param("category"), c.Query("month"))
 	}
 	createResponse(c, memos, nil)
 }
 
 func getMemosId(c *gin.Context) {
-	memos := findById(c.Param("id"))
+	memos := findMemoById(c.Param("category"), c.Param("id"))
 	createResponse(c, memos, nil)
 }
 
@@ -48,6 +58,7 @@ func putMemos(c *gin.Context) {
 	var b Memo
 	err := c.ShouldBindJSON(&b)
 	if err == nil {
+		b.Category = c.Param("category")
 		upsertMemo(b)
 	}
 	createResponse(c, nil, err)
@@ -59,6 +70,7 @@ func postMemosId(c *gin.Context) {
 	if err == nil {
 		validate := validator.New() //インスタンス生成
 		err = validate.Struct(b)
+		b.Category = c.Param("category")
 		if err == nil {
 			b.Id, _ = strconv.Atoi(c.Param("id"))
 			upsertMemo(b)

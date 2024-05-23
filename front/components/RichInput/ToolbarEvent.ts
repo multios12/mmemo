@@ -6,7 +6,7 @@ import { $setBlocksType } from "@lexical/selection";
 
 export const paragraphs = [
   {
-    key: "0",
+    key: "",
     value: "normal",
   },
   {

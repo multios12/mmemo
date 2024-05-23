@@ -65,12 +65,12 @@
         {#each model.Lines as v}
           <tr on:click={(e) => listClick(e, v.Day)}>
             <td>
-              <span>
+              <button>
                 {v.Day}
                 {v.Outline}{#if v.IsDetail}<i
                     class="material-icons has-text-grey-light"
                     style="vertical-align:middle">note</i
-                  >{/if}</span
+                  >{/if}</button
               >
             </td>
             <td>

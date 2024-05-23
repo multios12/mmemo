@@ -1,29 +1,39 @@
 <script lang="ts">
   import "bulma/css/bulma.css";
   import Router, { location, link } from "svelte-spa-router";
+  import { type RouteDefinition } from "svelte-spa-router";
   import DiaryList from "./routes/DiaryList.svelte";
   import DiaryEdit from "./routes/DiaryDetail.svelte";
-  import HMemoList from "./routes/HMemoList.svelte";
-  import HMemoEdit from "./routes/HMemoDetail.svelte";
+  import HMemoList from "./routes/MemoList.svelte";
+  import HMemoEdit from "./routes/MemoDetail.svelte";
+  import { onMount } from "svelte";
+  import type { settingType } from "models/memoModels";
   let page = "";
 
-  const routes = {
-    "/":  DiaryList,
-    "/d/": DiaryList,
+  let settings: settingType;
+  let routes: RouteDefinition = {
+    "/": DiaryList,
     "/d/:id": DiaryEdit,
     "/d/add": DiaryEdit,
-    "/h/": HMemoList,
-    "/h/:id": HMemoEdit,
-    "/h/add": HMemoEdit,
+    "/:category/": HMemoList,
+    "/:category/:id": HMemoEdit,
+    "/:category/add": HMemoEdit,
   };
 
+  onMount(async () => {
+    console.log("aaa");
+    const r = await fetch("./api/memos");
+    settings = <settingType>await r.json();
+  });
+
   $: {
-    if ($location.indexOf("/d") >= 0) {
-      page = "d";
-    } else if ($location.indexOf("/h") >= 0) {
-      page = "h";
-    } else {
-      page = "d";
+    if (settings !== undefined) {
+      page = "";
+      for (const category of settings.Categories) {
+        if ($location.indexOf("/" + category.Key) >= 0) {
+          page = category.Key;
+        }
+      }
     }
   }
 
@@ -51,7 +61,7 @@
 
 <nav class="navbar is-transparent is-dark">
   <div class="navbar-brand">
-    <a class="navbar-item is-unselectable" href="/" use:link>memo</a>
+    <div class="navbar-item is-unselectable has-text-weight-bold">memo</div>
     <div class="navbar-burger js-burger" data-target="navbarMMemo">
       <span></span>
       <span></span>
@@ -62,8 +72,26 @@
 
   <div id="navbarMMemo" class="navbar-menu">
     <div class="navbar-start">
-      <a class="navbar-item is-unselectable" href="/d/" use:link> diary </a>
-      <a class="navbar-item is-unselectable" href="/h/" use:link> memo </a>
+      <a
+        class="navbar-item is-unselectable is-tab"
+        class:is-active={page === ""}
+        href="/"
+        use:link
+      >
+        {settings?.Diary?.Name}
+      </a>
+      {#if settings !== undefined}
+        {#each settings.Categories as category}
+          <a
+            class="navbar-item is-unselectable is-tab"
+            class:is-active={page === category.Key}
+            href={`/${category.Key}/`}
+            use:link
+          >
+            {category.Name}
+          </a>
+        {/each}
+      {/if}
     </div>
   </div>
 </nav>

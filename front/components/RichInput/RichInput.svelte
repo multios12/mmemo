@@ -1,8 +1,11 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
   import ToolbarPlugin from "./ToolbarPlugin.svelte";
   import { mergeRegister } from "@lexical/utils";
-  import { $isRangeSelection as _isRangeSelection } from "lexical";
+  import {
+    CLEAR_HISTORY_COMMAND,
+    $isRangeSelection as _isRangeSelection,
+  } from "lexical";
   import { $createParagraphNode as _createParagraphNode } from "lexical";
   import { $getSelection as _getSelection } from "lexical";
   import { ElementNode, createEditor, type LexicalEditor } from "lexical";
@@ -20,15 +23,17 @@
 
   /** 入力値 */
   export let value: string;
+
   /** lexical Editor */
   let editor: LexicalEditor;
   /** 選択ノードの段落種別 */
-  let para: string;
+  let para: string = "";
   /** アンドゥボタン表示状態 */
   let canUndo: boolean;
   /** リドゥボタン表示状態 */
   let canRedo: boolean;
   const LowPriority = 1;
+  const dispatch = createEventDispatcher();
 
   /** マウントイベント */
   onMount(async () => {
@@ -60,15 +65,22 @@
 
     // 更新タイミングでのmarkdown出力
     editor.registerUpdateListener(({}) => {
-      editor.update(() => (value = _convertToMarkdownString(TRANSFORMERS)));
+      editor.update(() => {
+        const markdown = _convertToMarkdownString(TRANSFORMERS);
+        dispatch("textChange", markdown);
+      });
     });
   });
 
   $: {
     if (value !== null && value !== "") {
-      editor.update(() => _convertFromMarkdownString(value, TRANSFORMERS));
+      editor.update(() => {
+        _convertFromMarkdownString(value, TRANSFORMERS);
+      });
+      editor.dispatchCommand(CLEAR_HISTORY_COMMAND, undefined);
     }
   }
+
   /** LexicalEditorの初期化 */
   export const InitializeLixicalEditor = async (detailElement: HTMLElement) => {
     // LexicalEditorの設定
@@ -153,7 +165,7 @@
 
 <div class="panel is-dark">
   <ToolbarPlugin {editor} {para} {canUndo} {canRedo} />
-  <div class="panel-block p-0">
+  <div class="panel-block p-0 is-fullwidth">
     <div id="detail" class="content editor-input" contenteditable></div>
   </div>
 </div>
@@ -161,5 +173,6 @@
 <style>
   #detail {
     width: 100%;
+    min-height: 150px;
   }
 </style>

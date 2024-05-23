@@ -22,22 +22,26 @@ func dbOpen(dataPath string) (err error) {
 	return err
 }
 
-func find() (memos []Memo) {
-	db.Find(&memos)
+func findMemos(category string) (memos []Memo) {
+	if len(category) == 0 {
+		db.Find(&memos)
+	} else {
+		db.Where("category = ?", category).Find(&memos)
+	}
 	return memos
 }
 
-func findById(id string) (memos []Memo) {
-	db.Where("id = ?", id).Find(&memos)
+func findMemoById(category string, id string) (memos []Memo) {
+	db.Where("category = ? and id = ?", category, id).Find(&memos)
 	return memos
 }
 
-func findByMonth(month string) (memos []Memo) {
+func findMemosByMonth(category string, month string) (memos []Memo) {
 	from := month + "-01"
 	toDate, _ := time.Parse("2006-01-02", from)
 	toDate = toDate.AddDate(0, 1, 0).AddDate(0, 0, -1)
 	to := toDate.Format("2006-01-02")
-	db.Where("date >= ? and date <= ?", from, to).Find(&memos)
+	db.Where("category = ? and date >= ? and date <= ?", category, from, to).Find(&memos)
 	return memos
 }
 

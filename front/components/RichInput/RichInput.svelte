@@ -59,7 +59,8 @@
       ),
     );
 
-    if (value !== null) {
+    if (value !== undefined) {
+      console.log(value);
       editor.update(() => _convertFromMarkdownString(value, TRANSFORMERS));
     }
 
@@ -73,7 +74,7 @@
   });
 
   $: {
-    if (value !== null && value !== "") {
+    if (value !== undefined && value !== "") {
       editor.update(() => {
         _convertFromMarkdownString(value, TRANSFORMERS);
       });

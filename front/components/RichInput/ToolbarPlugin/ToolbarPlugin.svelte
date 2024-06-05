@@ -4,7 +4,8 @@
   import { FORMAT_TEXT_COMMAND } from "lexical";
   import { TOGGLE_LINK_COMMAND } from "@lexical/link";
   import { onMount } from "svelte";
-  import Dropdown from "../Dropdown.svelte";
+  import Dropdown from "../../Dropdown.svelte";
+  import ImageButton from "./ImageButton.svelte";
 
   /** lexical Editor */
   export let editor: LexicalEditor;
@@ -112,6 +113,9 @@
         >
           <i class="material-icons">link</i>
         </button>
+      </div>
+      <div class="level-item">
+        <ImageButton {editor} />
       </div>
     </div>
   </div>

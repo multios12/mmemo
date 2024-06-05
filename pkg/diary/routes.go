@@ -1,8 +1,11 @@
 package diary
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -20,6 +23,8 @@ func Initial(router *gin.Engine, dataPath string) {
 	router.GET("/api/diary/:year/:month/:day", getDetail)
 	router.POST("/api/diary/:year/:month/:day", postDetail)
 	router.DELETE("/api/diary/:year/:month/:day", deleteDetail)
+	router.POST("/api/diary/images", postImage)
+	router.GET("/api/diary/images/:file", getImage)
 }
 
 func getMonth(c *gin.Context) {
@@ -62,4 +67,48 @@ func deleteDetail(c *gin.Context) {
 	} else {
 		c.Status(http.StatusOK)
 	}
+}
+
+func postImage(c *gin.Context) {
+	filename := path.Join(diaryPath, "_")
+
+	for i := 0; i < 99999999; i++ {
+		n := filename + fmt.Sprintf("%08d.png", i)
+		if _, err := os.Stat(n); err != nil {
+			filename = n
+			break
+		}
+	}
+
+	inFile, _, err := c.Request.FormFile("file")
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	outFile, err := os.Create(filename)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	defer outFile.Close()
+
+	_, err = io.Copy(outFile, inFile)
+	if err != nil {
+		err = fmt.Errorf("ファイルが保存できません: %w", err)
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	filename = filepath.Base(filename)
+	filename = path.Join("./api/diary/images", filename)
+	c.String(http.StatusOK, filename)
+}
+
+func getImage(c *gin.Context) {
+	filename := path.Join(diaryPath, c.Param("file"))
+	if b, err := os.ReadFile(filename); err == nil {
+		c.Data(http.StatusOK, "image/png", b)
+	}
+	c.Status(http.StatusNotFound)
 }

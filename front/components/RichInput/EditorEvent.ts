@@ -18,7 +18,9 @@ import { createEmptyHistoryState, registerHistory } from "@lexical/history";
 import { TRANSFORMERS } from "@lexical/markdown";
 import type { UpdateListener } from "node_modules/lexical/LexicalEditor.js";
 import type { EventDispatcher } from "svelte";
-
+import { ImageNode } from "./ImagesPlugin/ImageNode.js"
+import { registerInsertImageCommand } from "./ImagesPlugin/index.js";
+import { IMAGE } from "./MarkdownTransformers.js"
 const LowPriority = 1;
 
 /** LexicalEditorの初期化 */
@@ -41,6 +43,7 @@ export const InitialEditor = async (
       ListItemNode,
       QuoteNode,
       LinkNode,
+      ImageNode,
     ],
     onError: (error: Error) => {
       throw error;
@@ -86,7 +89,9 @@ export const InitialEditor = async (
     // 更新時のマークダウン出力リスナ登録
     editor.registerUpdateListener(({ }) => {
       editor.update(() => {
-        const markdown = _convertToMarkdownString(TRANSFORMERS);
+        const trans = TRANSFORMERS
+        trans.unshift(IMAGE);
+        const markdown = _convertToMarkdownString(trans);
         dispatch("textChange", markdown);
       });
     }),
@@ -95,31 +100,15 @@ export const InitialEditor = async (
   );
 
   // コマンド登録
+  const linkCommand = (p: string | null) => {
+    _toggleLink(<string | null>p);
+    return true;
+  }
   mergeRegister(
-    editor.registerCommand(
-      CAN_UNDO_COMMAND,
-      (payload) => {
-        doCanUndo(payload);
-        return false;
-      },
-      LowPriority,
-    ),
-    editor.registerCommand(
-      CAN_REDO_COMMAND,
-      (payload) => {
-        doCanRedo(payload);
-        return false;
-      },
-      LowPriority,
-    ),
-    editor.registerCommand(
-      TOGGLE_LINK_COMMAND,
-      (payload) => {
-        _toggleLink(<string | null>payload);
-        return true;
-      },
-      LowPriority,
-    ),
+    editor.registerCommand(CAN_UNDO_COMMAND, (p) => doCanUndo(p), LowPriority),
+    editor.registerCommand(CAN_REDO_COMMAND, (p) => doCanRedo(p), LowPriority),
+    editor.registerCommand(TOGGLE_LINK_COMMAND, linkCommand, LowPriority),
+    registerInsertImageCommand(editor)
   );
 
   // デバッグ情報出力リスナ登録

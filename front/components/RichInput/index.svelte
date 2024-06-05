@@ -6,10 +6,11 @@
   import { $convertFromMarkdownString as _convertFromMarkdownString } from "@lexical/markdown";
   import { TRANSFORMERS } from "@lexical/markdown";
 
-  import ToolbarPlugin from "./ToolbarPlugin.svelte";
-  import { updateToolbar } from "./ToolbarEvent.js";
+  import ToolbarPlugin from "./ToolbarPlugin/ToolbarPlugin.svelte";
+  import { updateToolbar } from "./ToolbarPlugin/ToolbarEvent.js";
   import { InitialEditor } from "./EditorEvent.js";
   import { createEventDispatcher } from "svelte";
+  import { IMAGE } from "./MarkdownTransformers.js";
 
   /** 入力値 */
   export let value: string;
@@ -49,7 +50,9 @@
   $: {
     // 入力値が更新されたとき、マークダウン変換と、履歴クリア
     if (value !== undefined && value !== "") {
-      editor.update(() => _convertFromMarkdownString(value, TRANSFORMERS));
+      const trans = TRANSFORMERS;
+      trans.unshift(IMAGE);
+      editor.update(() => _convertFromMarkdownString(value, trans));
       editor.dispatchCommand(CLEAR_HISTORY_COMMAND, undefined);
     }
   }

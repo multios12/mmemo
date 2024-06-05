@@ -1,9 +1,9 @@
 <script lang="ts">
   import { pop } from "svelte-spa-router";
-  import type { memoType } from "../models/memoModels";
+  import type { memoType } from "../models/memoModels.js";
   import { onMount } from "svelte";
-  import RichInput from "../components/RichInput/RichInput.svelte";
-  import { settingsStore } from "../store";
+  import RichInput from "../components/RichInput/index.svelte";
+  import { settingsStore } from "../store.js";
 
   const m: memoType = {
     Id: undefined,

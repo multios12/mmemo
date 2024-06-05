@@ -3,7 +3,7 @@
   import { location, pop } from "svelte-spa-router";
   import TagsInput from "../components/TagsInput.svelte";
   import type { detailType } from "../models/diaryModels.js";
-  import RichInput from "../components/RichInput/RichInput.svelte";
+  import RichInput from "../components/RichInput/index.svelte";
 
   export let params: { id: string | undefined } = { id: undefined };
   export let Template: string;

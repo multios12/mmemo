@@ -6,4 +6,4 @@ RUN apk  --no-cache --update add go git tzdata && \
     go install -v github.com/go-delve/delve/cmd/dlv@latest && \
     go install -v honnef.co/go/tools/cmd/staticcheck@latest
 
-# ENTRYPOINT [ "yarn", "dev", "--cwd", "./front" ]
+#ENTRYPOINT [ "yarn", "--cwd", "/workspaces/mmemo/front", "dev" ]

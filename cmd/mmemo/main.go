@@ -57,6 +57,13 @@ func getStatic(c *gin.Context) {
 
 // 設定ファイルの読み込み
 func loadSettingJson() {
+
+	// データファイルパスの確認と、存在しない場合は作成
+	if _, err := os.Stat((dataPath)); err != nil {
+		os.Mkdir(dataPath, os.ModeDir)
+	}
+
+	// 設定ファイルの読み込み、存在しない場合はサンプルファイルをもとに作成
 	filename := filepath.Join(dataPath, "settings.json")
 	if _, err := os.Stat(filename); err != nil {
 		b, err := static.ReadFile("static/.default.settings.json")

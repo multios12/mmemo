@@ -11,7 +11,6 @@
     push(`/${params.category}/${id}`);
   };
   onMount(async () => {
-    console.log(params.category);
     const r = await fetch(`./api/memos/${params.category}`);
     memos = await r.json();
   });

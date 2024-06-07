@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { LexicalEditor } from "lexical";
-  import { pop } from "svelte-spa-router";
   import { INSERT_IMAGE_COMMAND } from "../ImagesPlugin/index.js";
   import type { ImagePayload } from "../ImagesPlugin/ImageNode.js";
 
@@ -21,7 +20,7 @@
     data.append("file", file);
     try {
       const init = { method: "post", body: data };
-      const r = await fetch(`./api/diary/images`, init);
+      const r = await fetch(`./api/images`, init);
       if (r.status === 200) {
         document.querySelector("#dialog")?.classList.remove("is-active");
         const f = await r.text();
@@ -29,14 +28,12 @@
           src: f,
           altText: "イメージ",
         };
-        console.log(payload);
         editor.dispatchCommand(INSERT_IMAGE_COMMAND, payload);
         //pop();
       } else {
         message = await r.text();
       }
     } catch (e) {
-      console.log(e);
       message = "ファイルを保存できませんでした";
     } finally {
       document.querySelector("#progress")?.classList.add("is-hidden");

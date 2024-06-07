@@ -84,7 +84,7 @@
           <i class="material-icons">format_bold</i>
         </button>
       </div>
-      <div class="level-item">
+      <div class="level-item is-hidden">
         <button
           id="italicButton"
           class="button is-ghost p-0"
@@ -94,7 +94,7 @@
           <i class="material-icons">format_italic</i>
         </button>
       </div>
-      <div class="level-item">
+      <div class="level-item is-hidden">
         <button
           id="underButton"
           class="button is-ghost p-0"

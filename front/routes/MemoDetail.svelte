@@ -3,7 +3,6 @@
   import type { memoType } from "../models/memoModels.js";
   import { onMount } from "svelte";
   import RichInput from "../components/RichInput/index.svelte";
-  import { settingsStore } from "../store.js";
 
   const m: memoType = {
     Id: undefined,
@@ -22,15 +21,15 @@
   let changedValue: string;
   let template: string;
 
+  /*
   onMount(async () => {
     settingsStore.subscribe((s) => {
-      s.Categories.forEach((c) => {
-        if (c.Key == params.category) {
-          template = c.Template;
-        }
-      });
+      for (let index = 0; index < s.Categories.length; index++) {
+        const c = s.Categories[index];
+      }
     });
   });
+  */
 
   const sendClick = () => {
     isLoading = true;
@@ -38,9 +37,7 @@
     url += params.id === "add" ? "" : `/${params.id}`;
     let o = {};
     memo.Value = changedValue;
-    console.log(changedValue);
     if (params.id === "add") {
-      console.log(memo);
       o = { method: "put", body: JSON.stringify(memo) };
     } else {
       o = { method: "post", body: JSON.stringify(memo) };

@@ -203,6 +203,7 @@ export class ImageNode extends DecoratorNode<HTMLImageElement> {
     element.setAttribute('alt', this.__altText);
     element.setAttribute('width', this.__width.toString());
     element.setAttribute('height', this.__height.toString());
+    element.style.maxWidth = "70%"
     return element
     /*    
     return new ImageComponent({

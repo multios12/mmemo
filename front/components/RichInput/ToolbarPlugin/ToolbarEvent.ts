@@ -78,7 +78,6 @@ export const updateToolbar = (): { para: string, linkValue: string | undefined }
     menuElement.classList.remove("is-hidden");
     const linkNode = <LinkNode>p;
     linkValue = linkNode.getURL();
-    console.log(`linkValue=${linkValue}`);
   } else {
     menuElement.classList.add("is-hidden");
   }

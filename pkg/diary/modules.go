@@ -57,10 +57,18 @@ func removeDetail(day string) error {
 		}
 	}
 
+	// データファイルの削除
 	filename := strings.ReplaceAll(day, "-", "") + ".txt"
 	filename = path.Join(diaryPath, filename)
 	if _, err := os.Stat(filename); err == nil {
 		os.Remove(filename)
+	}
+
+	// 画像ディレクトリの削除
+	dirname := strings.ReplaceAll(day, "-", "")
+	dirname = path.Join(diaryPath, dirname)
+	if _, err := os.Stat(dirname); err == nil {
+		os.RemoveAll(dirname)
 	}
 
 	return m.writeListFile(month)

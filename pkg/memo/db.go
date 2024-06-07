@@ -45,10 +45,11 @@ func findMemosByMonth(category string, month string) (memos []Memo) {
 	return memos
 }
 
-func upsertMemo(m Memo) {
+func upsertMemo(m Memo) Memo {
 	db.Clauses(clause.OnConflict{
 		UpdateAll: true,
 	}).Create(&m)
+	return m
 }
 
 func deleteMemo(id string) {

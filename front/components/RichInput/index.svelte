@@ -60,8 +60,12 @@
   // リンクURLの更新
   const linkOK = () => {
     editor.update(() => {
-      console.log(`linkValue=${linkValue}`);
       _toggleLink(linkValue);
+    });
+  };
+  const linkDel = () => {
+    editor.update(() => {
+      _toggleLink(null);
     });
   };
 </script>
@@ -83,11 +87,11 @@
                 bind:value={linkValue}
               />
             </p>
-            <p class="control m-0">
+            <p class="buttons m-0">
               <button class="button is-info is-small" on:click={linkOK}>
-                <i class="material-icons">ok</i>
+                <i class="material-icons">link</i>
               </button>
-              <button class="button is-small">
+              <button class="button is-danger is-small" on:click={linkDel}>
                 <i class="material-icons">delete</i>
               </button>
             </p>
@@ -106,11 +110,13 @@
     width: 100%;
     min-height: 150px;
   }
+  /* 
   #lexical-state {
     width: 100%;
     min-height: 150px;
     font-size: 10px;
   }
+  */
   #link-menu {
     position: absolute;
     width: 400px;

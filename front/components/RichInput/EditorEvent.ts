@@ -26,8 +26,8 @@ const LowPriority = 1;
 /** LexicalEditorの初期化 */
 export const InitialEditor = async (
   detailElement: HTMLElement,
-  menuElement: HTMLDivElement,
   richElement: HTMLDivElement,
+  menuElement: HTMLDivElement,
   doCanUndo: (p: boolean) => boolean,
   doCanRedo: (p: boolean) => boolean,
   toolBarListener: UpdateListener,

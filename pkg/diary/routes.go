@@ -1,8 +1,6 @@
 package diary
 
 import (
-	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path"
@@ -10,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/multios12/mmemo/pkg/images"
 )
 
 // gin.Engineインスタンスにルーティングを設定して返す
@@ -23,8 +22,7 @@ func Initial(router *gin.Engine, dataPath string) {
 	router.GET("/api/diary/:year/:month/:day", getDetail)
 	router.POST("/api/diary/:year/:month/:day", postDetail)
 	router.DELETE("/api/diary/:year/:month/:day", deleteDetail)
-	router.POST("/api/diary/images", postImage)
-	router.GET("/api/diary/images/:file", getImage)
+	router.GET("/api/diary/:year/:month/:day/images/:file", getImage)
 }
 
 func getMonth(c *gin.Context) {
@@ -51,13 +49,25 @@ func postDetail(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else if detail.Outline = strings.TrimSpace(detail.Outline); detail.Outline == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "outline is not found."})
-	} else {
-		detail.Day = day
-		if err = detail.writeDetailFile(); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		}
-		c.Status(http.StatusOK)
 	}
+	detail.Day = day
+
+	// 一時保存画像をdiaryデータパスに移動
+	newDirPath := c.Param("year") + c.Param("month") + c.Param("day")
+	newDirPath = path.Join(diaryPath, newDirPath) + "/"
+	imageTemplate := "![イメージ](/api/diary/" + c.Param("year") + "/" + c.Param("month") + "/" + c.Param("day") + "/images/%s)"
+	d, err := images.MoveTempImages(detail.Detail, newDirPath, imageTemplate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	detail.Detail = d
+
+	if err = detail.writeDetailFile(); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusOK)
 }
 
 func deleteDetail(c *gin.Context) {
@@ -69,44 +79,9 @@ func deleteDetail(c *gin.Context) {
 	}
 }
 
-func postImage(c *gin.Context) {
-	filename := path.Join(diaryPath, "_")
-
-	for i := 0; i < 99999999; i++ {
-		n := filename + fmt.Sprintf("%08d.png", i)
-		if _, err := os.Stat(n); err != nil {
-			filename = n
-			break
-		}
-	}
-
-	inFile, _, err := c.Request.FormFile("file")
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	outFile, err := os.Create(filename)
-	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-	defer outFile.Close()
-
-	_, err = io.Copy(outFile, inFile)
-	if err != nil {
-		err = fmt.Errorf("ファイルが保存できません: %w", err)
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	filename = filepath.Base(filename)
-	filename = path.Join("./api/diary/images", filename)
-	c.String(http.StatusOK, filename)
-}
-
 func getImage(c *gin.Context) {
-	filename := path.Join(diaryPath, c.Param("file"))
+	filename := c.Param("year") + c.Param("month") + c.Param("day")
+	filename = path.Join(diaryPath, filename, c.Param("file"))
 	if b, err := os.ReadFile(filename); err == nil {
 		c.Data(http.StatusOK, "image/png", b)
 	}

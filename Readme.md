@@ -50,5 +50,24 @@ remove:削除
 update: dependencies
   外部モジュール更新
 
+## 正規表現メモ
 
-git tag -a v1.0.0 -m ''; git push origin --tags
+* markdown画像の取得
+```
+(?:!\[([^[]+)\])(?:\((?:([^()\s]+)(?:\s"((?:[^"]*\\")*[^"]*)"\s*)?)\))$
+```
+
+* markdown画像の取得(URLが、"/api/images/tmp_"から始まるもののみ)
+```
+(?:!\[([^[]+)\])(?:\((?:(\/api\/images\/tmp_[^()\s]+)(?:\s"((?:[^"]*\\")*[^"]*)"\s*)?)\))$
+```
+
+```
+![イメージ](/api/diary/2024/06/06/images/00000004.png)
+![イメージ](/api/diary/2024/06/06/images/00000004.png "テスト")
+
+![イメージ](/api/images/tmp_00000004.png)
+![イメージ](/api/images/tmp_00000004.png "テスト")
+```
+
+git tag -a v1.1.0 -m ''; git push origin --tags

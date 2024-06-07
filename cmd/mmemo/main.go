@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/multios12/mmemo/pkg/diary"
+	"github.com/multios12/mmemo/pkg/images"
 	"github.com/multios12/mmemo/pkg/memo"
 )
 
@@ -45,7 +46,7 @@ func main() {
 	// モジュールの初期化
 	memo.Initial(router, dataPath, setting)
 	diary.Initial(router, dataPath)
-
+	images.Initial(router, dataPath)
 	router.Run(port)
 }
 

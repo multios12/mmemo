@@ -31,7 +31,7 @@
   });
   */
 
-  const sendClick = () => {
+  const onOk = () => {
     isLoading = true;
     let url = `./api/memos/${params.category}`;
     url += params.id === "add" ? "" : `/${params.id}`;
@@ -55,7 +55,7 @@
   };
 
   /** キャンセル クリックイベント */
-  const cancelClick = () => pop();
+  const onCancel = () => pop();
 
   const deleteClick = async () => {
     let url = `./api/memos/${params.category}/${params.id}`;
@@ -142,18 +142,24 @@
     </div>
     -->
   </section>
-
-  <footer class="card-footer">
-    <div class="card-footer-item buttons">
-      <button
-        class="button is-primary"
-        disabled={isLoading}
-        class:is-loading={isLoading}
-        on:click={sendClick}
-      >
-        ok
-      </button>
-      <button class="button" on:click={cancelClick}> cancel </button>
-    </div>
-  </footer>
 </div>
+<footer class="columns is-dark is-mobile">
+  <button
+    class="column button is-primary"
+    disabled={isLoading}
+    class:is-loading={isLoading}
+    on:click={onOk}
+  >
+    ok
+  </button>
+  <button class="column button" on:click={onCancel}> cancel </button>
+</footer>
+
+<style>
+  footer {
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    position: fixed;
+  }
+</style>

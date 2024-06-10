@@ -7,8 +7,8 @@
   import HMemoList from "./routes/MemoList.svelte";
   import HMemoEdit from "./routes/MemoDetail.svelte";
   import { onMount } from "svelte";
-  import type { settingType } from "models/memoModels";
-  import { settingsStore } from "./store";
+  import type { settingType } from "./models/memoModels.js";
+  import { settingsStore } from "./store.js";
   let page = "";
 
   let routes: RouteDefinition = {
@@ -38,6 +38,19 @@
     }
   }
 
+  $: {
+    let navBar = document.querySelector<HTMLDivElement>(".navbar");
+    if ($location.substring($location.length - 1) !== "/") {
+      navBar?.classList.add("is-hidden");
+      console.log("add");
+      // document.getElementById("body")?.style.overflow = "hidden";
+    } else {
+      navBar?.classList.remove("is-hidden");
+      console.log("not add");
+    }
+  }
+
+  // navbarのバーガー開閉イベント
   document.addEventListener("DOMContentLoaded", () => {
     // Get all "navbar-burger" elements
     const $navbarBurgers = Array.prototype.slice.call(
@@ -97,9 +110,7 @@
   </div>
 </nav>
 <main>
-  <div class="box">
-    <Router {routes} />
-  </div>
+  <Router {routes} />
 </main>
 
 <style>

@@ -10,6 +10,7 @@
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "devDependencies": {
+    "@formkit/tempo": "0.1.1",
     "@lexical/code": "0.16.0",
     "@lexical/history": "0.16.0",
     "@lexical/markdown": "0.16.0",

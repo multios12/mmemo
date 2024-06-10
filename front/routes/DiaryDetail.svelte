@@ -66,7 +66,7 @@
   };
 
   /** キャンセル クリックイベント */
-  const OnCancel = () => pop();
+  const onCancel = () => pop();
 
   /** 削除 クリックイベント */
   const onDelete = async () => {
@@ -84,13 +84,19 @@
   };
 </script>
 
-<div class="card" class:is-active={editDay != null}>
+<div class="card m-0" class:is-active={editDay != null}>
   <header class="card-header sp-panel-heading">
     <input
       type="date"
       class="input"
       bind:value={editDay}
       disabled={!isDayEdit}
+    />
+    <input
+      type="text"
+      placeholder="outline"
+      class="input"
+      bind:value={Outline}
     />
     {#if !isDayEdit}
       <button
@@ -104,12 +110,6 @@
 
   <section class="card-content p-0">
     <!-- Card Content -->
-    <input
-      type="text"
-      placeholder="outline"
-      class="input"
-      bind:value={Outline}
-    />
     <div class="field">
       <div class="control">
         <TagsInput bind:items={Tags} />
@@ -119,18 +119,24 @@
       </div>
     </div>
   </section>
-
-  <footer class="card-footer">
-    <div class="card-footer-item buttons">
-      <button
-        class="button is-primary"
-        disabled={isLoading}
-        class:is-loading={isLoading}
-        on:click={onOk}
-      >
-        ok
-      </button>
-      <button class="button" on:click={OnCancel}> cancel </button>
-    </div>
-  </footer>
 </div>
+<footer class="columns is-dark is-mobile">
+  <button
+    class="column button is-primary"
+    disabled={isLoading}
+    class:is-loading={isLoading}
+    on:click={onOk}
+  >
+    ok
+  </button>
+  <button class="column button" on:click={onCancel}> cancel </button>
+</footer>
+
+<style>
+  footer {
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    position: fixed;
+  }
+</style>

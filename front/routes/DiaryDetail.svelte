@@ -7,6 +7,9 @@
 
   export let params: { id: string | undefined } = { id: undefined };
   export let Template: string;
+  let isErr = false;
+  let errMessage = "";
+
   let editDay: string | null;
   let Outline = "";
   let Detail = "";
@@ -60,9 +63,15 @@
       method: "post",
       body: JSON.stringify({ Tags, Outline, Detail: changedValue }),
     };
-    await fetch(url, init);
-    editDay = null;
-    pop();
+
+    let r = await fetch(url, init);
+    if (r.status != 200) {
+      errMessage = (await r.json()).error;
+      isErr = true;
+    } else {
+      editDay = null;
+      pop();
+    }
   };
 
   /** キャンセル クリックイベント */
@@ -84,9 +93,13 @@
   };
 </script>
 
+{#if errMessage != ""}
+  <div class="notification is-danger p-1">{errMessage}</div>
+{/if}
 <div class="card m-0" class:is-active={editDay != null}>
   <header class="card-header sp-panel-heading">
     <input
+      id="dateInput"
       type="date"
       class="input"
       bind:value={editDay}
@@ -138,5 +151,8 @@
     bottom: 0;
     width: 100%;
     position: fixed;
+  }
+  #dateInput {
+    width: 150px;
   }
 </style>

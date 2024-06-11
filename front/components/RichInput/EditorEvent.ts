@@ -21,6 +21,7 @@ import type { EventDispatcher } from "svelte";
 import { ImageNode } from "./ImagesPlugin/ImageNode.js"
 import { registerInsertImageCommand } from "./ImagesPlugin/index.js";
 import { IMAGE } from "./MarkdownTransformers.js"
+import { LineBreakPlugin } from "./LineBreakCommand.js";
 const LowPriority = 1;
 
 /** LexicalEditorの初期化 */
@@ -108,7 +109,8 @@ export const InitialEditor = async (
     editor.registerCommand(CAN_UNDO_COMMAND, (p) => doCanUndo(p), LowPriority),
     editor.registerCommand(CAN_REDO_COMMAND, (p) => doCanRedo(p), LowPriority),
     editor.registerCommand(TOGGLE_LINK_COMMAND, linkCommand, LowPriority),
-    registerInsertImageCommand(editor)
+    registerInsertImageCommand(editor),
+    LineBreakPlugin(editor),
   );
 
   // デバッグ情報出力リスナ登録

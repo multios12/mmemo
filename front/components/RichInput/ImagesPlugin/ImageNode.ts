@@ -1,25 +1,9 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
-import type {
-  DOMConversionMap,
-  DOMConversionOutput,
-  DOMExportOutput,
-  EditorConfig,
-  LexicalEditor,
-  LexicalNode,
-  NodeKey,
-  SerializedEditor,
-  SerializedLexicalNode,
-  Spread,
-} from 'lexical';
+import type { DOMConversionMap, DOMConversionOutput, DOMExportOutput, } from 'lexical';
+import type { EditorConfig, LexicalEditor, LexicalNode, } from 'lexical';
+import type { NodeKey, SerializedEditor, SerializedLexicalNode, Spread, } from 'lexical';
 import { $applyNodeReplacement, createEditor, DecoratorNode } from 'lexical';
 
+/** イメージペイロード */
 export interface ImagePayload {
   altText: string;
   caption?: LexicalEditor;
@@ -32,29 +16,7 @@ export interface ImagePayload {
   captionsEnabled?: boolean;
 }
 
-function convertImageElement(domNode: Node): null | DOMConversionOutput {
-  const img = domNode as HTMLImageElement;
-  if (img.src.startsWith('file:///')) {
-    return null;
-  }
-  const { alt: altText, src, width, height } = img;
-  const node = $createImageNode({ altText, height, src, width });
-  return { node };
-}
-
-export type SerializedImageNode = Spread<
-  {
-    altText: string;
-    caption: SerializedEditor;
-    height?: number;
-    maxWidth: number;
-    showCaption: boolean;
-    src: string;
-    width?: number;
-  },
-  SerializedLexicalNode
->;
-
+/** イメージノードクラス */
 export class ImageNode extends DecoratorNode<HTMLImageElement> {
   __src: string;
   __altText: string;
@@ -121,6 +83,7 @@ export class ImageNode extends DecoratorNode<HTMLImageElement> {
     };
   }
 
+  /** コンストラクタ */
   constructor(
     src: string,
     altText: string,
@@ -172,7 +135,6 @@ export class ImageNode extends DecoratorNode<HTMLImageElement> {
   }
 
   // View
-
   createDOM(config: EditorConfig): HTMLElement {
     const div = document.createElement('div');
     const theme = config.theme;
@@ -205,24 +167,30 @@ export class ImageNode extends DecoratorNode<HTMLImageElement> {
     element.setAttribute('height', this.__height.toString());
     element.style.maxWidth = "70%"
     return element
-    /*    
-    return new ImageComponent({
-          target: document.body,
-          props: {
-            src: this.__src,
-            alt: this.__altText,
-            width: <number>this.__width,
-            height: <number>this.__height,
-            // maxWidth: String(this.__maxWidth),
-            // nodeKey = this.getKey()
-            // showCaption = this.__showCaption
-            // caption = this.__caption
-            // captionsEnabled = this.__captionsEnabled
-            // resizable = true
-          }
-        });
-        */
   }
+}
+
+export type SerializedImageNode = Spread<
+  {
+    altText: string;
+    caption: SerializedEditor;
+    height?: number;
+    maxWidth: number;
+    showCaption: boolean;
+    src: string;
+    width?: number;
+  },
+  SerializedLexicalNode
+>;
+
+function convertImageElement(domNode: Node): null | DOMConversionOutput {
+  const img = domNode as HTMLImageElement;
+  if (img.src.startsWith('file:///')) {
+    return null;
+  }
+  const { alt: altText, src, width, height } = img;
+  const node = $createImageNode({ altText, height, src, width });
+  return { node };
 }
 
 /** イメージノードの作成 */

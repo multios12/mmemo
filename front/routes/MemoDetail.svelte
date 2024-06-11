@@ -82,7 +82,20 @@
 
 <div class="card">
   <header class="card-header sp-panel-heading">
-    <p class="card-header-title" />
+    <input
+      class="input"
+      type="text"
+      name="name"
+      bind:value={memo.Name}
+      placeholder="name"
+    />
+    <input
+      id="dateInput"
+      class="input"
+      type="text"
+      name="date"
+      bind:value={memo.Date}
+    />
     <button
       class="button is-inverted is-small has-text-danger sp-right"
       on:click={deleteClick}
@@ -96,51 +109,13 @@
       <div class="notification is-danger">{errMessage}</div>
     {/if}
     <div class="columns m-0">
-      <div class="field column m-0">
-        <label class="label" for="name">name</label>
-        <div class="control">
-          <input class="input" type="text" name="name" bind:value={memo.Name} />
-        </div>
-      </div>
       <div class="field column">
-        <label class="label" for="date">date</label>
-        <div class="control">
-          <input class="input" type="text" name="date" bind:value={memo.Date} />
-        </div>
+        <div class="control"></div>
       </div>
     </div>
     <div class="field">
-      <label class="label" for="value"> value </label>
       <RichInput bind:value={memo.Value} on:textChange={onTextChange} />
     </div>
-    <!--
-    <div class="columns m-0">
-      <div class="field column">
-        <label class="label" for="shop">shop</label>
-        <div class="control">
-          <input class="input" type="text" name="shop" bind:value={memo.Shop} />
-        </div>
-      </div>
-      <div class="field column">
-        <label class="label" for="page">home page</label>
-        <div class="control">
-          <input class="input" type="text" name="page" bind:value={memo.Page} />
-        </div>
-      </div>
-    </div>
-    <div class="field">
-      <label class="label" for="play">play</label>
-      <div class="control">
-        <textarea class="textarea" name="play" bind:value={memo.Play} />
-      </div>
-    </div>
-    <div class="field">
-      <label class="label" for="talk">talk</label>
-      <div class="control">
-        <textarea class="textarea" name="talk" bind:value={memo.Talk} />
-      </div>
-    </div>
-    -->
   </section>
 </div>
 <footer class="columns is-dark is-mobile">
@@ -161,5 +136,8 @@
     bottom: 0;
     width: 100%;
     position: fixed;
+  }
+  #dateInput {
+    width: 150px;
   }
 </style>

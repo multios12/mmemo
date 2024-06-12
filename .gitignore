@@ -10,5 +10,6 @@
 /__debug_bin.exe
 /static/static
 /cmd/mmemo/static/*.html
-/cmd/mmemo/static/favicon.ico
 /cmd/mmemo/static/asset-manifest.json
+/cmd/mmemo/static/favicon.ico
+/cmd/mmemo/static/manifest.json

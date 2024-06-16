@@ -2,6 +2,10 @@
   import Router, { link, push } from "svelte-spa-router";
   import { onMount } from "svelte";
   import type { memoType } from "../models/memoModels.js";
+  import { dom, library } from "@fortawesome/fontawesome-svg-core";
+  import { faPlus, faNoteSticky } from "@fortawesome/free-solid-svg-icons";
+  library.add(faPlus, faNoteSticky);
+  dom.watch();
 
   // ルーティングパラメータ
   export let params: { category: string | undefined } = { category: undefined };
@@ -20,9 +24,10 @@
   <div class="card-content">
     <div class="columns">
       <div class="column">
-        <a class="button is-primary" href={`/${params.category}/add`} use:link
-          ><i class="material-icons">add</i>add</a
-        >
+        <a class="button is-primary" href={`/${params.category}/add`} use:link>
+          <i class="fa-solid fa-plus"></i>
+          add
+        </a>
       </div>
     </div>
 

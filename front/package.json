@@ -10,6 +10,8 @@
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "devDependencies": {
+    "@fortawesome/fontawesome-svg-core": "6.5.2",
+    "@fortawesome/free-solid-svg-icons": "6.5.2",
     "@formkit/tempo": "0.1.1",
     "@lexical/code": "0.16.0",
     "@lexical/history": "0.16.0",

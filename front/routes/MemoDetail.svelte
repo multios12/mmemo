@@ -3,6 +3,10 @@
   import type { memoType } from "../models/memoModels.js";
   import { onMount } from "svelte";
   import RichInput from "../components/RichInput/index.svelte";
+  import { dom, library } from "@fortawesome/fontawesome-svg-core";
+  import { faTrash } from "@fortawesome/free-solid-svg-icons";
+  library.add(faTrash);
+  dom.watch();
 
   const m: memoType = {
     Id: undefined,
@@ -100,7 +104,7 @@
       class="button is-inverted is-small has-text-danger sp-right"
       on:click={deleteClick}
     >
-      <i class="material-icons">delete</i>
+      <i class="fa-solid fa-trash"></i>
     </button>
   </header>
 

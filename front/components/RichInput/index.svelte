@@ -11,6 +11,10 @@
   import { InitialEditor } from "./EditorEvent.js";
   import { createEventDispatcher } from "svelte";
   import { IMAGE } from "./MarkdownTransformers.js";
+  import { dom, library } from "@fortawesome/fontawesome-svg-core";
+  import { faLink, faTrash } from "@fortawesome/free-solid-svg-icons";
+  library.add(faLink, faTrash);
+  dom.watch();
 
   /** 入力値 */
   export let value: string;
@@ -103,10 +107,10 @@
             </p>
             <p class="buttons m-0">
               <button class="button is-info is-small" on:click={linkOK}>
-                <i class="material-icons">link</i>
+                <i class="fa-solid fa-link"></i>
               </button>
               <button class="button is-danger is-small" on:click={linkDel}>
-                <i class="material-icons">delete</i>
+                <i class="fa-solid fa-trash"></i>
               </button>
             </p>
           </div>

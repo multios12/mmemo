@@ -6,6 +6,18 @@
   import { onMount } from "svelte";
   import Dropdown from "../../Dropdown.svelte";
   import ImageButton from "./ImageButton.svelte";
+  import { dom, library } from "@fortawesome/fontawesome-svg-core";
+  import { faRotateLeft } from "@fortawesome/free-solid-svg-icons";
+  import { faRotateRight } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faBold,
+    faItalic,
+    faUnderline,
+    faLink,
+  } from "@fortawesome/free-solid-svg-icons";
+  library.add(faRotateLeft, faRotateRight);
+  library.add(faBold, faItalic, faUnderline, faLink);
+  dom.watch();
 
   /** lexical Editor */
   export let editor: LexicalEditor;
@@ -51,7 +63,7 @@
           tabindex="-1"
           on:click={undo}
         >
-          <i class="material-icons">undo</i>
+          <i class="fa-solid fa-rotate-left"></i>
         </button>
       </div>
       <div class="level-item">
@@ -61,7 +73,7 @@
           tabindex="-1"
           on:click={redo}
         >
-          <i class="material-icons">redo</i>
+          <i class="fa-solid fa-rotate-right"></i>
         </button>
       </div>
 
@@ -81,7 +93,7 @@
           tabindex="-1"
           on:click={formatBold}
         >
-          <i class="material-icons">format_bold</i>
+          <i class="fa-solid fa-bold"></i>
         </button>
       </div>
       <div class="level-item is-hidden">
@@ -91,7 +103,7 @@
           tabindex="-1"
           on:click={formatItalic}
         >
-          <i class="material-icons">format_italic</i>
+          <i class="fa-solid fa-italic"></i>
         </button>
       </div>
       <div class="level-item is-hidden">
@@ -101,7 +113,7 @@
           tabindex="-1"
           on:click={formatUnderline}
         >
-          <i class="material-icons">format_underlined</i>
+          <i class="fa-solid fa-underline"></i>
         </button>
       </div>
       <div class="level-item">
@@ -111,7 +123,7 @@
           tabindex="-1"
           on:click={toggleLink}
         >
-          <i class="material-icons">link</i>
+          <i class="fa-solid fa-link"></i>
         </button>
       </div>
       <div class="level-item">

@@ -1,6 +1,11 @@
 <script lang="ts">
   import { push } from "svelte-spa-router";
   import type { listType } from "../models/diaryModels.js";
+  import { dom, library } from "@fortawesome/fontawesome-svg-core";
+  import { faPlus, faNoteSticky } from "@fortawesome/free-solid-svg-icons";
+  library.add(faPlus, faNoteSticky);
+  dom.watch();
+
   export let selectMonth: string | null = `${new Date().getFullYear()}-${(
     "00" +
     (new Date().getMonth() + 1)
@@ -55,9 +60,9 @@
         </div>
       </div>
       <div class="column">
-        <button class="button is-primary" on:click={addClick}
-          ><i class="material-icons">add</i>add</button
-        >
+        <button class="button is-primary" on:click={addClick}>
+          <i class="fa-solid fa-plus"></i>
+        </button>
       </div>
     </div>
     <table class="table is-hoverable is-fullwidth">
@@ -67,20 +72,19 @@
             <td>
               <button>
                 {v.Day}
-                {v.Outline}{#if v.IsDetail}<i
-                    class="material-icons has-text-grey-light"
-                    style="vertical-align:middle">note</i
-                  >{/if}</button
-              >
+                {v.Outline}{#if v.IsDetail}
+                  <i
+                    class="fa-solid fa-note-sticky has-text-grey-light"
+                    style="vertical-align:middle"
+                  ></i>
+                {/if}
+              </button>
             </td>
             <td>
               <div class="tags are-medium">
                 {#each v.Tags as t}
                   <span class="tag">{t}</span>
                 {/each}
-                {#if v.HCount > 0}
-                  <i class="material-icons">local_activity</i>
-                {/if}
               </div>
             </td>
           </tr>

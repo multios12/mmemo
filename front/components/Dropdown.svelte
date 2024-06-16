@@ -1,5 +1,10 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
+  import { dom, library } from "@fortawesome/fontawesome-svg-core";
+  import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
+  library.add(faCaretDown);
+  dom.watch();
+
   const dispatch = createEventDispatcher();
 
   /** 選択アイテムのリスト */
@@ -42,7 +47,7 @@
     >
       <span>{value}</span>
       <span class="icon is-small">
-        <i class="material-icons">arrow_drop_down</i>
+        <i class="fa-solid fa-caret-down"></i>
       </span>
     </button>
   </div>

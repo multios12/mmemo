@@ -4,6 +4,10 @@
   import TagsInput from "../components/TagsInput.svelte";
   import type { detailType } from "../models/diaryModels.js";
   import RichInput from "../components/RichInput/index.svelte";
+  import { dom, library } from "@fortawesome/fontawesome-svg-core";
+  import { faTrash } from "@fortawesome/free-solid-svg-icons";
+  library.add(faTrash);
+  dom.watch();
 
   export let params: { id: string | undefined } = { id: undefined };
   export let Template: string;
@@ -116,7 +120,7 @@
         class="button is-inverted is-small has-text-danger"
         on:click={onDelete}
       >
-        <i class="material-icons">delete</i>
+        <i class="fa-solid fa-trash"></i>
       </button>
     {/if}
   </header>

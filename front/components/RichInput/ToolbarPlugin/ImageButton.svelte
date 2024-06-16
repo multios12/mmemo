@@ -2,6 +2,10 @@
   import type { LexicalEditor } from "lexical";
   import { INSERT_IMAGE_COMMAND } from "../ImagesPlugin/index.js";
   import type { ImagePayload } from "../ImagesPlugin/ImageNode.js";
+  import { dom, library } from "@fortawesome/fontawesome-svg-core";
+  import { faImage } from "@fortawesome/free-solid-svg-icons";
+  library.add(faImage);
+  dom.watch();
 
   export let editor: LexicalEditor;
   /** メッセージ */
@@ -52,7 +56,7 @@
   tabindex="-1"
   on:click={toggleClick}
 >
-  <i class="material-icons"> image </i>
+  <i class="fa-solid fa-image"></i>
 </button>
 
 <div class="modal" id="dialog">

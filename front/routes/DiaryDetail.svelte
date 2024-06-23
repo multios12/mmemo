@@ -21,8 +21,42 @@
   let isDayEdit: boolean;
   let isLoading: boolean;
   let changedValue: string;
+  let innerHeight: number;
+  let innerWidth: number;
+  // メニューバー非表示化
+  document.querySelector<HTMLDivElement>(".navbar")?.classList.add("is-hidden");
 
+  // テキスト部の高さ調整
+  $: {
+    let a = innerHeight + innerWidth + 1;
+    let headRect = document.querySelector("header")?.getBoundingClientRect();
+    let footRect = document.querySelector("footer")?.getBoundingClientRect();
+    let barRect = document.querySelector("#toolbar")?.getBoundingClientRect();
+    if (footRect && headRect && barRect) {
+      let height =
+        innerHeight - headRect.height - footRect.height - barRect.height - 30;
+      document
+        .querySelector<HTMLDivElement>("#detail")
+        ?.style.setProperty("height", height + "px");
+    }
+  }
+
+  /** マウントイベント */
   onMount(async () => {
+    // コントロールの位置調整
+    let headerRect = document.querySelector("header")?.getBoundingClientRect();
+    let barRect = document.querySelector("#toolbar")?.getBoundingClientRect();
+    if (headerRect !== undefined && barRect !== undefined) {
+      let bar = document.querySelector<HTMLDivElement>("#toolbar");
+      bar?.style.setProperty("position", "fixed");
+      bar?.style.setProperty("top", headerRect.height + 5 + "px");
+      bar?.style.setProperty("width", "100%");
+
+      let rich = document.querySelector<HTMLDivElement>("#rich");
+      let top = headerRect.height + barRect.height;
+      rich?.style.setProperty("margin-top", top + "px");
+    }
+
     isLoading = true;
     if ($location.indexOf("/add") > -1) {
       isDayEdit = true;
@@ -97,60 +131,87 @@
   };
 </script>
 
+<svelte:window bind:innerHeight bind:innerWidth />
+
 {#if errMessage != ""}
   <div class="notification is-danger p-1">{errMessage}</div>
 {/if}
-<div class="card m-0" class:is-active={editDay != null}>
-  <header class="card-header sp-panel-heading">
-    <input
-      id="dateInput"
-      type="date"
-      class="input"
-      bind:value={editDay}
-      disabled={!isDayEdit}
-    />
-    <input
-      type="text"
-      placeholder="outline"
-      class="input"
-      bind:value={Outline}
-    />
-    {#if !isDayEdit}
-      <button
-        class="button is-inverted is-small has-text-danger"
-        on:click={onDelete}
-      >
-        <i class="fa-solid fa-trash"></i>
-      </button>
-    {/if}
-  </header>
 
-  <section class="card-content p-0">
-    <!-- Card Content -->
-    <div class="field">
-      <div class="control">
-        <TagsInput bind:items={Tags} />
-      </div>
-      <div class="control py-2">
-        <RichInput bind:value={Detail} on:textChange={onTextChange} />
-      </div>
+<header>
+  <nav class="level is-mobile m-0">
+    <div class="level-item title-left">
+      <input
+        id="dateInput"
+        type="date"
+        class="input"
+        bind:value={editDay}
+        disabled={!isDayEdit}
+      />
+      <input
+        type="text"
+        placeholder="outline"
+        class="input"
+        bind:value={Outline}
+      />
     </div>
-  </section>
-</div>
-<footer class="columns is-dark is-mobile">
-  <button
-    class="column button is-primary"
-    disabled={isLoading}
-    class:is-loading={isLoading}
-    on:click={onOk}
-  >
-    ok
-  </button>
-  <button class="column button" on:click={onCancel}> cancel </button>
+    {#if !isDayEdit}
+      <div class="level-right">
+        <div class="level-item">
+          <div class="column p-0">
+            <button class="button has-text-danger" on:click={onDelete}>
+              <i class="fa-solid fa-trash" />
+            </button>
+          </div>
+        </div>
+      </div>
+    {/if}
+  </nav>
+  <div class="control">
+    <TagsInput bind:items={Tags} />
+  </div>
+</header>
+
+<section class="p-0">
+  <div class="field">
+    <div class="control py-2">
+      <RichInput bind:value={Detail} on:textChange={onTextChange} />
+    </div>
+  </div>
+</section>
+<footer class="is-dark m-0">
+  <div class="level is-mobile m-0">
+    <div class="level-item p-0">
+      <button
+        class="button is-primary"
+        disabled={isLoading}
+        class:is-loading={isLoading}
+        on:click={onOk}
+      >
+        保存
+      </button>
+    </div>
+    <div class="level-item">
+      <button class="button" on:click={onCancel}> cancel </button>
+    </div>
+  </div>
 </footer>
 
 <style>
+  /* タイトルテキストボックスを300px以下に縮小できるよう調整 */
+  .title-left {
+    flex-basis: 100px;
+  }
+  header {
+    background-color: var(--bulma-border);
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin: 0;
+    z-index: 999;
+  }
   footer {
+    background-color: var(--bulma-border);
     left: 0;
     bottom: 0;
     width: 100%;

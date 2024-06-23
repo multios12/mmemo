@@ -53,7 +53,7 @@
   const onChange = (e: CustomEvent<any>) => onParagraphChange(editor, e.detail);
 </script>
 
-<div class="panel-heading py-1">
+<div id="toolbar" class="panel-heading py-1">
   <div class="level is-mobile">
     <div class="level-left">
       <div class="level-item">

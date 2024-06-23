@@ -35,18 +35,14 @@
   onMount(async () => {
     let detailRect = document.querySelector("#detail")?.getBoundingClientRect();
     let footerRect = document.querySelector("footer")?.getBoundingClientRect();
-    if (
-      detailRect !== undefined &&
-      footerRect !== undefined &&
-      detailRect.top !== undefined &&
-      footerRect.top !== undefined
-    ) {
-      let height = footerRect.top - detailRect.top;
+    if (detailRect !== undefined && footerRect !== undefined) {
+      let height = footerRect.top - detailRect.top - 100;
       let a = height + "px";
       document
         .querySelector<HTMLDivElement>("#detail")
         ?.style.setProperty("height", a);
     }
+
     // LexicalEditorの初期化
     editor = await InitialEditor(
       document.getElementById("detail") as HTMLElement,
@@ -126,8 +122,9 @@
 <style>
   #detail {
     overflow: auto;
-    width: 100%;
+    width: 99%;
     min-height: 150px;
+    margin-left: 2px;
   }
   /* 
   #lexical-state {

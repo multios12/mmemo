@@ -7,6 +7,11 @@
   library.add(faPlus, faNoteSticky);
   dom.watch();
 
+  // メニューバー表示化
+  document
+    .querySelector<HTMLDivElement>(".navbar")
+    ?.classList.remove("is-hidden");
+
   // ルーティングパラメータ
   export let params: { category: string | undefined } = { category: undefined };
 

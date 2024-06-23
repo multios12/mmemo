@@ -6,8 +6,9 @@
   import DiaryEdit from "./routes/DiaryDetail.svelte";
   import HMemoList from "./routes/MemoList.svelte";
   import HMemoEdit from "./routes/MemoDetail.svelte";
+  import Planner from "./routes/Planner/Planner.svelte";
   import { onMount } from "svelte";
-  import type { settingType } from "./models/memoModels.js";
+  import type { settingType } from "./models/settingType.js";
   import { settingsStore } from "./store.js";
   let page = "";
 
@@ -15,6 +16,7 @@
     "/": DiaryList,
     "/d/:id": DiaryEdit,
     "/d/add": DiaryEdit,
+    "/planner/": Planner,
     "/:category/": HMemoList,
     "/:category/:id": HMemoEdit,
     "/:category/add": HMemoEdit,
@@ -35,18 +37,6 @@
           page = category.Key;
         }
       }
-    }
-  }
-
-  $: {
-    let navBar = document.querySelector<HTMLDivElement>(".navbar");
-    if ($location.substring($location.length - 1) !== "/") {
-      navBar?.classList.add("is-hidden");
-      console.log("add");
-      // document.getElementById("body")?.style.overflow = "hidden";
-    } else {
-      navBar?.classList.remove("is-hidden");
-      console.log("not add");
     }
   }
 
@@ -106,6 +96,15 @@
           </a>
         {/each}
       {/if}
+      <!--
+      <a
+        class="navbar-item is-unselectable is-tab"
+        class:is-active={page === "/planner/"}
+        href="/planner"
+        use:link
+        >planner
+      </a>
+      -->
     </div>
   </div>
 </nav>

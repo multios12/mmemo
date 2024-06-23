@@ -3,8 +3,8 @@
   import { INSERT_IMAGE_COMMAND } from "../ImagesPlugin/index.js";
   import type { ImagePayload } from "../ImagesPlugin/ImageNode.js";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
-  import { faImage } from "@fortawesome/free-solid-svg-icons";
-  library.add(faImage);
+  import { faImage, faUpload } from "@fortawesome/free-solid-svg-icons";
+  library.add(faImage, faUpload);
   dom.watch();
 
   export let editor: LexicalEditor;
@@ -81,7 +81,7 @@
           />
           <span class="file-cta">
             <span class="file-icon">
-              <span class="material-icons"> file_upload </span>
+              <i class="fa-solid fa-upload"> file_upload </i>
             </span>
             <span class="file-label"> Choose a file… </span>
             <progress

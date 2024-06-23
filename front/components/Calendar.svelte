@@ -9,9 +9,9 @@
 
   type dayType = {
     date: Date;
-    isHoliday: boolean;
-    isSaturday: boolean;
-    isDisable: boolean;
+    isHoliday?: boolean;
+    isSaturday?: boolean;
+    isDisable?: boolean;
   };
 
   onMount(async () => {

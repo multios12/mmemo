@@ -6,6 +6,11 @@
   library.add(faPlus, faNoteSticky);
   dom.watch();
 
+  // メニューバー表示化
+  document
+    .querySelector<HTMLDivElement>(".navbar")
+    ?.classList.remove("is-hidden");
+
   export let selectMonth: string | null = `${new Date().getFullYear()}-${(
     "00" +
     (new Date().getMonth() + 1)

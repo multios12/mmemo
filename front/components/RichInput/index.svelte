@@ -125,6 +125,7 @@
     width: 99%;
     min-height: 150px;
     margin-left: 2px;
+    padding: 5px;
   }
   /* 
   #lexical-state {

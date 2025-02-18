@@ -13,7 +13,7 @@
 1. vscodeでフォルダを開く
 2. CTRL+SHIFT+Pを押下して、コマンドパレット表示し、「Reopen in Container」を実行し、devContainerを開く
 3. 実行とデバッグで「go API Server」を選択、実行
-4. 実行とデバッグで「debug react」を選択、実行
+4. 実行とデバッグで「Launch edge against localhost」を選択、実行
 
 ## デバッグ実行
 vscode上での実行を前提。chromeを利用
@@ -24,13 +24,6 @@ vscode上での実行を前提。chromeを利用
 > ./.devcontainer/build.sh
 
 -------------------------------------------------------------
-
-## nitialize setting
-> npm i -g yarn create-react-app
-
-## create new react project
-> create-react-app --typescvript
-
 ## create new go project
 > mkdir srv
 > cd srv

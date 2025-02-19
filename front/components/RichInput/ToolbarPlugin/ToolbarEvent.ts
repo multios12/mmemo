@@ -8,7 +8,7 @@ import { $setBlocksType } from "@lexical/selection";
 /** 段落選択値 */
 export const paragraphs = [
   {
-    key: "",
+    key: "normal",
     value: "normal",
   },
   {
@@ -64,7 +64,7 @@ export const updateToolbar = (): { para: string, linkValue: string | undefined }
   } else if (p.getType() === "code") {
     para = "code";
   } else {
-    para = "";
+    para = "normal";
   }
 
   updateButton("boldButton", selection.hasFormat("bold"));

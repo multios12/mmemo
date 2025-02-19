@@ -1,3 +1,7 @@
+<!-- @migration-task Error while migrating Svelte code: Unexpected token `}`. Did you mean `&rbrace;` or `{"}"}`?
+https://svelte.dev/e/js_parse_error -->
+<!-- @migration-task Error while migrating Svelte code: Unexpected token `}`. Did you mean `&rbrace;` or `{"}"}`?
+https://svelte.dev/e/js_parse_error -->
 <script lang="ts">
   import { onMount } from "svelte";
   import { CLEAR_HISTORY_COMMAND } from "lexical";

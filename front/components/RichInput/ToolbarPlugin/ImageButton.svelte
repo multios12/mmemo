@@ -7,9 +7,13 @@
   library.add(faImage, faUpload);
   dom.watch();
 
-  export let editor: LexicalEditor;
+  interface Props {
+    editor: LexicalEditor;
+  }
+
+  let { editor }: Props = $props();
   /** メッセージ */
-  let message = "";
+  let message = $state("");
 
   /** ファイル選択イベント */
   const fileChange = async () => {
@@ -54,17 +58,17 @@
   id="linkButton"
   class="button is-ghost p-0"
   tabindex="-1"
-  on:click={toggleClick}
+  onclick={toggleClick}
 >
   <i class="fa-solid fa-image"></i>
 </button>
 
 <div class="modal" id="dialog">
-  <div class="modal-background" />
+  <div class="modal-background"></div>
   <div class="modal-card">
     <header class="modal-card-head">
       <p class="modal-card-title">Image Upload</p>
-      <button class="delete" aria-label="close" on:click={toggleClick} />
+      <button class="delete" aria-label="close" onclick={toggleClick}></button>
     </header>
     <section class="modal-card-body">
       {#if message != ""}
@@ -77,7 +81,7 @@
             class="file-input"
             type="file"
             name="resume"
-            on:change={fileChange}
+            onchange={fileChange}
           />
           <span class="file-cta">
             <span class="file-icon">
@@ -88,7 +92,7 @@
               id="progress"
               class="progress is-small is-primary is-hidden"
               max="100"
-            />
+></progress>
           </span>
         </label>
       </div>

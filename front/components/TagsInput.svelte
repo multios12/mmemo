@@ -1,6 +1,10 @@
 <script lang="ts">
-  export let items: string[] = [];
-  let value = "";
+  interface Props {
+    items?: string[];
+  }
+
+  let { items = $bindable([]) }: Props = $props();
+  let value = $state("");
 
   const onKeydown = (e: KeyboardEvent) => {
     if (e.code == "Enter" && value != "" && e.isComposing == false) {
@@ -34,8 +38,8 @@
           >{i}<button
             class="delete"
             data-value={i}
-            on:click={deleteClick}
-          /></span
+            onclick={deleteClick}
+></button></span
         >{/each}
     </div>
   </div>
@@ -45,8 +49,8 @@
       type="text"
       placeholder="Choose Tags"
       bind:value
-      on:keydown={onKeydown}
-      on:blur={onBlur}
+      onkeydown={onKeydown}
+      onblur={onBlur}
     />
   </div>
 </div>

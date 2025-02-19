@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { pop } from "svelte-spa-router";
   import type { memoType } from "../models/memoModels.js";
   import { onMount } from "svelte";
@@ -8,14 +10,14 @@
   library.add(faTrash);
   dom.watch();
 
-  let innerHeight: number;
-  let innerWidth: number;
+  let innerHeight: number = $state();
+  let innerWidth: number = $state();
 
   // メニューバー非表示化
   document.querySelector<HTMLDivElement>(".navbar")?.classList.add("is-hidden");
 
   // テキスト部の高さ調整
-  $: {
+  run(() => {
     let a = innerHeight + innerWidth + 1;
     let headRect = document.querySelector("header")?.getBoundingClientRect();
     let footRect = document.querySelector("footer")?.getBoundingClientRect();
@@ -27,7 +29,7 @@
         .querySelector<HTMLDivElement>("#detail")
         ?.style.setProperty("height", height + "px");
     }
-  }
+  });
 
   const m: memoType = {
     Id: undefined,
@@ -36,13 +38,17 @@
     Value: "",
   };
 
-  // ルーティングパラメータ
-  export let params: { id: string | undefined; category: string | undefined } =
-    { id: undefined, category: undefined };
-  let memo = m;
+  
+  interface Props {
+    // ルーティングパラメータ
+    params?: { id: string | undefined; category: string | undefined };
+  }
+
+  let { params = { id: undefined, category: undefined } }: Props = $props();
+  let memo = $state(m);
   let isErr = false;
-  let errMessage = "";
-  let isLoading = false;
+  let errMessage = $state("");
+  let isLoading = $state(false);
   let changedValue: string;
   let template: string;
 
@@ -124,8 +130,8 @@
     <div class="level-right">
       <div class="level-item">
         <div class="column p-0">
-          <button class="button has-text-danger" on:click={deleteClick}>
-            <i class="fa-solid fa-trash" />
+          <button class="button has-text-danger" onclick={deleteClick}>
+            <i class="fa-solid fa-trash"></i>
           </button>
         </div>
       </div>
@@ -147,13 +153,13 @@
         class="button is-primary"
         disabled={isLoading}
         class:is-loading={isLoading}
-        on:click={onOk}
+        onclick={onOk}
       >
         保存
       </button>
     </div>
     <div class="level-item">
-      <button class="button" on:click={onCancel}> cancel </button>
+      <button class="button" onclick={onCancel}> cancel </button>
     </div>
   </div>
 </footer>

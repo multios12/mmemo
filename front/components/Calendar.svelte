@@ -3,9 +3,13 @@
   import { monthStart, monthEnd, weekStart } from "@formkit/tempo";
   import { addDay, diffDays, format } from "@formkit/tempo";
 
-  export let Value: Date;
+  interface Props {
+    Value: Date;
+  }
 
-  let table: dayType[][] = [];
+  let { Value }: Props = $props();
+
+  let table: dayType[][] = $state([]);
 
   type dayType = {
     date: Date;

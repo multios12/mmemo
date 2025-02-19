@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { createEventDispatcher } from "svelte";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
   import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
@@ -7,14 +9,20 @@
 
   const dispatch = createEventDispatcher();
 
-  /** 選択アイテムのリスト */
-  export let items: { key: string; value: string }[];
-  /** 表示値のキー */
-  export let key: string;
+  
+  
   /** 表示値 */
-  let value: string;
+  let value: string = $state();
 
-  export let tabindex: number | null | undefined;
+  interface Props {
+    /** 選択アイテムのリスト */
+    items: { key: string; value: string }[];
+    /** 表示値のキー */
+    key: string;
+    tabindex: number | null | undefined;
+  }
+
+  let { items, key, tabindex }: Props = $props();
   /** ドロップダウン トグルイベント */
   const onToggle = () =>
     document.getElementById("dropdown")?.classList.toggle("is-active");
@@ -25,14 +33,14 @@
     onToggle();
   };
 
-  $: {
+  run(() => {
     for (let i = 0; i < items.length; i++) {
       const p = items[i];
       if (p.key === key) {
         value = p.value;
       }
     }
-  }
+  });
 </script>
 
 <div class="dropdown" id="dropdown">
@@ -43,7 +51,7 @@
       aria-controls="dropdown-menu"
       id="para-button"
       {tabindex}
-      on:click={onToggle}
+      onclick={onToggle}
     >
       <span>{value}</span>
       <span class="icon is-small">
@@ -54,7 +62,7 @@
   <div class="dropdown-menu" id="dropdown-menu" role="menu">
     <div class="dropdown-content">
       {#each items as i}
-        <button class="dropdown-item" on:click={() => onChange(i.key)}>
+        <button class="dropdown-item" onclick={() => onChange(i.key)}>
           {i.value}
         </button>
       {/each}

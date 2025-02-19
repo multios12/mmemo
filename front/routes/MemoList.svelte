@@ -12,10 +12,15 @@
     .querySelector<HTMLDivElement>(".navbar")
     ?.classList.remove("is-hidden");
 
-  // ルーティングパラメータ
-  export let params: { category: string | undefined } = { category: undefined };
+  
+  interface Props {
+    // ルーティングパラメータ
+    params?: { category: string | undefined };
+  }
 
-  let memos: memoType[] = [];
+  let { params = { category: undefined } }: Props = $props();
+
+  let memos: memoType[] = $state([]);
   const showEdit = (id: string | undefined) => {
     push(`/${params.category}/${id}`);
   };
@@ -41,8 +46,8 @@
         {#each memos as m}
           <tr>
             <td
-              on:click={() => showEdit(m.Id)}
-              on:keypress={() => showEdit(m.Id)}
+              onclick={() => showEdit(m.Id)}
+              onkeypress={() => showEdit(m.Id)}
             >
               <button class="is-fullwidth">
                 {m.Date}&nbsp;{m.Name}

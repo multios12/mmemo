@@ -57,6 +57,7 @@
   <div class="level is-mobile">
     <div class="level-left">
       <div class="level-item">
+        <!-- svelte-ignore a11y_consider_explicit_label -->
         <button
           class="button is-ghost p-0"
           disabled={!canUndo}
@@ -67,6 +68,7 @@
         </button>
       </div>
       <div class="level-item">
+        <!-- svelte-ignore a11y_consider_explicit_label -->
         <button
           class="button is-ghost p-0"
           disabled={!canRedo}
@@ -87,6 +89,7 @@
       </div>
 
       <div class="level-item">
+        <!-- svelte-ignore a11y_consider_explicit_label -->
         <button
           id="boldButton"
           class="button is-ghost p-0"
@@ -97,6 +100,7 @@
         </button>
       </div>
       <div class="level-item is-hidden">
+        <!-- svelte-ignore a11y_consider_explicit_label -->
         <button
           id="italicButton"
           class="button is-ghost p-0"
@@ -107,6 +111,7 @@
         </button>
       </div>
       <div class="level-item is-hidden">
+        <!-- svelte-ignore a11y_consider_explicit_label -->
         <button
           id="underButton"
           class="button is-ghost p-0"
@@ -117,6 +122,7 @@
         </button>
       </div>
       <div class="level-item">
+        <!-- svelte-ignore a11y_consider_explicit_label -->
         <button
           id="linkButton"
           class="button is-ghost p-0"

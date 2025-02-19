@@ -63,4 +63,4 @@ update: dependencies
 ![イメージ](/api/images/tmp_00000004.png "テスト")
 ```
 
-git tag -a v1.2.3 -m ''; git push origin --tags
+git tag -a v1.2.4 -m ''; git push origin --tags

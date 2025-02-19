@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { push } from "svelte-spa-router";
   import type { listType } from "../models/diaryModels.js";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
@@ -11,10 +13,14 @@
     .querySelector<HTMLDivElement>(".navbar")
     ?.classList.remove("is-hidden");
 
-  export let selectMonth: string | null = `${new Date().getFullYear()}-${(
+  interface Props {
+    selectMonth?: string | null;
+  }
+
+  let { selectMonth = $bindable(`${new Date().getFullYear()}-${(
     "00" +
     (new Date().getMonth() + 1)
-  ).slice(-2)}`;
+  ).slice(-2)}`) }: Props = $props();
   export const showList = () => {
     let url = selectMonth !== null ? selectMonth.replace("-", "/") : null;
     url = `./api/diary/${url}`;
@@ -29,7 +35,7 @@
       });
   };
 
-  let model: listType = { WritedMonths: [], Lines: [] };
+  let model: listType = $state({ WritedMonths: [], Lines: [] });
 
   /** 追加ボタンクリックイベント */
   const addClick = () => push("/d/add");
@@ -37,7 +43,7 @@
   /** リストクリックイベント */
   const listClick = async (e: any, l: string) => push("/d/" + l);
 
-  $: {
+  run(() => {
     let url = selectMonth !== null ? selectMonth.replace("-", "/") : null;
     url = `./api/diary/${url}`;
     fetch(url)
@@ -49,7 +55,7 @@
           selectMonth = r.WritedMonths[0];
         }
       });
-  }
+  });
 </script>
 
 <div class="card px-10">
@@ -65,7 +71,7 @@
         </div>
       </div>
       <div class="column">
-        <button class="button is-primary" on:click={addClick}>
+        <button class="button is-primary" onclick={addClick}>
           <i class="fa-solid fa-plus"></i>
         </button>
       </div>
@@ -73,7 +79,7 @@
     <table class="table is-hoverable is-fullwidth">
       <tbody>
         {#each model.Lines as v}
-          <tr on:click={(e) => listClick(e, v.Day)}>
+          <tr onclick={(e) => listClick(e, v.Day)}>
             <td>
               <button>
                 {v.Day}

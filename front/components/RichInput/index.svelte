@@ -1,3 +1,7 @@
+<!-- @migration-task Error while migrating Svelte code: Unexpected token `}`. Did you mean `&rbrace;` or `{"}"}`?
+https://svelte.dev/e/js_parse_error -->
+<!-- @migration-task Error while migrating Svelte code: Unexpected token `}`. Did you mean `&rbrace;` or `{"}"}`?
+https://svelte.dev/e/js_parse_error -->
 <script lang="ts">
   import { onMount } from "svelte";
   import { CLEAR_HISTORY_COMMAND } from "lexical";
@@ -102,9 +106,11 @@
               />
             </p>
             <p class="buttons m-0">
+              <!-- svelte-ignore a11y_consider_explicit_label -->
               <button class="button is-info is-small" on:click={linkOK}>
                 <i class="fa-solid fa-link"></i>
               </button>
+              <!-- svelte-ignore a11y_consider_explicit_label -->
               <button class="button is-danger is-small" on:click={linkDel}>
                 <i class="fa-solid fa-trash"></i>
               </button>
@@ -114,8 +120,8 @@
       </div>
     </div>
   </div>
+  <textarea id="lexical-state"> </textarea>
   <!-- デバッグテキストエリア
-  <textarea id="lexical-state" class="is-hidden"> </textarea>    
   -->
 </div>
 
@@ -127,13 +133,7 @@
     margin-left: 2px;
     padding: 5px;
   }
-  /* 
-  #lexical-state {
-    width: 100%;
-    min-height: 150px;
-    font-size: 10px;
-  }
-  */
+
   #link-menu {
     position: absolute;
     width: 400px;

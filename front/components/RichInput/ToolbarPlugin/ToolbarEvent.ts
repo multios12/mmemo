@@ -64,7 +64,7 @@ export const updateToolbar = (): { para: string, linkValue: string | undefined }
   } else if (p.getType() === "code") {
     para = "code";
   } else {
-    para = "0";
+    para = "";
   }
 
   updateButton("boldButton", selection.hasFormat("bold"));

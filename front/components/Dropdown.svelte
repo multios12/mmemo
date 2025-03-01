@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
+  import { run } from "svelte/legacy";
 
   import { createEventDispatcher } from "svelte";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
@@ -9,10 +9,8 @@
 
   const dispatch = createEventDispatcher();
 
-  
-  
   /** 表示値 */
-  let value: string = $state();
+  let value: string = $state("");
 
   interface Props {
     /** 選択アイテムのリスト */

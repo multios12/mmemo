@@ -120,8 +120,8 @@ https://svelte.dev/e/js_parse_error -->
       </div>
     </div>
   </div>
-  <textarea id="lexical-state"> </textarea>
   <!-- デバッグテキストエリア
+  <textarea id="lexical-state"> </textarea>
   -->
 </div>
 

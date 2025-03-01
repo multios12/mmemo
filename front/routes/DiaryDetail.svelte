@@ -4,6 +4,7 @@
   import TagsInput from "../components/TagsInput.svelte";
   import type { detailType } from "../models/diaryModels.js";
   import RichInput from "../components/RichInput/index.svelte";
+  import GelEdit from "../components/GelEdit/GelEdit.svelte";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
   import { faTrash } from "@fortawesome/free-solid-svg-icons";
   library.add(faTrash);
@@ -158,8 +159,12 @@
       <div class="level-right">
         <div class="level-item">
           <div class="column p-0">
-            <button class="button has-text-danger" on:click={onDelete}>
-              <i class="fa-solid fa-trash" />
+            <button
+              class="button has-text-danger"
+              on:click={onDelete}
+              aria-label="delete"
+            >
+              <i class="fa-solid fa-trash"></i>
             </button>
           </div>
         </div>

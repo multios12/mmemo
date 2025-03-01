@@ -7,6 +7,7 @@
   import RichInput from "../components/RichInput/index.svelte";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
   import { faTrash } from "@fortawesome/free-solid-svg-icons";
+  import { settingsStore } from "../store.js";
   library.add(faTrash);
   dom.watch();
 
@@ -49,17 +50,6 @@
   let errMessage = $state("");
   let isLoading = $state(false);
   let changedValue: string;
-  let template: string;
-
-  /*
-  onMount(async () => {
-    settingsStore.subscribe((s) => {
-      for (let index = 0; index < s.Categories.length; index++) {
-        const c = s.Categories[index];
-      }
-    });
-  });
-  */
 
   const onOk = () => {
     isLoading = true;
@@ -95,7 +85,13 @@
 
   onMount(async () => {
     if (params.id === "add") {
-      memo.Value = template;
+      // 追加時、テンプレートを設定
+      for (let index = 0; index < $settingsStore.Categories.length; index++) {
+        const c = $settingsStore.Categories[index];
+        if (c.Key == params.category) {
+          memo.Value = c.Template;
+        }
+      }
       return;
     }
     isLoading = true;
@@ -129,6 +125,7 @@
     <div class="level-right">
       <div class="level-item">
         <div class="column p-0">
+          <!-- svelte-ignore a11y_consider_explicit_label -->
           <button class="button has-text-danger" onclick={deleteClick}>
             <i class="fa-solid fa-trash"></i>
           </button>
@@ -154,7 +151,7 @@
         class:is-loading={isLoading}
         onclick={onOk}
       >
-        保存
+        save
       </button>
     </div>
     <div class="level-item">
@@ -175,6 +172,7 @@
     width: 100%;
     position: fixed;
   }
+
   #dateInput {
     width: 150px;
   }

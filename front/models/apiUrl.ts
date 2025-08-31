@@ -19,6 +19,7 @@ export const deleteDetailApi = (year: string, month: string, day: string) => {
   return fetch(url, options)
 }
 
+// ----------------------------------------------------------------------------
 export const getMemosSettingApi = () => {
   let url = `${apiUrl}memos`;
   return fetch(url);

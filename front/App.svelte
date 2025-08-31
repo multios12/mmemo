@@ -26,7 +26,7 @@
   let settings: settingType;
 
   onMount(async () => {
-    const r = await getMemosSettingApi(routes);
+    const r = await getMemosSettingApi();
     settings = <settingType>await r.json();
 
     settingsStore.update((s) => settings);

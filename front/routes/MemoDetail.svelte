@@ -1,13 +1,18 @@
 <script lang="ts">
   import { run } from "svelte/legacy";
 
-  import { pop } from "svelte-spa-router";
   import type { memoType } from "../models/memoModels.js";
   import { onMount } from "svelte";
   import RichInput from "../components/RichInput/index.svelte";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
   import { faTrash } from "@fortawesome/free-solid-svg-icons";
-  import { settingsStore } from "../store.js";
+  import { initSetting, settingsStore } from "../store.js";
+  import {
+    deleteMemosIdApi,
+    getMemosIdApi,
+    postMemosApi,
+    putMemosApi,
+  } from "../models/apiUrl.js";
   library.add(faTrash);
   dom.watch();
 
@@ -19,6 +24,7 @@
 
   // テキスト部の高さ調整
   run(() => {
+    initSetting(route);
     let a = innerHeight + innerWidth + 1;
     let headRect = document.querySelector("header")?.getBoundingClientRect();
     let footRect = document.querySelector("footer")?.getBoundingClientRect();
@@ -44,27 +50,28 @@
     params?: { id: string | undefined; category: string | undefined };
   }
 
-  let { params = { id: undefined, category: undefined } }: Props = $props();
+  let { params = { id: undefined, category: "" } } = {};
   let memo = $state(m);
   let isErr = false;
   let errMessage = $state("");
   let isLoading = $state(false);
   let changedValue: string;
+  let { route } = $props();
 
   const onOk = () => {
     isLoading = true;
-    let url = `./api/memos/${params.category}`;
-    url += params.id === "add" ? "" : `/${params.id}`;
     let o = {};
     memo.Value = changedValue;
+    let body = JSON.stringify(memo);
+    let f: Promise<Response>;
+
     if (params.id === "add") {
-      o = { method: "put", body: JSON.stringify(memo) };
+      f = putMemosApi(params.category, body, route);
     } else {
-      o = { method: "post", body: JSON.stringify(memo) };
+      f = postMemosApi(params.category, String(params.id), body, route);
     }
 
-    fetch(url, o)
-      .then(pop)
+    f.then(() => history.back())
       .catch((res) => {
         errMessage = res.response.data.error;
         isErr = true;
@@ -75,15 +82,15 @@
   };
 
   /** キャンセル クリックイベント */
-  const onCancel = () => pop();
+  const onCancel = () => history.back();
 
   const deleteClick = async () => {
-    let url = `./api/memos/${params.category}/${params.id}`;
-    await fetch(url, { method: "delete" });
-    pop();
+    await deleteMemosIdApi(params.category, String(params.id), route);
+    history.back();
   };
 
   onMount(async () => {
+    params = route.result.path.params;
     if (params.id === "add") {
       // 追加時、テンプレートを設定
       for (let index = 0; index < $settingsStore.Categories.length; index++) {
@@ -95,7 +102,7 @@
       return;
     }
     isLoading = true;
-    const r = await fetch(`./api/memos/${params.category}/${params.id}`);
+    const r = await getMemosIdApi(params.category, String(params.id), route);
     const v = await r.json();
     memo = v[0];
     isLoading = false;

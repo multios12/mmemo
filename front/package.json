@@ -19,6 +19,7 @@
     "@lexical/markdown": "0.24.0",
     "@lexical/rich-text": "0.24.0",
     "@lexical/utils": "0.24.0",
+    "@mateothegreat/svelte5-router": "^2.14.1",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@tsconfig/svelte": "5.0.4",
     "@types/node": "22.13.4",
@@ -27,9 +28,9 @@
     "purgecss": "^7.0.2",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
-    "svelte-spa-router": "^4.0.1",
     "tslib": "^2.6.3",
     "typescript": "^5.7.3",
     "vite": "^5.4.4"
-  }
+  },
+  "dependencies": {}
 }

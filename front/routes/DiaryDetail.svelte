@@ -1,34 +1,32 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { location, pop } from "svelte-spa-router";
   import TagsInput from "../components/TagsInput.svelte";
   import type { detailType } from "../models/diaryModels.js";
   import RichInput from "../components/RichInput/index.svelte";
-  import GelEdit from "../components/GelEdit/GelEdit.svelte";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
   import { faTrash } from "@fortawesome/free-solid-svg-icons";
+  import { getMonthApi } from "../models/apiUrl.js";
   library.add(faTrash);
   dom.watch();
 
-  export let params: { id: string | undefined } = { id: undefined };
-  export let Template: string;
   let isErr = false;
-  let errMessage = "";
+  let errMessage = $state("");
 
   let editDay: string | null;
-  let Outline = "";
-  let Detail = "";
-  let Tags: string[] = [];
-  let isDayEdit: boolean;
-  let isLoading: boolean;
-  let changedValue: string;
-  let innerHeight: number;
-  let innerWidth: number;
+  let Outline = $state("");
+  let Detail = $state("");
+  let Tags: string[] = $state([]);
+  let isDayEdit: boolean = $state(false);
+  let isLoading: boolean = $state(false);
+  let changedValue: string = $state("");
+  let innerHeight: number = $state(0);
+  let innerWidth: number = $state(0);
+
   // メニューバー非表示化
   document.querySelector<HTMLDivElement>(".navbar")?.classList.add("is-hidden");
-
+  let { Template, params, route } = $props();
   // テキスト部の高さ調整
-  $: {
+  $effect: {
     let a = innerHeight + innerWidth + 1;
     let headRect = document.querySelector("header")?.getBoundingClientRect();
     let footRect = document.querySelector("footer")?.getBoundingClientRect();
@@ -44,6 +42,7 @@
 
   /** マウントイベント */
   onMount(async () => {
+    const location = window.location.href;
     // コントロールの位置調整
     let headerRect = document.querySelector("header")?.getBoundingClientRect();
     let barRect = document.querySelector("#toolbar")?.getBoundingClientRect();
@@ -59,7 +58,7 @@
     }
 
     isLoading = true;
-    if ($location.indexOf("/add") > -1) {
+    if (location.indexOf("/add") > -1) {
       isDayEdit = true;
       const dt = new Date();
       editDay = `${dt.getFullYear()}-`;
@@ -75,8 +74,8 @@
         return;
       }
       let url = params.id.replaceAll("-", "/");
-      url = `./api/diary/${url}`;
-      fetch(url, { method: "get" })
+      let apiFetch = getMonthApi(url, route);
+      apiFetch
         .then((r) => r.json())
         .then((r) => {
           const s = r as detailType;
@@ -109,12 +108,12 @@
       isErr = true;
     } else {
       editDay = null;
-      pop();
+      history.back();
     }
   };
 
   /** キャンセル クリックイベント */
-  const onCancel = () => pop();
+  const onCancel = () => history.back();
 
   /** 削除 クリックイベント */
   const onDelete = async () => {
@@ -124,7 +123,7 @@
     let url = editDay.replaceAll("-", "/");
     url = `./api/diary/${url}`;
     await fetch(url, { method: "delete" });
-    pop();
+    history.back();
   };
 
   const onTextChange = (e: CustomEvent<string>) => {
@@ -161,7 +160,7 @@
           <div class="column p-0">
             <button
               class="button has-text-danger"
-              on:click={onDelete}
+              onclick={onDelete}
               aria-label="delete"
             >
               <i class="fa-solid fa-trash"></i>
@@ -190,13 +189,13 @@
         class="button is-primary"
         disabled={isLoading}
         class:is-loading={isLoading}
-        on:click={onOk}
+        onclick={onOk}
       >
         保存
       </button>
     </div>
     <div class="level-item">
-      <button class="button" on:click={onCancel}> cancel </button>
+      <button class="button" onclick={onCancel}> cancel </button>
     </div>
   </div>
 </footer>

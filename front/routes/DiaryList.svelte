@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
-  import { push } from "svelte-spa-router";
+  import { run } from "svelte/legacy";
   import type { listType } from "../models/diaryModels.js";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
   import { faPlus, faNoteSticky } from "@fortawesome/free-solid-svg-icons";
+  import { goto } from "@mateothegreat/svelte5-router";
+  import { getMonthApi } from "../models/apiUrl.js";
   library.add(faPlus, faNoteSticky);
   dom.watch();
 
@@ -15,16 +15,21 @@
 
   interface Props {
     selectMonth?: string | null;
+    route: any;
   }
 
-  let { selectMonth = $bindable(`${new Date().getFullYear()}-${(
-    "00" +
-    (new Date().getMonth() + 1)
-  ).slice(-2)}`) }: Props = $props();
+  let {
+    selectMonth = $bindable(
+      `${new Date().getFullYear()}-${("00" + (new Date().getMonth() + 1)).slice(
+        -2,
+      )}`,
+    ),
+    route,
+  }: Props = $props();
   export const showList = () => {
-    let url = selectMonth !== null ? selectMonth.replace("-", "/") : null;
-    url = `./api/diary/${url}`;
-    fetch(url)
+    let url = selectMonth !== null ? selectMonth.replace("-", "/") : "";
+    let apiFetch = getMonthApi(url, route);
+    apiFetch
       .then((r) => r.json())
       .then((r) => r as listType)
       .then((r) => {
@@ -38,15 +43,16 @@
   let model: listType = $state({ WritedMonths: [], Lines: [] });
 
   /** 追加ボタンクリックイベント */
-  const addClick = () => push("/d/add");
+  const addClick = () => goto("/d/add");
 
   /** リストクリックイベント */
-  const listClick = async (e: any, l: string) => push("/d/" + l);
+  const listClick = async (e: any, l: string) => goto("/d/" + l);
 
   run(() => {
-    let url = selectMonth !== null ? selectMonth.replace("-", "/") : null;
-    url = `./api/diary/${url}`;
-    fetch(url)
+    let params = route.result.path.params;
+
+    let url = selectMonth !== null ? selectMonth.replace("-", "/") : "";
+    getMonthApi(url, route)
       .then((r) => r.json())
       .then((r) => r as listType)
       .then((r) => {
@@ -71,7 +77,7 @@
         </div>
       </div>
       <div class="column">
-        <button class="button is-primary" onclick={addClick}>
+        <button class="button is-primary" onclick={addClick} aria-label="add">
           <i class="fa-solid fa-plus"></i>
         </button>
       </div>

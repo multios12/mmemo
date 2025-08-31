@@ -1,55 +1,60 @@
 <script lang="ts">
   import "bulma/css/bulma.css";
-  import Router, { location, link } from "svelte-spa-router";
-  import { type RouteDefinition } from "svelte-spa-router";
+  import { goto } from "@mateothegreat/svelte5-router";
+  import { Router, type RouteConfig } from "@mateothegreat/svelte5-router";
   import DiaryList from "./routes/DiaryList.svelte";
   import DiaryEdit from "./routes/DiaryDetail.svelte";
   import HMemoList from "./routes/MemoList.svelte";
   import HMemoEdit from "./routes/MemoDetail.svelte";
-  import Planner from "./routes/Planner/Planner.svelte";
   import { onMount } from "svelte";
   import type { settingType } from "./models/settingType.js";
   import { settingsStore } from "./store.js";
-  let page = "";
+  import { getMemosSettingApi } from "./models/apiUrl.js";
 
-  let routes: RouteDefinition = {
-    "/": DiaryList,
-    "/d/:id": DiaryEdit,
-    "/d/add": DiaryEdit,
-    "/planner/": Planner,
-    "/:category/": HMemoList,
-    "/:category/:id": HMemoEdit,
-    "/:category/add": HMemoEdit,
-  };
+  /** 選択中ページ */
+  let page = $state("");
+
+  let routes: RouteConfig[] = $state([
+    { component: DiaryList },
+    { path: "/d/(?<id>.?)", component: DiaryEdit },
+    { path: "/(?<category>.+)", component: HMemoList },
+    { path: "/d/add", component: DiaryEdit },
+    { path: "/(?<category>.+)/(?<id>.+)", component: HMemoEdit },
+    { path: "/(?<category>.+)/add", component: HMemoEdit },
+  ]);
+
   let settings: settingType;
 
   onMount(async () => {
-    const r = await fetch("./api/memos");
+    const r = await getMemosSettingApi(routes);
     settings = <settingType>await r.json();
+
     settingsStore.update((s) => settings);
   });
 
-  $: {
+  $effect(() => {
+    const location = window.location.href;
     if (settings !== undefined) {
       page = "";
       for (const category of settings.Categories) {
-        if ($location.indexOf("/" + category.Key) >= 0) {
+        if (location.indexOf("/" + category.Key) >= 0) {
           page = category.Key;
         }
       }
+      routes = routes;
     }
-  }
+  });
 
   // navbarのバーガー開閉イベント
   document.addEventListener("DOMContentLoaded", () => {
     // Get all "navbar-burger" elements
-    const $navbarBurgers = Array.prototype.slice.call(
+    const navbarBurgers = Array.prototype.slice.call(
       document.querySelectorAll(".navbar-burger"),
       0,
     );
 
     // Add a click event on each of them
-    $navbarBurgers.forEach((el) => {
+    navbarBurgers.forEach((el) => {
       el.addEventListener("click", () => {
         // Get the target from the "data-target" attribute
         const target = el.dataset.target;
@@ -61,6 +66,12 @@
       });
     });
   });
+
+  const onClick = (value: string) => {
+    page = value;
+    value = value === "" ? "" : `/${value}/`;
+    goto(value);
+  };
 </script>
 
 <nav class="navbar is-transparent is-dark">
@@ -76,35 +87,24 @@
 
   <div id="navbarMMemo" class="navbar-menu">
     <div class="navbar-start">
-      <a
+      <button
         class="navbar-item is-unselectable is-tab"
         class:is-active={page === ""}
-        href="/"
-        use:link
+        onclick={() => onClick("")}
       >
         {settings?.Diary?.Name}
-      </a>
+      </button>
       {#if settings !== undefined}
         {#each settings.Categories as category}
-          <a
+          <button
             class="navbar-item is-unselectable is-tab"
             class:is-active={page === category.Key}
-            href={`/${category.Key}/`}
-            use:link
+            onclick={() => onClick(category.Key)}
           >
             {category.Name}
-          </a>
+          </button>
         {/each}
       {/if}
-      <!--
-      <a
-        class="navbar-item is-unselectable is-tab"
-        class:is-active={page === "/planner/"}
-        href="/planner"
-        use:link
-        >planner
-      </a>
-      -->
     </div>
   </div>
 </nav>

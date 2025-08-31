@@ -1,9 +1,10 @@
 <script lang="ts">
-  import Router, { link, push } from "svelte-spa-router";
   import { onMount } from "svelte";
   import type { memoType } from "../models/memoModels.js";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
   import { faPlus, faNoteSticky } from "@fortawesome/free-solid-svg-icons";
+  import { goto } from "@mateothegreat/svelte5-router";
+  import { getMemosApi } from "../models/apiUrl.js";
   library.add(faPlus, faNoteSticky);
   dom.watch();
 
@@ -11,21 +12,16 @@
   document
     .querySelector<HTMLDivElement>(".navbar")
     ?.classList.remove("is-hidden");
-
-  
-  interface Props {
-    // ルーティングパラメータ
-    params?: { category: string | undefined };
-  }
-
-  let { params = { category: undefined } }: Props = $props();
+  let { route } = $props();
+  let params = { category: "" };
 
   let memos: memoType[] = $state([]);
   const showEdit = (id: string | undefined) => {
-    push(`/${params.category}/${id}`);
+    goto(`/${params.category}/${id}`);
   };
   onMount(async () => {
-    const r = await fetch(`./api/memos/${params.category}`);
+    params = route.result.path.params;
+    const r = await getMemosApi(params.category, route);
     memos = await r.json();
   });
 </script>
@@ -34,10 +30,13 @@
   <div class="card-content">
     <div class="columns">
       <div class="column">
-        <a class="button is-primary" href={`/${params.category}/add`} use:link>
+        <button
+          class="button is-primary"
+          onclick={() => goto(`/${params.category}/add`)}
+        >
           <i class="fa-solid fa-plus"></i>
           add
-        </a>
+        </button>
       </div>
     </div>
 

@@ -28,6 +28,7 @@ func findMemos(category string) (memos []Memo) {
 	} else {
 		db.Where("category = ?", category).Find(&memos)
 	}
+	db.Order("date desc").Find(&memos)
 	return memos
 }
 

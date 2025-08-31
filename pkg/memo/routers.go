@@ -20,7 +20,6 @@ func Initial(router *gin.Engine, d string, s SettingModel) error {
 	dataPath, _ = filepath.Abs(d)
 	// DB初期化
 	if err := dbOpen(dataPath); err != nil {
-		fmt.Sprintln(err)
 		return err
 	}
 	memos := findMemos("")

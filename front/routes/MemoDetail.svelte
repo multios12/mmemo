@@ -66,9 +66,9 @@
     let f: Promise<Response>;
 
     if (params.id === "add") {
-      f = putMemosApi(params.category, body, route);
+      f = putMemosApi(params.category, body);
     } else {
-      f = postMemosApi(params.category, String(params.id), body, route);
+      f = postMemosApi(params.category, String(params.id), body);
     }
 
     f.then(() => history.back())
@@ -85,7 +85,7 @@
   const onCancel = () => history.back();
 
   const deleteClick = async () => {
-    await deleteMemosIdApi(params.category, String(params.id), route);
+    await deleteMemosIdApi(params.category, String(params.id));
     history.back();
   };
 
@@ -102,7 +102,7 @@
       return;
     }
     isLoading = true;
-    const r = await getMemosIdApi(params.category, String(params.id), route);
+    const r = await getMemosIdApi(params.category, String(params.id));
     const v = await r.json();
     memo = v[0];
     isLoading = false;

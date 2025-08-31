@@ -28,7 +28,7 @@
   }: Props = $props();
   export const showList = () => {
     let url = selectMonth !== null ? selectMonth.replace("-", "/") : "";
-    let apiFetch = getMonthApi(url, route);
+    let apiFetch = getMonthApi(url);
     apiFetch
       .then((r) => r.json())
       .then((r) => r as listType)
@@ -49,10 +49,8 @@
   const listClick = async (e: any, l: string) => goto("/d/" + l);
 
   run(() => {
-    let params = route.result.path.params;
-
     let url = selectMonth !== null ? selectMonth.replace("-", "/") : "";
-    getMonthApi(url, route)
+    getMonthApi(url)
       .then((r) => r.json())
       .then((r) => r as listType)
       .then((r) => {

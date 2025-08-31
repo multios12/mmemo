@@ -74,7 +74,7 @@
         return;
       }
       let url = params.id.replaceAll("-", "/");
-      let apiFetch = getMonthApi(url, route);
+      let apiFetch = getMonthApi(url);
       apiFetch
         .then((r) => r.json())
         .then((r) => {

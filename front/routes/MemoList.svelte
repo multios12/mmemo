@@ -21,7 +21,7 @@
   };
   onMount(async () => {
     params = route.result.path.params;
-    const r = await getMemosApi(params.category, route);
+    const r = await getMemosApi(params.category);
     memos = await r.json();
   });
 </script>

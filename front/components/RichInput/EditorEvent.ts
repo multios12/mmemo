@@ -1,4 +1,5 @@
 import { mergeRegister } from "@lexical/utils";
+import "prismjs";
 import { $isRangeSelection as _isRangeSelection } from "lexical";
 import { $createParagraphNode as _createParagraphNode } from "lexical";
 import { $getSelection as _getSelection } from "lexical";

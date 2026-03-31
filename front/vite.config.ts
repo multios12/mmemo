@@ -7,6 +7,9 @@ export default defineConfig(() => {
   const html = process.env.HTML || "index.html"
   return {
     plugins: [svelte(), purgeCssPlugin(), singleFilePlugin()],
+    optimizeDeps: {
+      exclude: ["@lexical/code", "prismjs"],
+    },
     build: {
       rollupOptions: {
         input: html,

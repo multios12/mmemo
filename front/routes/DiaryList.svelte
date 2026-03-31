@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { push } from "svelte-spa-router";
   import type { listType } from "../models/diaryModels.js";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
@@ -21,7 +19,8 @@
     "00" +
     (new Date().getMonth() + 1)
   ).slice(-2)}`) }: Props = $props();
-  export const showList = () => {
+
+  const showList = () => {
     let url = selectMonth !== null ? selectMonth.replace("-", "/") : null;
     url = `./api/diary/${url}`;
     fetch(url)
@@ -43,18 +42,9 @@
   /** リストクリックイベント */
   const listClick = async (e: any, l: string) => push("/d/" + l);
 
-  run(() => {
-    let url = selectMonth !== null ? selectMonth.replace("-", "/") : null;
-    url = `./api/diary/${url}`;
-    fetch(url)
-      .then((r) => r.json())
-      .then((r) => r as listType)
-      .then((r) => {
-        model = r;
-        if (r.Lines.length == 0 && r.WritedMonths.length > 0) {
-          selectMonth = r.WritedMonths[0];
-        }
-      });
+  $effect(() => {
+    selectMonth;
+    showList();
   });
 </script>
 
@@ -71,7 +61,11 @@
         </div>
       </div>
       <div class="column">
-        <button class="button is-primary" onclick={addClick}>
+        <button
+          class="button is-primary"
+          aria-label="add diary"
+          onclick={addClick}
+        >
           <i class="fa-solid fa-plus"></i>
         </button>
       </div>

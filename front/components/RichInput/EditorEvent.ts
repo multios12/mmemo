@@ -17,7 +17,6 @@ import { ListNode, ListItemNode } from "@lexical/list";
 import { createEmptyHistoryState, registerHistory } from "@lexical/history";
 import { TRANSFORMERS } from "@lexical/markdown";
 import type { UpdateListener } from "node_modules/lexical/LexicalEditor.js";
-import type { EventDispatcher } from "svelte";
 import { ImageNode } from "./ImagesPlugin/ImageNode.js"
 import { registerInsertImageCommand } from "./ImagesPlugin/index.js";
 import { IMAGE } from "./MarkdownTransformers.js"
@@ -32,7 +31,7 @@ export const InitialEditor = async (
   doCanUndo: (p: boolean) => boolean,
   doCanRedo: (p: boolean) => boolean,
   toolBarListener: UpdateListener,
-  dispatch: EventDispatcher<any>
+  onTextChange?: (value: string) => void,
 ) => {
   // LexicalEditorの設定
   const initialConfig = {
@@ -90,10 +89,9 @@ export const InitialEditor = async (
     // 更新時のマークダウン出力リスナ登録
     editor.registerUpdateListener(({ }) => {
       editor.update(() => {
-        const trans = TRANSFORMERS
-        trans.unshift(IMAGE);
+        const trans = [IMAGE, ...TRANSFORMERS];
         const markdown = _convertToMarkdownString(trans);
-        dispatch("textChange", markdown);
+        onTextChange?.(markdown);
       });
     }),
     // ツールバー状態更新リスナ登録

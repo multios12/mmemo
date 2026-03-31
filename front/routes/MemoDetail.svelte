@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { run } from "svelte/legacy";
-
   import { pop } from "svelte-spa-router";
   import type { memoType } from "../models/memoModels.js";
   import { onMount } from "svelte";
@@ -17,8 +15,9 @@
   document.querySelector<HTMLDivElement>(".navbar")?.classList.add("is-hidden");
 
   // テキスト部の高さ調整
-  run(() => {
-    let a = innerHeight + innerWidth + 1;
+  $effect(() => {
+    innerHeight;
+    innerWidth;
     let headRect = document.querySelector("header")?.getBoundingClientRect();
     let footRect = document.querySelector("footer")?.getBoundingClientRect();
     let barRect = document.querySelector("#toolbar")?.getBoundingClientRect();
@@ -48,8 +47,8 @@
   let isErr = false;
   let errMessage = $state("");
   let isLoading = $state(false);
-  let changedValue: string;
-  let template: string;
+  let changedValue = $state("");
+  let template = "";
 
   /*
   onMount(async () => {
@@ -66,7 +65,7 @@
     let url = `./api/memos/${params.category}`;
     url += params.id === "add" ? "" : `/${params.id}`;
     let o = {};
-    memo.Value = changedValue;
+    memo.Value = changedValue || memo.Value;
     if (params.id === "add") {
       o = { method: "put", body: JSON.stringify(memo) };
     } else {
@@ -95,18 +94,20 @@
 
   onMount(async () => {
     if (params.id === "add") {
-      memo.Value = template;
+      memo.Value = template ?? "";
+      changedValue = memo.Value;
       return;
     }
     isLoading = true;
     const r = await fetch(`./api/memos/${params.category}/${params.id}`);
     const v = await r.json();
-    memo = v[0];
+    memo = v;
+    changedValue = v.Value ?? "";
     isLoading = false;
   });
 
-  const onTextChange = (e: CustomEvent<string>) => {
-    changedValue = e.detail;
+  const onTextChange = (value: string) => {
+    changedValue = value;
   };
 </script>
 
@@ -129,7 +130,11 @@
     <div class="level-right">
       <div class="level-item">
         <div class="column p-0">
-          <button class="button has-text-danger" onclick={deleteClick}>
+          <button
+            class="button has-text-danger"
+            aria-label="delete memo"
+            onclick={deleteClick}
+          >
             <i class="fa-solid fa-trash"></i>
           </button>
         </div>
@@ -141,7 +146,7 @@
 <section class="p-0">
   <div class="field">
     <div class="control py-2">
-      <RichInput bind:value={memo.Value} on:textChange={onTextChange} />
+      <RichInput bind:value={memo.Value} {onTextChange} />
     </div>
   </div>
 </section>

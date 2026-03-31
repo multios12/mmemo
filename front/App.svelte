@@ -12,7 +12,7 @@
   import { settingsStore } from "./store.js";
   let page = "";
 
-  let routes: RouteDefinition = {
+  const routes = {
     "/": DiaryList,
     "/d/:id": DiaryEdit,
     "/d/add": DiaryEdit,
@@ -20,7 +20,7 @@
     "/:category/": HMemoList,
     "/:category/:id": HMemoEdit,
     "/:category/add": HMemoEdit,
-  };
+  } as unknown as RouteDefinition;
   let settings: settingType;
 
   onMount(async () => {

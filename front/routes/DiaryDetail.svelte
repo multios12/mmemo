@@ -9,26 +9,31 @@
   library.add(faTrash);
   dom.watch();
 
-  export let params: { id: string | undefined } = { id: undefined };
-  export let Template: string;
-  let isErr = false;
-  let errMessage = "";
+  interface Props {
+    params?: { id: string | undefined };
+    Template?: string;
+  }
 
-  let editDay: string | null;
-  let Outline = "";
-  let Detail = "";
-  let Tags: string[] = [];
-  let isDayEdit: boolean;
-  let isLoading: boolean;
-  let changedValue: string;
-  let innerHeight: number;
-  let innerWidth: number;
+  let { params = { id: undefined }, Template = "" }: Props = $props();
+  let isErr = $state(false);
+  let errMessage = $state("");
+
+  let editDay = $state<string | null>(null);
+  let Outline = $state("");
+  let Detail = $state("");
+  let Tags = $state<string[]>([]);
+  let isDayEdit = $state(false);
+  let isLoading = $state(false);
+  let changedValue = $state("");
+  let innerHeight = $state(0);
+  let innerWidth = $state(0);
   // メニューバー非表示化
   document.querySelector<HTMLDivElement>(".navbar")?.classList.add("is-hidden");
 
   // テキスト部の高さ調整
-  $: {
-    let a = innerHeight + innerWidth + 1;
+  $effect(() => {
+    innerHeight;
+    innerWidth;
     let headRect = document.querySelector("header")?.getBoundingClientRect();
     let footRect = document.querySelector("footer")?.getBoundingClientRect();
     let barRect = document.querySelector("#toolbar")?.getBoundingClientRect();
@@ -39,7 +44,7 @@
         .querySelector<HTMLDivElement>("#detail")
         ?.style.setProperty("height", height + "px");
     }
-  }
+  });
 
   /** マウントイベント */
   onMount(async () => {
@@ -64,7 +69,8 @@
       editDay = `${dt.getFullYear()}-`;
       editDay += ("00" + (dt.getMonth() + 1)).slice(-2);
       editDay += `-${("00" + dt.getDate()).slice(-2)}`;
-      Detail = Template;
+      Detail = Template ?? "";
+      changedValue = Detail;
     } else {
       if (params == undefined) {
         return;
@@ -82,6 +88,7 @@
           editDay = <string | null>params.id;
           Outline = s.Outline;
           Detail = s.Detail;
+          changedValue = Detail;
           Tags = s.Tags;
         });
     }
@@ -99,7 +106,7 @@
     url = `./api/diary/${url}`;
     const init = {
       method: "post",
-      body: JSON.stringify({ Tags, Outline, Detail: changedValue }),
+      body: JSON.stringify({ Tags, Outline, Detail: changedValue || Detail }),
     };
 
     let r = await fetch(url, init);
@@ -126,8 +133,8 @@
     pop();
   };
 
-  const onTextChange = (e: CustomEvent<string>) => {
-    changedValue = e.detail;
+  const onTextChange = (value: string) => {
+    changedValue = value;
   };
 </script>
 
@@ -158,8 +165,12 @@
       <div class="level-right">
         <div class="level-item">
           <div class="column p-0">
-            <button class="button has-text-danger" on:click={onDelete}>
-              <i class="fa-solid fa-trash" />
+            <button
+              class="button has-text-danger"
+              aria-label="delete diary"
+              onclick={onDelete}
+            >
+              <i class="fa-solid fa-trash"></i>
             </button>
           </div>
         </div>
@@ -174,7 +185,7 @@
 <section class="p-0">
   <div class="field">
     <div class="control py-2">
-      <RichInput bind:value={Detail} on:textChange={onTextChange} />
+      <RichInput bind:value={Detail} {onTextChange} />
     </div>
   </div>
 </section>
@@ -185,13 +196,13 @@
         class="button is-primary"
         disabled={isLoading}
         class:is-loading={isLoading}
-        on:click={onOk}
+        onclick={onOk}
       >
         保存
       </button>
     </div>
     <div class="level-item">
-      <button class="button" on:click={onCancel}> cancel </button>
+      <button class="button" onclick={onCancel}> cancel </button>
     </div>
   </div>
 </footer>
@@ -204,7 +215,6 @@
   header {
     background-color: var(--bulma-border);
     width: 100%;
-    position: fixed;
     top: 0;
     left: 0;
     margin: 0;

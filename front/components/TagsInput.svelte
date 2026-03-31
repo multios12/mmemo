@@ -35,7 +35,11 @@
   <div class="control">
     <div class="tags are-medium">
       {#each items as i}<span class="tag is-rounded"
-          >{i}<button class="delete" data-value={i} onclick={deleteClick}
+          >{i}<button
+            class="delete"
+            aria-label={`delete tag ${i}`}
+            data-value={i}
+            onclick={deleteClick}
           ></button></span
         >{/each}
     </div>

@@ -86,21 +86,22 @@
       {/if}
     </tr>
   </thead>
-
-  {#each table as d}
-    <tr>
-      <td class="p-0"> {format(d[0].date, "M月", "ja")} </td>
-      {#each d as day}
-        <td
-          class="day p-0"
-          class:holiday={day.isHoliday}
-          class:disable={day.isDisable}
-          class:saturday={day.isSaturday}
-        >
-        </td>
-      {/each}
-    </tr>
-  {/each}
+  <tbody>
+    {#each table as d}
+      <tr>
+        <td class="p-0"> {format(d[0].date, "M月", "ja")} </td>
+        {#each d as day}
+          <td
+            class="day p-0"
+            class:holiday={day.isHoliday}
+            class:disable={day.isDisable}
+            class:saturday={day.isSaturday}
+          >
+          </td>
+        {/each}
+      </tr>
+    {/each}
+  </tbody>
 </table>
 
 <style>

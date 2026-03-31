@@ -1,7 +1,3 @@
-<!-- @migration-task Error while migrating Svelte code: Unexpected token `}`. Did you mean `&rbrace;` or `{"}"}`?
-https://svelte.dev/e/js_parse_error -->
-<!-- @migration-task Error while migrating Svelte code: Unexpected token `}`. Did you mean `&rbrace;` or `{"}"}`?
-https://svelte.dev/e/js_parse_error -->
 <script lang="ts">
   import { onMount } from "svelte";
   import { CLEAR_HISTORY_COMMAND } from "lexical";
@@ -13,27 +9,30 @@ https://svelte.dev/e/js_parse_error -->
   import ToolbarPlugin from "./ToolbarPlugin/ToolbarPlugin.svelte";
   import { updateToolbar } from "./ToolbarPlugin/ToolbarEvent.js";
   import { InitialEditor } from "./EditorEvent.js";
-  import { createEventDispatcher } from "svelte";
   import { IMAGE } from "./MarkdownTransformers.js";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
   import { faLink, faTrash } from "@fortawesome/free-solid-svg-icons";
   library.add(faLink, faTrash);
   dom.watch();
 
-  /** 入力値 */
-  export let value: string;
-  const dispatch = createEventDispatcher();
+  interface Props {
+    /** 入力値 */
+    value?: string;
+    onTextChange?: (value: string) => void;
+  }
+
+  let { value = $bindable(""), onTextChange }: Props = $props();
 
   /** lexical Editor */
-  let editor: LexicalEditor;
+  let editor = $state<LexicalEditor | undefined>(undefined);
   /** 選択ノードの段落種別 */
-  let para: string = "";
+  let para = $state("");
   /** アンドゥボタン表示状態 */
-  let canUndo: boolean;
+  let canUndo = $state(false);
   /** リドゥボタン表示状態 */
-  let canRedo: boolean;
+  let canRedo = $state(false);
   /** リンクポップアップ表示値 */
-  let linkValue: string;
+  let linkValue = $state("");
 
   /** マウントイベント */
   onMount(async () => {
@@ -61,27 +60,28 @@ https://svelte.dev/e/js_parse_error -->
           linkValue = <string>plinkValue;
         });
       },
-      dispatch,
+      onTextChange,
     );
   });
 
-  $: {
+  $effect(() => {
     // 入力値が更新されたとき、マークダウン変換と、履歴クリア
-    if (value !== undefined && value !== "") {
-      const trans = TRANSFORMERS;
-      trans.unshift(IMAGE);
+    if (editor !== undefined && value !== undefined && value !== "") {
+      const trans = [IMAGE, ...TRANSFORMERS];
       editor.update(() => _convertFromMarkdownString(value, trans));
       editor.dispatchCommand(CLEAR_HISTORY_COMMAND, undefined);
     }
-  }
+  });
 
   // リンクURLの更新
   const linkOK = () => {
+    if (!editor) return;
     editor.update(() => {
       _toggleLink(linkValue);
     });
   };
   const linkDel = () => {
+    if (!editor) return;
     editor.update(() => {
       _toggleLink(null);
     });
@@ -89,7 +89,9 @@ https://svelte.dev/e/js_parse_error -->
 </script>
 
 <div id="rich" class="panel is-dark">
-  <ToolbarPlugin {editor} {para} {canUndo} {canRedo} />
+  {#if editor}
+    <ToolbarPlugin {editor} {para} {canUndo} {canRedo} />
+  {/if}
 
   <div class="panel-block p-0 is-fullwidth">
     <div id="detail" class="content editor-input" contenteditable></div>
@@ -107,11 +109,11 @@ https://svelte.dev/e/js_parse_error -->
             </p>
             <p class="buttons m-0">
               <!-- svelte-ignore a11y_consider_explicit_label -->
-              <button class="button is-info is-small" on:click={linkOK}>
+              <button class="button is-info is-small" onclick={linkOK}>
                 <i class="fa-solid fa-link"></i>
               </button>
               <!-- svelte-ignore a11y_consider_explicit_label -->
-              <button class="button is-danger is-small" on:click={linkDel}>
+              <button class="button is-danger is-small" onclick={linkDel}>
                 <i class="fa-solid fa-trash"></i>
               </button>
             </p>
@@ -120,7 +122,7 @@ https://svelte.dev/e/js_parse_error -->
       </div>
     </div>
   </div>
-  <textarea id="lexical-state"> </textarea>
+  <textarea id="lexical-state" style="display: none;"> </textarea>
   <!-- デバッグテキストエリア
   -->
 </div>

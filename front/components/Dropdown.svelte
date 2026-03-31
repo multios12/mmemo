@@ -1,46 +1,31 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
-  import { createEventDispatcher } from "svelte";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
   import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
   library.add(faCaretDown);
   dom.watch();
 
-  const dispatch = createEventDispatcher();
-
-  
-  
-  /** 表示値 */
-  let value: string = $state();
-
   interface Props {
     /** 選択アイテムのリスト */
     items: { key: string; value: string }[];
     /** 表示値のキー */
-    key: string;
+    key?: string;
     tabindex: number | null | undefined;
+    onchange?: (value: string) => void;
   }
 
-  let { items, key, tabindex }: Props = $props();
+  let { items, key = $bindable(""), tabindex, onchange }: Props = $props();
+  /** 表示値 */
+  let value = $derived(items.find((item) => item.key === key)?.value ?? "");
   /** ドロップダウン トグルイベント */
   const onToggle = () =>
     document.getElementById("dropdown")?.classList.toggle("is-active");
 
   /** アイテム変更イベント */
-  const onChange = (value: string) => {
-    dispatch("change", value);
+  const onChange = (nextKey: string) => {
+    key = nextKey;
+    onchange?.(nextKey);
     onToggle();
   };
-
-  run(() => {
-    for (let i = 0; i < items.length; i++) {
-      const p = items[i];
-      if (p.key === key) {
-        value = p.value;
-      }
-    }
-  });
 </script>
 
 <div class="dropdown" id="dropdown">

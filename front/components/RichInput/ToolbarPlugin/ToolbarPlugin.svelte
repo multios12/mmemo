@@ -3,7 +3,6 @@
   import { REDO_COMMAND, UNDO_COMMAND, type LexicalEditor } from "lexical";
   import { FORMAT_TEXT_COMMAND } from "lexical";
   import { TOGGLE_LINK_COMMAND } from "@lexical/link";
-  import { onMount } from "svelte";
   import Dropdown from "../../Dropdown.svelte";
   import ImageButton from "./ImageButton.svelte";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
@@ -19,14 +18,18 @@
   library.add(faBold, faItalic, faUnderline, faLink);
   dom.watch();
 
-  /** lexical Editor */
-  export let editor: LexicalEditor;
-  /** アンドゥボタン表示状態 */
-  export let canUndo: boolean;
-  /** リドゥボタン表示状態 */
-  export let canRedo: boolean;
-  /** 段落種別 */
-  export let para: string;
+  interface Props {
+    /** lexical Editor */
+    editor: LexicalEditor;
+    /** アンドゥボタン表示状態 */
+    canUndo: boolean;
+    /** リドゥボタン表示状態 */
+    canRedo: boolean;
+    /** 段落種別 */
+    para: string;
+  }
+
+  let { editor, canUndo, canRedo, para }: Props = $props();
 
   /** 選択ノードを太字に変更 */
   const formatBold = () => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
@@ -44,13 +47,8 @@
   /** リドゥコマンド実行 */
   const redo = () => editor.dispatchCommand(REDO_COMMAND, undefined);
 
-  /** マウントイベント */
-  onMount(async () => {
-    const el = <HTMLButtonElement>document.getElementById("para-button");
-  });
-
   /** 段落ドロップダウン 値変更イベント */
-  const onChange = (e: CustomEvent<any>) => onParagraphChange(editor, e.detail);
+  const onChange = (value: string) => onParagraphChange(editor, value);
 </script>
 
 <div id="toolbar" class="panel-heading py-1">
@@ -62,7 +60,7 @@
           class="button is-ghost p-0"
           disabled={!canUndo}
           tabindex="-1"
-          on:click={undo}
+          onclick={undo}
         >
           <i class="fa-solid fa-rotate-left"></i>
         </button>
@@ -73,7 +71,7 @@
           class="button is-ghost p-0"
           disabled={!canRedo}
           tabindex="-1"
-          on:click={redo}
+          onclick={redo}
         >
           <i class="fa-solid fa-rotate-right"></i>
         </button>
@@ -84,7 +82,7 @@
           items={paragraphs}
           key={para}
           tabindex={-1}
-          on:change={onChange}
+          onchange={onChange}
         />
       </div>
 
@@ -94,7 +92,7 @@
           id="boldButton"
           class="button is-ghost p-0"
           tabindex="-1"
-          on:click={formatBold}
+          onclick={formatBold}
         >
           <i class="fa-solid fa-bold"></i>
         </button>
@@ -105,7 +103,7 @@
           id="italicButton"
           class="button is-ghost p-0"
           tabindex="-1"
-          on:click={formatItalic}
+          onclick={formatItalic}
         >
           <i class="fa-solid fa-italic"></i>
         </button>
@@ -116,7 +114,7 @@
           id="underButton"
           class="button is-ghost p-0"
           tabindex="-1"
-          on:click={formatUnderline}
+          onclick={formatUnderline}
         >
           <i class="fa-solid fa-underline"></i>
         </button>
@@ -127,7 +125,7 @@
           id="linkButton"
           class="button is-ghost p-0"
           tabindex="-1"
-          on:click={toggleLink}
+          onclick={toggleLink}
         >
           <i class="fa-solid fa-link"></i>
         </button>

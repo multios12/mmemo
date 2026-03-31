@@ -16,7 +16,9 @@ func Initial(router *gin.Engine, dataPath string) {
 	diaryPath, _ = filepath.Abs(dataPath)
 	diaryPath = filepath.Join(diaryPath, "diary")
 	if _, err := os.Stat(diaryPath); err != nil {
-		os.Mkdir(diaryPath, 0777)
+		if err := os.MkdirAll(diaryPath, 0755); err != nil {
+			panic(err)
+		}
 	}
 	router.GET("/api/diary/:year/:month", getMonth)
 	router.GET("/api/diary/:year/:month/:day", getDetail)
@@ -27,14 +29,23 @@ func Initial(router *gin.Engine, dataPath string) {
 
 func getMonth(c *gin.Context) {
 	month := c.Param("year") + c.Param("month")
-	var m = readListFile(month)
+	m, err := readListFile(month)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	m.WritedMonths = getWritedMonths()
 	c.JSON(200, m)
 }
 
 func getDetail(c *gin.Context) {
 	day := c.Param("year") + "-" + c.Param("month") + "-" + c.Param("day")
-	if l := readDetail(day); len(l.Day) == 0 {
+	l, err := readDetail(day)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if len(l.Day) == 0 {
 		c.Status(http.StatusNotFound)
 	} else {
 		c.JSON(http.StatusOK, l)
@@ -47,8 +58,10 @@ func postDetail(c *gin.Context) {
 	var detail detailModel
 	if err := c.ShouldBindJSON(&detail); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	} else if detail.Outline = strings.TrimSpace(detail.Outline); detail.Outline == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "outline is not found."})
+		return
 	}
 	detail.Day = day
 
@@ -84,6 +97,7 @@ func getImage(c *gin.Context) {
 	filename = path.Join(diaryPath, filename, c.Param("file"))
 	if b, err := os.ReadFile(filename); err == nil {
 		c.Data(http.StatusOK, "image/png", b)
+		return
 	}
 	c.Status(http.StatusNotFound)
 }

@@ -17,7 +17,9 @@ func Initial(router *gin.Engine, dataPath string) error {
 	imagesPath = path.Join(dataPath, "images")
 
 	if _, err := os.Stat((imagesPath)); err != nil {
-		os.Mkdir(imagesPath, os.ModeDir)
+		if err := os.MkdirAll(imagesPath, 0755); err != nil {
+			return err
+		}
 	}
 
 	// ルーティング
@@ -30,13 +32,19 @@ func Initial(router *gin.Engine, dataPath string) error {
 // 一時保存
 func postImage(c *gin.Context) {
 	filename := path.Join(imagesPath, "tmp_")
-	filename = createPath(filename)
+	var err error
+	filename, err = createPath(filename)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	inFile, _, err := c.Request.FormFile("file")
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
+	defer inFile.Close()
 
 	outFile, err := os.Create(filename)
 	if err != nil {
@@ -62,6 +70,7 @@ func getImage(c *gin.Context) {
 	filename := path.Join(imagesPath, c.Param("file"))
 	if b, err := os.ReadFile(filename); err == nil {
 		c.Data(http.StatusOK, "image/png", b)
+		return
 	}
 	c.Status(http.StatusNotFound)
 }

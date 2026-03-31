@@ -2,7 +2,7 @@ package diary
 
 import (
 	"bufio"
-	"io"
+	"fmt"
 	"io/fs"
 	"os"
 	"path"
@@ -16,37 +16,36 @@ type listModel struct {
 	Lines        []lineModel
 }
 
-func readListFile(month string) *listModel {
+func readListFile(month string) (*listModel, error) {
 	p := filepath.Join(diaryPath, month+".txt")
 
 	l := new(listModel)
 	if _, err := os.Stat(p); err != nil {
 		l.Lines = []lineModel{}
-		return l
+		return l, nil
 	}
 
 	fp, err := os.Open(p)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer fp.Close()
 
-	reader := bufio.NewReaderSize(fp, 5000)
-	for {
-		line, _, err := reader.ReadLine()
-		if err == io.EOF {
-			break
-		}
+	scanner := bufio.NewScanner(fp)
+	buf := make([]byte, 0, 64*1024)
+	scanner.Buffer(buf, 1024*1024)
+	for scanner.Scan() {
+		d, err := newLineModel(scanner.Text())
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
-
-		s := string(line)
-		d := newLineModel(s)
 		l.Lines = append(l.Lines, *d)
 	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
 
-	return l
+	return l, nil
 }
 
 func (l *listModel) writeListFile(month string) error {
@@ -67,16 +66,15 @@ func (l *listModel) writeListFile(month string) error {
 	return os.WriteFile(filename, []byte(dataFile), os.ModePerm)
 }
 
-func (l *listModel) updateLine(month string, target lineModel) {
+func (l *listModel) updateLine(month string, target lineModel) error {
 	for i, line := range l.Lines {
 		if target.Day == line.Day {
 			l.Lines[i] = target
-			l.writeListFile(month)
-			return
+			return l.writeListFile(month)
 		}
 	}
 	l.Lines = append(l.Lines, target)
-	l.writeListFile(month)
+	return l.writeListFile(month)
 }
 
 // ----------------------------------------------------------------------------
@@ -90,7 +88,10 @@ type lineModel struct {
 	HCount   int      // メモ数
 }
 
-func newLineModel(s string) *lineModel {
+func newLineModel(s string) (*lineModel, error) {
+	if len(s) < 11 {
+		return nil, fmt.Errorf("invalid diary line: %q", s)
+	}
 	l := new(lineModel)
 	l.Day = s[0:10]
 	l.IsDetail = s[10:11] == "*"
@@ -105,7 +106,7 @@ func newLineModel(s string) *lineModel {
 		l.Tags = []string{}
 	}
 	l.HCount = 0
-	return l
+	return l, nil
 }
 
 func (l *lineModel) toString() string {
@@ -160,9 +161,14 @@ func (d *detailModel) writeDetailFile() error {
 	month := d.Day[0:4] + d.Day[5:7]
 
 	// monthファイルの更新
-	m := readListFile(month)
+	m, err := readListFile(month)
+	if err != nil {
+		return err
+	}
 	target := lineModel{d.Day, d.Outline, d.Tags, len(d.Detail) > 0, 0}
-	m.updateLine(month, target)
+	if err := m.updateLine(month, target); err != nil {
+		return err
+	}
 
 	// 詳細ファイルの更新
 	filename := strings.ReplaceAll(d.Day, "-", "") + ".txt"

@@ -1,6 +1,7 @@
 package memo
 
 import (
+	"errors"
 	"path/filepath"
 	"time"
 
@@ -31,9 +32,13 @@ func findMemos(category string) (memos []Memo) {
 	return memos
 }
 
-func findMemoById(category string, id string) (memos []Memo) {
-	db.Where("category = ? and id = ?", category, id).Find(&memos)
-	return memos
+func findMemoById(category string, id string) (Memo, error) {
+	var memo Memo
+	result := db.Where("category = ? and id = ?", category, id).First(&memo)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return Memo{}, gorm.ErrRecordNotFound
+	}
+	return memo, result.Error
 }
 
 func findMemosByMonth(category string, month string) (memos []Memo) {
@@ -52,6 +57,6 @@ func upsertMemo(m Memo) Memo {
 	return m
 }
 
-func deleteMemo(id string) {
-	db.Delete(&Memo{}, id)
+func deleteMemo(category string, id string) {
+	db.Where("category = ? and id = ?", category, id).Delete(&Memo{})
 }

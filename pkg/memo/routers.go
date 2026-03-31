@@ -1,6 +1,7 @@
 package memo
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 var setting SettingModel
@@ -20,7 +22,7 @@ func Initial(router *gin.Engine, d string, s SettingModel) error {
 	dataPath, _ = filepath.Abs(d)
 	// DB初期化
 	if err := dbOpen(dataPath); err != nil {
-		fmt.Sprintln(err)
+		log.Printf("memo init failed: %v", err)
 		return err
 	}
 	memos := findMemos("")
@@ -30,7 +32,9 @@ func Initial(router *gin.Engine, d string, s SettingModel) error {
 	for _, c := range setting.Categories {
 		categoryPath := path.Join(dataPath, c.Key)
 		if _, err := os.Stat(categoryPath); err != nil {
-			os.Mkdir(categoryPath, 0777)
+			if err := os.MkdirAll(categoryPath, 0755); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -61,27 +65,54 @@ func getMemos(c *gin.Context) {
 }
 
 func getMemosId(c *gin.Context) {
-	memos := findMemoById(c.Param("category"), c.Param("id"))
-	createResponse(c, memos, nil)
+	memo, err := findMemoById(c.Param("category"), c.Param("id"))
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.Status(http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		createResponse(c, nil, err)
+		return
+	}
+	c.JSON(http.StatusOK, memo)
 }
 
 func postMemos(c *gin.Context) {
 	var b Memo
 	err := c.ShouldBindJSON(&b)
 	if err == nil {
-		if b.Id == 0 {
-			b.Category = c.Param("category")
-			b = upsertMemo(b)
+		category := c.Param("category")
+		if pathID := c.Param("id"); pathID != "" {
+			id, convErr := strconv.Atoi(pathID)
+			if convErr != nil {
+				err = convErr
+			} else if b.Id != 0 && b.Id != id {
+				err = errors.New("path id and body id do not match")
+			} else {
+				b.Id = id
+			}
 		}
-		// 一時保存画像をdiaryデータパスに移動
-		b.Value, err = Move(b.Value, c.Param("category"), strconv.Itoa(b.Id))
-		b = upsertMemo(b)
+		if err == nil {
+			b.Category = category
+			isNewMemo := b.Id == 0
+			if isNewMemo {
+				b = upsertMemo(b)
+			}
+			// 一時保存画像をmemoデータパスに移動
+			b.Value, err = Move(b.Value, category, strconv.Itoa(b.Id))
+			if err != nil && isNewMemo {
+				deleteMemo(category, strconv.Itoa(b.Id))
+			}
+			if err == nil {
+				b = upsertMemo(b)
+			}
+		}
 	}
 	createResponse(c, nil, err)
 }
 
 func deleteMemosId(c *gin.Context) {
-	deleteMemo(c.Param("id"))
+	deleteMemo(c.Param("category"), c.Param("id"))
 
 	// 画像ディレクトリの削除
 	n, _ := strconv.Atoi(c.Param("id"))
@@ -106,6 +137,7 @@ func getImage(c *gin.Context) {
 	filename := path.Join(dataPath, c.Param("category"), c.Param("id"), c.Param("file"))
 	if b, err := os.ReadFile(filename); err == nil {
 		c.Data(http.StatusOK, "image/png", b)
+		return
 	}
 	c.Status(http.StatusNotFound)
 }

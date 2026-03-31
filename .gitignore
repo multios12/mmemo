@@ -13,3 +13,4 @@
 /cmd/mmemo/static/asset-manifest.json
 /cmd/mmemo/static/favicon.ico
 /cmd/mmemo/static/manifest.json
+/node_modules

@@ -37,19 +37,25 @@ func getWritedMonths() []string {
 }
 
 // ----------------------------------------------------------------------------
-func readDetail(day string) detailModel {
-	m := readListFile(day[0:4] + day[5:7])
+func readDetail(day string) (detailModel, error) {
+	m, err := readListFile(day[0:4] + day[5:7])
+	if err != nil {
+		return detailModel{}, err
+	}
 	for _, l := range m.Lines {
 		if day == l.Day {
-			return *readDetailFile(l)
+			return *readDetailFile(l), nil
 		}
 	}
-	return detailModel{}
+	return detailModel{}, nil
 }
 
 func removeDetail(day string) error {
 	month := day[0:4] + day[5:7]
-	m := readListFile(month)
+	m, err := readListFile(month)
+	if err != nil {
+		return err
+	}
 	for i, l := range m.Lines {
 		if day == l.Day {
 			m.Lines = append(m.Lines[:i], m.Lines[i+1:]...)

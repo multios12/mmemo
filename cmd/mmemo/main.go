@@ -4,6 +4,7 @@ import (
 	"embed"
 	"encoding/json"
 	"flag"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -44,10 +45,16 @@ func main() {
 	router.GET("/favicon.ico", getStatic)
 
 	// モジュールの初期化
-	memo.Initial(router, dataPath, setting)
+	if err := memo.Initial(router, dataPath, setting); err != nil {
+		log.Fatal(err)
+	}
 	diary.Initial(router, dataPath)
-	images.Initial(router, dataPath)
-	router.Run(port)
+	if err := images.Initial(router, dataPath); err != nil {
+		log.Fatal(err)
+	}
+	if err := router.Run(port); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // スタティックリソース GET API
@@ -61,7 +68,9 @@ func loadSettingJson() {
 
 	// データファイルパスの確認と、存在しない場合は作成
 	if _, err := os.Stat((dataPath)); err != nil {
-		os.Mkdir(dataPath, os.ModeDir)
+		if err := os.MkdirAll(dataPath, 0755); err != nil {
+			panic(err)
+		}
 	}
 
 	// 設定ファイルの読み込み、存在しない場合はサンプルファイルをもとに作成
@@ -72,7 +81,9 @@ func loadSettingJson() {
 		if err != nil {
 			panic(err)
 		}
-		os.WriteFile(filename, b, os.ModePerm)
+		if err := os.WriteFile(filename, b, os.ModePerm); err != nil {
+			panic(err)
+		}
 	}
 
 	if b, err := os.ReadFile(filename); err != nil {

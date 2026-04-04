@@ -15,4 +15,5 @@ cp -R "$SCRIPT_DIR/front/dist/." "$SCRIPT_DIR/cmd/mmemo/static/"
 cd "$SCRIPT_DIR/cmd/mmemo"
 export GOOS=linux
 export GOARCH=amd64
+export GOCACHE="${GOCACHE:-/tmp/go-build}"
 go build -ldflags="-s -w" -trimpath -o "$SCRIPT_DIR/dist/"

@@ -1,7 +1,7 @@
 const rawBaseUrl = import.meta.env.BASE_URL || "/";
 
 const normalizeBasePath = (value: string) => {
-  if (!value || value === "./" || value === ".") {
+  if (!value || value === "/" || value === "./" || value === ".") {
     return "";
   }
 

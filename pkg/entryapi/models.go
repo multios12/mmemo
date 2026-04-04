@@ -12,6 +12,11 @@ type HolidayModel struct {
 	Name string `validate:"min=1"` // 名称
 }
 
+type TemplateModel struct {
+	Name  string // テンプレート名
+	Value string // 本文
+}
+
 // 情報種別
 type CategoryModel struct {
 	Key                         string // キー
@@ -20,7 +25,7 @@ type CategoryModel struct {
 	UseTag                      bool   // タグ表示
 	AllowMultipleEntriesPerDate bool   // 同一日付の複数登録可否
 	Fields                      map[string]string
-	Template                    string // テンプレート
+	Templates                   []TemplateModel // テンプレート
 }
 
 // 共有エントリ

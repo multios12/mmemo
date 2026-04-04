@@ -18,19 +18,21 @@ import (
 )
 
 var setting SettingModel
+var entryStore Store = sqliteStore{}
 
 func Initial(router *http.ServeMux, s SettingModel) error {
-	setting = s
-	if err := store.Open("."); err != nil {
+	if err := entryStore.Open("."); err != nil {
 		log.Printf("entry init failed: %v", err)
 		return err
 	}
-	entries := store.FindEntries("")
+	setting = hydrateSetting(s)
+	entries := entryStore.FindEntries("")
 	log.Printf("info: entry[dataPath=.]")
 	log.Printf("info: entry[count=%d]", len(entries))
 
 	router.HandleFunc("GET /settings", getSetting)
 	router.HandleFunc("GET /api/{category}", getEntries)
+	router.HandleFunc("POST /api/{category}/templates", saveTemplate)
 	router.HandleFunc("POST /api/{category}/images/tmp", postTempImage)
 	router.HandleFunc("GET /api/{category}/images/tmp/{file}", getTempImage)
 	router.HandleFunc("GET /api/{category}/{id}", getEntry)
@@ -46,7 +48,7 @@ func Initial(router *http.ServeMux, s SettingModel) error {
 func getSetting(w http.ResponseWriter, _ *http.Request) {
 	latestSetting, err := loadSettingFromFile()
 	if err == nil {
-		setting = latestSetting
+		setting = hydrateSetting(latestSetting)
 	}
 	writeJSON(w, http.StatusOK, setting)
 }
@@ -61,13 +63,134 @@ func loadSettingFromFile() (SettingModel, error) {
 	if err := json.Unmarshal(b, &latest); err != nil {
 		return SettingModel{}, err
 	}
+	normalizeSetting(&latest)
 	return latest, nil
+}
+
+func normalizeSetting(target *SettingModel) {
+	for categoryIndex := range target.Categories {
+		category := &target.Categories[categoryIndex]
+		for templateIndex := range category.Templates {
+			template := &category.Templates[templateIndex]
+			template.Name = strings.TrimSpace(template.Name)
+			if template.Name == "" {
+				template.Name = fmt.Sprintf("テンプレート%d", templateIndex+1)
+			}
+		}
+	}
+}
+
+func hydrateSetting(base SettingModel) SettingModel {
+	normalizeSetting(&base)
+	for categoryIndex := range base.Categories {
+		category := &base.Categories[categoryIndex]
+		if err := entryStore.SeedTemplates(category.Key, templateModelsToStore(category.Key, category.Templates)); err != nil {
+			log.Printf("template seed failed[category=%s]: %v", category.Key, err)
+		}
+
+		templates, err := entryStore.FindTemplates(category.Key)
+		if err != nil {
+			log.Printf("template load failed[category=%s]: %v", category.Key, err)
+			continue
+		}
+		category.Templates = storeTemplatesToModels(templates)
+	}
+	return base
+}
+
+func templateModelsToStore(category string, templates []TemplateModel) []store.Template {
+	items := make([]store.Template, 0, len(templates))
+	for index, template := range templates {
+		items = append(items, store.Template{
+			Category:     category,
+			Name:         template.Name,
+			Value:        template.Value,
+			DisplayOrder: index + 1,
+		})
+	}
+	return items
+}
+
+func storeTemplatesToModels(templates []store.Template) []TemplateModel {
+	items := make([]TemplateModel, 0, len(templates))
+	for _, template := range templates {
+		items = append(items, TemplateModel{
+			Name:  template.Name,
+			Value: template.Value,
+		})
+	}
+	return items
+}
+
+func SeedDefaultTemplates(defaults SettingModel) error {
+	normalizeSetting(&defaults)
+	for _, category := range defaults.Categories {
+		if err := entryStore.SeedTemplates(category.Key, templateModelsToStore(category.Key, category.Templates)); err != nil {
+			return err
+		}
+	}
+	setting = hydrateSetting(setting)
+	return nil
+}
+
+type templatePayload struct {
+	Name  string `json:"Name"`
+	Value string `json:"Value"`
+}
+
+func saveTemplate(w http.ResponseWriter, r *http.Request) {
+	category := r.PathValue("category")
+	if !hasCategory(setting, category) {
+		writeErrorJSON(w, http.StatusBadRequest, errors.New("カテゴリが見つかりません"))
+		return
+	}
+
+	var payload templatePayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
+	payload.Name = strings.TrimSpace(payload.Name)
+	payload.Value = strings.TrimSpace(payload.Value)
+	if payload.Name == "" {
+		writeErrorJSON(w, http.StatusBadRequest, errors.New("テンプレート名を入力してください"))
+		return
+	}
+	if payload.Value == "" {
+		writeErrorJSON(w, http.StatusBadRequest, errors.New("本文が空のためテンプレート保存できません"))
+		return
+	}
+
+	_, err := entryStore.SaveTemplate(category, store.Template{
+		Name:  payload.Name,
+		Value: payload.Value,
+	})
+	if err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
+	latestSetting, err := loadSettingFromFile()
+	if err == nil {
+		setting = hydrateSetting(latestSetting)
+	}
+	writeJSON(w, http.StatusOK, setting)
+}
+
+func hasCategory(setting SettingModel, category string) bool {
+	for _, categorySetting := range setting.Categories {
+		if categorySetting.Key == category {
+			return true
+		}
+	}
+	return false
 }
 
 func getEntries(w http.ResponseWriter, r *http.Request) {
 	category := r.PathValue("category")
 	if r.URL.Query().Get("months") == "1" {
-		months, err := store.FindMonths(category)
+		months, err := entryStore.FindMonths(category)
 		if err != nil {
 			writeErrorJSON(w, http.StatusBadRequest, err)
 			return
@@ -79,9 +202,9 @@ func getEntries(w http.ResponseWriter, r *http.Request) {
 	var entries []store.Entry
 	var err error
 	if month := r.URL.Query().Get("month"); month != "" {
-		entries, err = store.FindEntriesByMonth(category, month)
+		entries, err = entryStore.FindEntriesByMonth(category, month)
 	} else {
-		entries = store.FindEntries(category)
+		entries = entryStore.FindEntries(category)
 	}
 	if err != nil {
 		writeErrorJSON(w, http.StatusBadRequest, err)
@@ -137,20 +260,20 @@ func saveEntry(w http.ResponseWriter, r *http.Request, pathID string) {
 
 	isNewEntry := entry.Id == 0
 	if isNewEntry {
-		entry = store.UpsertEntry(entry)
+		entry = entryStore.UpsertEntry(entry)
 	}
 
 	value, err := Move(entry.Value, category, strconv.Itoa(entry.Id))
 	if err != nil {
 		if isNewEntry {
-			store.DeleteEntry(category, strconv.Itoa(entry.Id))
+			entryStore.DeleteEntry(category, strconv.Itoa(entry.Id))
 		}
 		writeErrorJSON(w, http.StatusBadRequest, err)
 		return
 	}
 
 	entry.Value = value
-	entry = store.UpsertEntry(entry)
+	entry = entryStore.UpsertEntry(entry)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -163,7 +286,7 @@ func validateEntryDateDuplication(category string, entry store.Entry) error {
 			return nil
 		}
 
-		current, err := store.FindEntryByDate(category, entry.Date)
+		current, err := entryStore.FindEntryByDate(category, entry.Date)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil
 		}
@@ -195,7 +318,7 @@ func validatePathID(entry *store.Entry, pathID string) error {
 }
 
 func findEntry(category string, id string) (store.Entry, error) {
-	return store.FindEntryByID(category, id)
+	return entryStore.FindEntryByID(category, id)
 }
 
 func deleteEntry(w http.ResponseWriter, r *http.Request) {
@@ -204,13 +327,13 @@ func deleteEntry(w http.ResponseWriter, r *http.Request) {
 	var legacyDiaryDate string
 
 	if category == "diary" {
-		entry, err := store.FindEntryByID(category, id)
+		entry, err := entryStore.FindEntryByID(category, id)
 		if err == nil {
 			legacyDiaryDate = entry.Date
 		}
 	}
 
-	store.DeleteEntry(category, id)
+	entryStore.DeleteEntry(category, id)
 	n, _ := strconv.Atoi(id)
 	paddedID := fmt.Sprintf("%05d", n)
 	_ = entryimage.DeleteImagesByPrefix(path.Join(category, paddedID) + "/")
@@ -222,10 +345,10 @@ func deleteEntry(w http.ResponseWriter, r *http.Request) {
 
 func getImage(w http.ResponseWriter, r *http.Request) {
 	imagePath := imagePathForRoute(r.PathValue("category"), r.PathValue("id"), r.PathValue("file"))
-	storedImage, err := store.FindImage(imagePath)
+	storedImage, err := entryStore.FindImage(imagePath)
 	if errors.Is(err, gorm.ErrRecordNotFound) && r.PathValue("category") == "diary" {
 		if legacyPath, legacyErr := legacyDiaryImagePath(r.PathValue("id"), r.PathValue("file")); legacyErr == nil {
-			storedImage, err = store.FindImage(legacyPath)
+			storedImage, err = entryStore.FindImage(legacyPath)
 		}
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -301,7 +424,7 @@ func imagePathForRoute(category string, id string, file string) string {
 }
 
 func legacyDiaryImagePath(id string, file string) (string, error) {
-	entry, err := store.FindEntryByID("diary", id)
+	entry, err := entryStore.FindEntryByID("diary", id)
 	if err != nil {
 		return "", err
 	}

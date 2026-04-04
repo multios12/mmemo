@@ -9,9 +9,9 @@ import (
 )
 
 func TestNormalizeImageForStorage_ResizesLargePNG(t *testing.T) {
-	img := stdimage.NewRGBA(stdimage.Rect(0, 0, 3200, 1200))
-	for y := 0; y < 1200; y++ {
-		for x := 0; x < 3200; x++ {
+	img := stdimage.NewRGBA(stdimage.Rect(0, 0, maxStoredImageWidth+1, maxStoredImageHeight+1))
+	for y := 0; y < maxStoredImageHeight+1; y++ {
+		for x := 0; x < maxStoredImageWidth+1; x++ {
 			img.Set(x, y, color.RGBA{R: uint8(x % 255), G: uint8(y % 255), B: 120, A: 255})
 		}
 	}
@@ -36,7 +36,7 @@ func TestNormalizeImageForStorage_ResizesLargePNG(t *testing.T) {
 	if cfg.Width > maxStoredImageWidth || cfg.Height > maxStoredImageHeight {
 		t.Fatalf("image was not resized enough: %dx%d", cfg.Width, cfg.Height)
 	}
-	if cfg.Width >= 3200 || cfg.Height >= 1200 {
+	if cfg.Width >= maxStoredImageWidth+1 || cfg.Height >= maxStoredImageHeight+1 {
 		t.Fatalf("image size did not shrink: %dx%d", cfg.Width, cfg.Height)
 	}
 	if len(out) >= len(in.Bytes()) {
@@ -45,9 +45,9 @@ func TestNormalizeImageForStorage_ResizesLargePNG(t *testing.T) {
 }
 
 func TestNormalizeImageForStorage_KeepsImageWithinResolutionLimit(t *testing.T) {
-	img := stdimage.NewRGBA(stdimage.Rect(0, 0, 1919, 1079))
-	for y := 0; y < 1079; y++ {
-		for x := 0; x < 1919; x++ {
+	img := stdimage.NewRGBA(stdimage.Rect(0, 0, 640, 360))
+	for y := 0; y < 360; y++ {
+		for x := 0; x < 640; x++ {
 			img.Set(x, y, color.RGBA{R: 10, G: 20, B: 30, A: 255})
 		}
 	}

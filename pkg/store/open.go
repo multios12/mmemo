@@ -18,5 +18,5 @@ func Open(dataPath string) error {
 		return err
 	}
 
-	return db.AutoMigrate(&Entry{}, &Image{})
+	return db.AutoMigrate(&Entry{}, &Image{}, &Template{})
 }

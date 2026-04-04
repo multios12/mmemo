@@ -3,13 +3,20 @@
   import { onMount } from "svelte";
   import TagsInput from "../components/TagsInput.svelte";
   import type { entryType } from "../models/entryModels.js";
+  import type { TemplateType } from "../models/settingType.js";
   import RichInput from "../components/RichInput/index.svelte";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
-  import { faArrowLeft, faCloudArrowUp, faTags, faTrash } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faArrowLeft,
+    faBook,
+    faCloudArrowUp,
+    faTags,
+    faTrash,
+  } from "@fortawesome/free-solid-svg-icons";
   import { settingsStore } from "../store.js";
   import { apiPath, appPath } from "../basePath.js";
 
-  library.add(faTrash, faTags, faCloudArrowUp, faArrowLeft);
+  library.add(faTrash, faTags, faCloudArrowUp, faArrowLeft, faBook);
   dom.watch();
 
   interface Props {
@@ -39,11 +46,11 @@
     const categorySetting = $settingsStore?.Categories?.find(
       (category) => category.Key === categoryKey,
     );
-
     return {
-      template: categorySetting?.Template || "",
+      templates: categorySetting?.Templates ?? [],
       showTags: categorySetting?.UseTag ?? false,
-      allowMultipleEntriesPerDate: categorySetting?.AllowMultipleEntriesPerDate ?? true,
+      allowMultipleEntriesPerDate:
+        categorySetting?.AllowMultipleEntriesPerDate ?? true,
       dateLabel: categorySetting?.Fields?.Date || "日付",
       tagsLabel: categorySetting?.Fields?.Tags || "タグ",
       outlineLabel: categorySetting?.Fields?.Outline || "見出し",
@@ -65,6 +72,8 @@
   let showTagsOnMobile = $state(false);
   let outlineInput = $state<HTMLInputElement | null>(null);
   let isPageLoading = $state(true);
+  let selectedTemplateIndex = $state<number | null>(null);
+  let isTemplateSelectorOpen = $state(false);
 
   document.querySelector<HTMLDivElement>(".navbar")?.classList.add("is-hidden");
 
@@ -98,6 +107,15 @@
       });
     });
   };
+  const applyInitialEditorValue = (value: string) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        editorValue = value;
+        entry.Value = value;
+        initialSnapshot = snapshotEntry(entry, value);
+      });
+    });
+  };
   const snapshotEntry = (target: entryType, value: string) =>
     JSON.stringify({
       Outline: target.Outline ?? "",
@@ -109,6 +127,19 @@
     canCheckDirty && snapshotEntry(entry, editorValue) !== initialSnapshot,
   );
   const saveButtonLabel = $derived(isNew ? "作成" : "保存");
+  const templateOptions = $derived.by(() => {
+    const options = [...resolvedSettings.templates];
+    if (!isNew) {
+      return options;
+    }
+
+    return [
+      { Name: "空白から作成", Value: "" } satisfies TemplateType,
+      ...options,
+    ];
+  });
+  const selectableTemplateCount = $derived(resolvedSettings.templates.length);
+  const showTemplateSelector = $derived(isNew && isTemplateSelectorOpen);
 
   const entryUrl = () => {
     if (isNew) {
@@ -176,6 +207,45 @@
     editorValue = value;
     entry.Value = value;
   };
+  const onSelectTemplate = (template: TemplateType, index: number) => {
+    selectedTemplateIndex = index;
+    isTemplateSelectorOpen = false;
+    applyInitialEditorValue(template.Value ?? "");
+  };
+  const onSaveTemplate = async () => {
+    const suggestedName = entry.Outline.trim() || "新しいテンプレート";
+    const name = window.prompt("テンプレート名", suggestedName)?.trim() ?? "";
+    if (name === "") {
+      return;
+    }
+    if (editorValue.trim() === "") {
+      errMessage = "本文が空のためテンプレート保存できません";
+      isErr = true;
+      return;
+    }
+
+    const response = await fetch(apiPath(`${categoryKey}/templates`), {
+      method: "post",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ Name: name, Value: editorValue }),
+    });
+    if (response.status !== 200) {
+      errMessage = (await response.json()).error;
+      isErr = true;
+      return;
+    }
+
+    const nextSettings = await response.json();
+    settingsStore.set(nextSettings);
+    isErr = false;
+    errMessage = "";
+  };
+  const templatePreview = (value: string) =>
+    value
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line !== "")
+      .slice(0, 3);
 
   onMount(() => {
     const headerRect = document
@@ -211,16 +281,24 @@
     entry = createEmptyEntry();
     isNew = isAddRoute;
     showTagsOnMobile = false;
-    canCheckDirty = false;
+    selectedTemplateIndex = null;
+    isTemplateSelectorOpen = false;
+    canCheckDirty = true;
 
     if (isNew) {
-      const nextEntry = { ...createEmptyEntry(), Value: resolvedSettings.template };
+      const nextEntry = createEmptyEntry();
+      const initialTemplateValue = resolvedSettings.templates[0]?.Value ?? "";
       entry = nextEntry;
-      editorValue = nextEntry.Value;
-      initialSnapshot = snapshotEntry(nextEntry, nextEntry.Value);
-      canCheckDirty = true;
+      editorValue = "";
+      nextEntry.Value = "";
+      initialSnapshot = snapshotEntry(nextEntry, "");
       isLoading = false;
       finishPageLoading();
+      if (selectableTemplateCount > 1) {
+        isTemplateSelectorOpen = true;
+      } else if (initialTemplateValue !== "") {
+        applyInitialEditorValue(initialTemplateValue);
+      }
       return;
     }
 
@@ -283,7 +361,9 @@
         <div class="detail-header-top">
           <div class="field detail-date-field">
             {#if isNew}
-              <label class="label" for="dateInput">{resolvedSettings.dateLabel}</label>
+              <label class="label" for="dateInput"
+                >{resolvedSettings.dateLabel}</label
+              >
             {:else}
               <div class="label">{resolvedSettings.dateLabel}</div>
             {/if}
@@ -316,7 +396,9 @@
         </div>
 
         <div class="field">
-          <label class="label" for="outlineInput">{resolvedSettings.outlineLabel}</label>
+          <label class="label" for="outlineInput"
+            >{resolvedSettings.outlineLabel}</label
+          >
           <div class="field has-addons mobile-outline-row">
             <div class="control is-expanded">
               <input
@@ -357,10 +439,39 @@
     {/if}
   </header>
 
-  <section class="p-0">
+  <section class="detail-body p-0">
+    {#if showTemplateSelector}
+      <div class="template-selector-modal">
+        <div class="template-selector">
+          <div class="template-selector-header">
+            <h2 class="title is-6 mb-2">テンプレート選択</h2>
+          </div>
+          <div class="template-grid">
+            {#each templateOptions as template, index}
+              <button
+                class="template-card"
+                class:is-selected={selectedTemplateIndex === index}
+                type="button"
+                onclick={() => onSelectTemplate(template, index)}
+              >
+                <span class="template-card-title">{template.Name}</span>
+                <span class="template-card-preview">
+                  {#if templatePreview(template.Value).length > 0}
+                    {templatePreview(template.Value).join(" / ")}
+                  {:else}
+                    空の本文で開始します
+                  {/if}
+                </span>
+              </button>
+            {/each}
+          </div>
+        </div>
+      </div>
+    {/if}
+
     <div class="field">
       <div class="control py-2">
-        <RichInput bind:value={entry.Value} {imageUploadPath} {onTextChange} />
+        <RichInput value={editorValue} {imageUploadPath} {onTextChange} />
       </div>
     </div>
   </section>
@@ -375,6 +486,13 @@
         <button class="button is-light footer-button" onclick={onCancel}>
           <span class="icon"><i class="fa-solid fa-arrow-left"></i></span>
           <span>戻る</span>
+        </button>
+        <button
+          class="button is-light footer-button footer-template-button"
+          onclick={onSaveTemplate}
+        >
+          <span class="icon"><i class="fa-solid fa-book"></i></span>
+          <span>テンプレート</span>
         </button>
         <button
           class="button footer-button"
@@ -396,6 +514,11 @@
 <style>
   .detail-page {
     position: relative;
+  }
+
+  .detail-body {
+    position: relative;
+    min-height: calc(100vh - 15rem);
   }
 
   .detail-page.is-page-loading {
@@ -512,6 +635,92 @@
     padding: 0.75rem 1rem;
   }
 
+  .template-selector {
+    width: min(100%, 34rem);
+    max-height: min(70vh, 38rem);
+    overflow-y: auto;
+    padding: 1rem;
+    border: 1px solid
+      color-mix(in srgb, var(--bulma-link) 18%, var(--bulma-border));
+    border-radius: 1.1rem;
+    background: var(--bulma-scheme-main);
+    box-shadow:
+      0 1.2rem 3rem rgba(15, 23, 42, 0.18),
+      0 0 0 1px color-mix(in srgb, var(--bulma-link) 12%, transparent);
+  }
+
+  .template-selector-modal {
+    position: absolute;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: color-mix(
+      in srgb,
+      var(--bulma-scheme-main) 55%,
+      rgba(15, 23, 42, 0.45)
+    );
+    backdrop-filter: blur(6px);
+  }
+
+  .template-selector-header {
+    margin-bottom: 0.75rem;
+  }
+
+  .template-grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .template-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid var(--bulma-border);
+    border-radius: 0.9rem;
+    background: color-mix(
+      in srgb,
+      var(--bulma-link) 10%,
+      var(--bulma-scheme-main)
+    );
+    color: var(--bulma-text);
+    text-align: left;
+    transition:
+      border-color 0.15s ease,
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .template-card:hover {
+    border-color: var(--bulma-link);
+    transform: translateY(-1px);
+  }
+
+  .template-card.is-selected {
+    border-color: var(--bulma-link);
+    background: color-mix(
+      in srgb,
+      var(--bulma-link) 18%,
+      var(--bulma-scheme-main)
+    );
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--bulma-link) 45%, transparent);
+  }
+
+  .template-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .template-card-preview {
+    color: var(--bulma-text-weak);
+    line-height: 1.5;
+  }
+
   .footer-status {
     display: flex;
     align-items: center;
@@ -539,6 +748,10 @@
 
   .footer-button {
     min-width: 7rem;
+  }
+
+  .footer-template-button {
+    font-size: 0.8rem;
   }
 
   .footer-button.is-disabled-look .icon {
@@ -652,6 +865,14 @@
       flex-wrap: wrap;
       gap: 0.4rem;
       padding: 0.45rem 0.75rem 0.6rem;
+    }
+
+    .detail-body {
+      min-height: calc(100vh - 13rem);
+    }
+
+    .template-selector {
+      padding: 0.75rem;
     }
 
     .footer-status,

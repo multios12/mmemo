@@ -87,8 +87,8 @@ export const InitialEditor = async (
       });
     }),
     // 更新時のマークダウン出力リスナ登録
-    editor.registerUpdateListener(({ }) => {
-      editor.update(() => {
+    editor.registerUpdateListener(({ editorState }) => {
+      editorState.read(() => {
         const trans = [IMAGE, ...TRANSFORMERS];
         const markdown = _convertToMarkdownString(trans);
         onTextChange?.(markdown);

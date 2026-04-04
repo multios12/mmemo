@@ -9,6 +9,11 @@ export type HolidayType = {
     Name: string,
 }
 
+export type TemplateType = {
+    Name: string,
+    Value: string,
+}
+
 export type CategoryType = {
     Key: string,
     // 種類名
@@ -22,7 +27,7 @@ export type CategoryType = {
     // 同一日付の複数登録可否
     AllowMultipleEntriesPerDate: boolean,
     // テンプレート
-    Template: string,
+    Templates?: TemplateType[],
     Fields: {
         Name?: string,
         Date?: string,

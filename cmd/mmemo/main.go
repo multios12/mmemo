@@ -1,9 +1,9 @@
 package main
 
 import (
-	"errors"
 	"embed"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/fs"
@@ -45,6 +45,12 @@ func init() {
 }
 
 func main() {
+	dataPath, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	dbExists := fileExists(filepath.Join(dataPath, "memo.db"))
+
 	// 設定ファイルの読み込み
 	loadSettingJson()
 
@@ -59,6 +65,11 @@ func main() {
 	// モジュールの初期化
 	if err := entryapi.Initial(router, setting); err != nil {
 		log.Fatal(err)
+	}
+	if !dbExists {
+		if err := entryapi.SeedDefaultTemplates(defaultTemplateSetting()); err != nil {
+			log.Printf("default template seed failed: %v", err)
+		}
 	}
 	if err := http.ListenAndServe(port, withRecovery(withLogging(router))); err != nil {
 		log.Fatal(err)
@@ -102,6 +113,32 @@ func shouldServeSPA(path string) bool {
 
 	_, err := fs.Stat(staticFiles, strings.TrimPrefix(path, "/"))
 	return errors.Is(err, fs.ErrNotExist)
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+func defaultTemplateSetting() entryapi.SettingModel {
+	return entryapi.SettingModel{
+		Categories: []entryapi.CategoryModel{
+			{
+				Key: "diary",
+				Templates: []entryapi.TemplateModel{
+					{Name: "通常日記", Value: "## 今日の出来事\n----\n## 明日の予定\n----"},
+					{Name: "ふりかえり", Value: "## 良かったこと\n----\n## 改善したいこと\n----\n## 次にやること\n----"},
+				},
+			},
+			{
+				Key: "sample",
+				Templates: []entryapi.TemplateModel{
+					{Name: "基本", Value: "## データ1\n----\n## データ2\n----"},
+					{Name: "打ち合わせ", Value: "## 議題\n----\n## 決定事項\n----\n## 宿題\n----"},
+				},
+			},
+		},
+	}
 }
 
 // 設定ファイルの読み込み

@@ -24,6 +24,14 @@ vscode上での実行を前提。chromeを利用
 そのため、開発用データは `data/settings.json` と `data/memo.db` に保存されます。
 `data` ディレクトリおよび生成されるデータファイルは Git にコミットしません。
 
+## テスト
+
+Go テストはキャッシュ先を `/tmp/go-build` に固定した `./test.sh` を使います。
+
+```sh
+./test.sh
+```
+
 ## 実行
 `mmemo` は起動したカレントディレクトリに `settings.json` と `memo.db` を作成して利用します。
 
@@ -67,7 +75,12 @@ mmemo -h
       "UseDate": true,
       "UseTag": true,
       "AllowMultipleEntriesPerDate": false,
-      "Template": "## 今日の出来事\n----\n## 明日の予定\n----",
+      "Templates": [
+        {
+          "Name": "通常日記",
+          "Value": "## 今日の出来事\n----\n## 明日の予定\n----"
+        }
+      ],
       "Fields": {
         "Name": "タイトル",
         "Date": "日付",
@@ -107,8 +120,8 @@ mmemo -h
   `true` の場合、タグ入力を表示します
 - `AllowMultipleEntriesPerDate`
   `false` の場合、同じカテゴリ・同じ日付のエントリは 1 件だけに制限されます
-- `Template`
-  新規作成時に本文へ入る初期テンプレートです
+- `Templates`
+  新規作成時に使うテンプレート一覧です。1 件なら自動反映、複数なら選択UIが表示されます
 - `Fields`
   UI 上のラベル文言です
   `Outline` を指定すると、詳細画面の見出しラベルを変更できます

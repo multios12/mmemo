@@ -1,30 +1,29 @@
 <script lang="ts">
   import "bulma/css/bulma.css";
   import Router, { location, link } from "svelte-spa-router";
+  import { wrap } from "svelte-spa-router/wrap";
   import { type RouteDefinition } from "svelte-spa-router";
-  import DiaryList from "./routes/DiaryList.svelte";
-  import DiaryEdit from "./routes/DiaryDetail.svelte";
-  import HMemoList from "./routes/MemoList.svelte";
-  import HMemoEdit from "./routes/MemoDetail.svelte";
+  import type { ComponentType } from "svelte";
+  import EntryList from "./routes/EntryList.svelte";
+  import EntryDetail from "./routes/EntryDetail.svelte";
   import Planner from "./routes/Planner/Planner.svelte";
   import { onMount } from "svelte";
   import type { settingType } from "./models/settingType.js";
   import { settingsStore } from "./store.js";
   let page = "";
+  const EntryListRoute = EntryList as unknown as ComponentType;
+  const EntryDetailRoute = EntryDetail as unknown as ComponentType;
 
   const routes = {
-    "/": DiaryList,
-    "/d/:id": DiaryEdit,
-    "/d/add": DiaryEdit,
     "/planner/": Planner,
-    "/:category/": HMemoList,
-    "/:category/:id": HMemoEdit,
-    "/:category/add": HMemoEdit,
+    "/:category/": EntryListRoute,
+    "/:category/:id": EntryDetailRoute,
+    "/:category/add": EntryDetailRoute,
   } as unknown as RouteDefinition;
   let settings: settingType;
 
   onMount(async () => {
-    const r = await fetch("./api/memos");
+    const r = await fetch("/settings");
     settings = <settingType>await r.json();
     settingsStore.update((s) => settings);
   });
@@ -76,14 +75,6 @@
 
   <div id="navbarMMemo" class="navbar-menu">
     <div class="navbar-start">
-      <a
-        class="navbar-item is-unselectable is-tab"
-        class:is-active={page === ""}
-        href="/"
-        use:link
-      >
-        {settings?.Diary?.Name}
-      </a>
       {#if settings !== undefined}
         {#each settings.Categories as category}
           <a

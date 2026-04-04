@@ -28,7 +28,7 @@
     data.append("file", file);
     try {
       const init = { method: "post", body: data };
-      const r = await fetch(`./api/images`, init);
+      const r = await fetch(`/images`, init);
       if (r.status === 200) {
         document.querySelector("#dialog")?.classList.remove("is-active");
         const f = await r.text();

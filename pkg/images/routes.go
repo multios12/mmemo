@@ -4,73 +4,76 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"path"
-	"path/filepath"
 
-	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-var imagesPath string
-
-func Initial(router *gin.Engine, dataPath string) error {
-	imagesPath = path.Join(dataPath, "images")
-
-	if _, err := os.Stat((imagesPath)); err != nil {
-		if err := os.MkdirAll(imagesPath, 0755); err != nil {
-			return err
-		}
-	}
-
+func Initial(router *http.ServeMux, _ string) error {
 	// ルーティング
-	router.POST("/api/images", postImage)
-	router.GET("/api/images/:file", getImage)
+	router.HandleFunc("POST /images", postImage)
+	router.HandleFunc("GET /images/{file}", getImage)
 
 	return nil
 }
 
 // 一時保存
-func postImage(c *gin.Context) {
-	filename := path.Join(imagesPath, "tmp_")
-	var err error
-	filename, err = createPath(filename)
+func postImage(w http.ResponseWriter, r *http.Request) {
+	filename, err := createPath("tmp_")
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	inFile, _, err := c.Request.FormFile("file")
+	inFile, header, err := r.FormFile("file")
 	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	defer inFile.Close()
 
-	outFile, err := os.Create(filename)
-	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-	defer outFile.Close()
-
-	_, err = io.Copy(outFile, inFile)
+	data, err := io.ReadAll(inFile)
 	if err != nil {
 		err = fmt.Errorf("ファイルが保存できません: %w", err)
-		c.String(http.StatusInternalServerError, err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	filename = filepath.Base(filename)
-	filename = fmt.Sprintf("/api/images/%s", filename)
-	c.String(http.StatusOK, filename)
+	contentType := header.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "image/png"
+	}
+	contentType, data, err = normalizeImageForStorage(contentType, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := saveImage(filename, contentType, data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	filename = fmt.Sprintf("/images/%s", filename)
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(filename))
 }
 
 // 一時画像の取得
-func getImage(c *gin.Context) {
-	filename := path.Join(imagesPath, c.Param("file"))
-	if b, err := os.ReadFile(filename); err == nil {
-		c.Data(http.StatusOK, "image/png", b)
+func getImage(w http.ResponseWriter, r *http.Request) {
+	image, err := findImage(r.PathValue("file"))
+	if err == nil {
+		contentType := image.ContentType
+		if contentType == "" {
+			contentType = "image/png"
+		}
+		w.Header().Set("Content-Type", contentType)
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(image.Data)
 		return
 	}
-	c.Status(http.StatusNotFound)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
 }

@@ -1,5 +1,6 @@
 /data
 /dist
+/front/.yarn
 /front/build
 /front/dist
 /front/node_modules

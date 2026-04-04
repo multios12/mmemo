@@ -1,20 +1,30 @@
 {
-    "Diary": {
-        "Name": "日記"
+  "Categories": [
+    {
+      "Key": "diary",
+      "Name": "日記",
+      "UseDate": true,
+      "UseTag": true,
+      "Template": "## 今日の出来事\n----\n## 明日の予定\n----",
+      "Fields": {
+        "Name": "タイトル",
+        "Date": "日付",
+        "Tags": "タグ",
+        "Value": "内容"
+      }
     },
-    "Categories": [
-        {
-            "Key": "sample",
-            "Name": "サンプル",
-            "UseDate": true,
-            "UseTag": true,
-            "Template": "## データ１\n----\n## データ2\n----",
-            "Fields": {
-                "Name": "名前",
-                "Date": "日付",
-                "Tags": "タグ",
-                "Value": "情報"
-            }
-        }
-    ]
+    {
+      "Key": "sample",
+      "Name": "サンプル",
+      "UseDate": true,
+      "UseTag": true,
+      "Template": "## データ１\n----\n## データ2\n----",
+      "Fields": {
+        "Name": "名前",
+        "Date": "日付",
+        "Tags": "タグ",
+        "Value": "情報"
+      }
+    }
+  ]
 }

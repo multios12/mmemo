@@ -1,143 +1,226 @@
 package memo
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 
-	"github.com/gin-gonic/gin"
+	"github.com/multios12/mmemo/pkg/images"
+	"github.com/multios12/mmemo/pkg/store"
 	"gorm.io/gorm"
 )
 
 var setting SettingModel
 var dataPath string
 
-func Initial(router *gin.Engine, d string, s SettingModel) error {
+func Initial(router *http.ServeMux, d string, s SettingModel) error {
 	setting = s
 	dataPath, _ = filepath.Abs(d)
-	// DB初期化
-	if err := dbOpen(dataPath); err != nil {
+	if err := store.Open(dataPath); err != nil {
 		log.Printf("memo init failed: %v", err)
 		return err
 	}
-	memos := findMemos("")
+	entries := store.FindEntries("")
 	log.Printf("info: memo[dataPath=%s]", dataPath)
-	log.Printf("info: memo[count=%d]", len(memos))
+	log.Printf("info: memo[count=%d]", len(entries))
 
-	for _, c := range setting.Categories {
-		categoryPath := path.Join(dataPath, c.Key)
-		if _, err := os.Stat(categoryPath); err != nil {
-			if err := os.MkdirAll(categoryPath, 0755); err != nil {
-				return err
-			}
-		}
-	}
-
-	// ルーティング
-	router.GET("/api/memos", getSetting)
-	router.GET("/api/memos/:category", getMemos)
-	router.GET("/api/memos/:category/:id", getMemosId)
-	router.PUT("/api/memos/:category", postMemos)
-	router.POST("/api/memos/:category/:id", postMemos)
-	router.DELETE("/api/memos/:category/:id", deleteMemosId)
-	router.GET("/api/memos/:category/:id/:file", getImage)
+	router.HandleFunc("GET /settings", getSetting)
+	router.HandleFunc("GET /api/{category}", getEntries)
+	router.HandleFunc("GET /api/{category}/{id}", getEntry)
+	router.HandleFunc("PUT /api/{category}", putEntry)
+	router.HandleFunc("POST /api/{category}/{id}", postEntry)
+	router.HandleFunc("DELETE /api/{category}/{id}", deleteEntry)
+	router.HandleFunc("GET /api/{category}/{id}/images/{file}", getImage)
 
 	return nil
 }
 
-func getSetting(c *gin.Context) {
-	c.JSON(http.StatusOK, setting)
+func getSetting(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, setting)
 }
 
-func getMemos(c *gin.Context) {
-	var memos []Memo
-	if len(c.Query("month")) == 0 {
-		memos = findMemos(c.Param("category"))
+func getEntries(w http.ResponseWriter, r *http.Request) {
+	category := r.PathValue("category")
+	if r.URL.Query().Get("months") == "1" {
+		months, err := store.FindMonths(category)
+		if err != nil {
+			writeErrorJSON(w, http.StatusBadRequest, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, months)
+		return
+	}
+
+	var entries []store.Entry
+	var err error
+	if month := r.URL.Query().Get("month"); month != "" {
+		entries, err = store.FindEntriesByMonth(category, month)
 	} else {
-		memos = findMemosByMonth(c.Param("category"), c.Query("month"))
+		entries = store.FindEntries(category)
 	}
-	createResponse(c, memos, nil)
+	if err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
+	response := make([]entryPayload, 0, len(entries))
+	for _, entry := range entries {
+		response = append(response, entryToPayload(entry))
+	}
+	writeJSON(w, http.StatusOK, response)
 }
 
-func getMemosId(c *gin.Context) {
-	memo, err := findMemoById(c.Param("category"), c.Param("id"))
+func getEntry(w http.ResponseWriter, r *http.Request) {
+	entry, err := findEntry(r.PathValue("category"), r.PathValue("id"))
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.Status(http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	if err != nil {
-		createResponse(c, nil, err)
+		writeErrorJSON(w, http.StatusBadRequest, err)
 		return
 	}
-	c.JSON(http.StatusOK, memo)
+	writeJSON(w, http.StatusOK, entryToPayload(entry))
 }
 
-func postMemos(c *gin.Context) {
-	var b Memo
-	err := c.ShouldBindJSON(&b)
-	if err == nil {
-		category := c.Param("category")
-		if pathID := c.Param("id"); pathID != "" {
-			id, convErr := strconv.Atoi(pathID)
-			if convErr != nil {
-				err = convErr
-			} else if b.Id != 0 && b.Id != id {
-				err = errors.New("path id and body id do not match")
-			} else {
-				b.Id = id
-			}
+func putEntry(w http.ResponseWriter, r *http.Request) {
+	saveEntry(w, r, "")
+}
+
+func postEntry(w http.ResponseWriter, r *http.Request) {
+	saveEntry(w, r, r.PathValue("id"))
+}
+
+func saveEntry(w http.ResponseWriter, r *http.Request, pathID string) {
+	category := r.PathValue("category")
+
+	var payload entryPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
+	entry := payloadToEntry(category, payload)
+	if err := validatePathID(&entry, pathID); err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
+	isNewEntry := entry.Id == 0
+	if isNewEntry {
+		entry = store.UpsertEntry(entry)
+	}
+
+	value, err := Move(entry.Value, category, strconv.Itoa(entry.Id))
+	if err != nil {
+		if isNewEntry {
+			store.DeleteEntry(category, strconv.Itoa(entry.Id))
 		}
+		writeErrorJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
+	entry.Value = value
+	entry = store.UpsertEntry(entry)
+	w.WriteHeader(http.StatusOK)
+}
+
+func validatePathID(entry *store.Entry, pathID string) error {
+	if pathID == "" {
+		return nil
+	}
+
+	id, err := strconv.Atoi(pathID)
+	if err != nil {
+		return err
+	}
+	if entry.Id != 0 && entry.Id != id {
+		return errors.New("path id and body id do not match")
+	}
+	entry.Id = id
+	return nil
+}
+
+func findEntry(category string, id string) (store.Entry, error) {
+	return store.FindEntryByID(category, id)
+}
+
+func deleteEntry(w http.ResponseWriter, r *http.Request) {
+	category := r.PathValue("category")
+	id := r.PathValue("id")
+	var legacyDiaryDate string
+
+	if category == "diary" {
+		entry, err := store.FindEntryByID(category, id)
 		if err == nil {
-			b.Category = category
-			isNewMemo := b.Id == 0
-			if isNewMemo {
-				b = upsertMemo(b)
-			}
-			// 一時保存画像をmemoデータパスに移動
-			b.Value, err = Move(b.Value, category, strconv.Itoa(b.Id))
-			if err != nil && isNewMemo {
-				deleteMemo(category, strconv.Itoa(b.Id))
-			}
-			if err == nil {
-				b = upsertMemo(b)
-			}
+			legacyDiaryDate = entry.Date
 		}
 	}
-	createResponse(c, nil, err)
-}
 
-func deleteMemosId(c *gin.Context) {
-	deleteMemo(c.Param("category"), c.Param("id"))
-
-	// 画像ディレクトリの削除
-	n, _ := strconv.Atoi(c.Param("id"))
-	id := fmt.Sprintf("%05d", n)
-	dirname := path.Join(dataPath, c.Param("category"), id)
-	if _, err := os.Stat(dirname); err == nil {
-		os.RemoveAll(dirname)
+	store.DeleteEntry(category, id)
+	n, _ := strconv.Atoi(id)
+	paddedID := fmt.Sprintf("%05d", n)
+	_ = images.DeleteImagesByPrefix(path.Join(category, paddedID) + "/")
+	if category == "diary" && legacyDiaryDate != "" {
+		_ = images.DeleteImagesByPrefix(path.Join(category, strings.ReplaceAll(legacyDiaryDate, "-", "")) + "/")
 	}
-
-	createResponse(c, nil, nil)
+	w.WriteHeader(http.StatusOK)
 }
 
-func createResponse(c *gin.Context, memos []Memo, err error) {
+func getImage(w http.ResponseWriter, r *http.Request) {
+	imagePath := imagePathForRoute(r.PathValue("category"), r.PathValue("id"), r.PathValue("file"))
+	image, err := store.FindImage(imagePath)
+	if errors.Is(err, gorm.ErrRecordNotFound) && r.PathValue("category") == "diary" {
+		if legacyPath, legacyErr := legacyDiaryImagePath(r.PathValue("id"), r.PathValue("file")); legacyErr == nil {
+			image, err = store.FindImage(legacyPath)
+		}
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		writeErrorJSON(w, http.StatusBadRequest, err)
 		return
 	}
-	c.JSON(http.StatusOK, memos)
+
+	contentType := image.ContentType
+	if contentType == "" {
+		contentType = "image/png"
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(image.Data)
 }
 
-func getImage(c *gin.Context) {
-	filename := path.Join(dataPath, c.Param("category"), c.Param("id"), c.Param("file"))
-	if b, err := os.ReadFile(filename); err == nil {
-		c.Data(http.StatusOK, "image/png", b)
-		return
+func imagePathForRoute(category string, id string, file string) string {
+	n, err := strconv.Atoi(id)
+	if err == nil {
+		return path.Join(category, fmt.Sprintf("%05d", n), file)
 	}
-	c.Status(http.StatusNotFound)
+	return path.Join(category, id, file)
+}
+
+func legacyDiaryImagePath(id string, file string) (string, error) {
+	entry, err := store.FindEntryByID("diary", id)
+	if err != nil {
+		return "", err
+	}
+	return path.Join("diary", strings.ReplaceAll(entry.Date, "-", ""), file), nil
+}
+
+func writeJSON(w http.ResponseWriter, status int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(v)
+}
+
+func writeErrorJSON(w http.ResponseWriter, status int, err error) {
+	writeJSON(w, status, map[string]string{"error": err.Error()})
 }

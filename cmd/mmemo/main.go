@@ -4,32 +4,35 @@ import (
 	"embed"
 	"encoding/json"
 	"flag"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 
-	"github.com/gin-gonic/gin"
-
-	"github.com/multios12/mmemo/pkg/diary"
 	"github.com/multios12/mmemo/pkg/images"
 	"github.com/multios12/mmemo/pkg/memo"
 )
 
 //go:embed static/*
 var static embed.FS
+var staticFiles fs.FS
 
 var port string
 var dataPath string
 var setting memo.SettingModel
-
-const DEFAULT_SETTING_JSON string = "{\"Diary\": {\"Name\": \"日記\"},\"Categories\": [{\"Key\": \"sample\",\"Name\": \"サンプル\",\"UseDate\": true,\"UseTag\": true,\"Template\": \"## データ１\n----\n## データ2\n----\",\"Titles\": {\"Name\": \"名前\",\"Date\": \"日付\",\"Tags\": \"タグ\",\"Value\": \"情報\"}}]}"
 
 func init() {
 	// 環境変数またはコマンドライン引数の読み込み
 	flag.StringVar(&port, "p", ":3000", "Webサーバが使用するポートを指定します")
 	flag.StringVar(&dataPath, "d", "./data", "")
 	flag.Parse()
+
+	var err error
+	staticFiles, err = fs.Sub(static, "static")
+	if err != nil {
+		panic(err)
+	}
 
 }
 
@@ -38,29 +41,32 @@ func main() {
 	loadSettingJson()
 
 	// ルーティング
-	router := gin.Default()
+	router := http.NewServeMux()
 
-	router.GET("/", getStatic)
-	router.GET("/index.html", getStatic)
-	router.GET("/favicon.ico", getStatic)
+	router.HandleFunc("GET /", getStatic)
+	router.HandleFunc("GET /index.html", getStatic)
+	router.HandleFunc("GET /favicon.ico", getStatic)
+	router.HandleFunc("GET /manifest.json", getStatic)
 
 	// モジュールの初期化
 	if err := memo.Initial(router, dataPath, setting); err != nil {
 		log.Fatal(err)
 	}
-	diary.Initial(router, dataPath)
 	if err := images.Initial(router, dataPath); err != nil {
 		log.Fatal(err)
 	}
-	if err := router.Run(port); err != nil {
+	if err := http.ListenAndServe(port, withRecovery(withLogging(router))); err != nil {
 		log.Fatal(err)
 	}
 }
 
 // スタティックリソース GET API
-func getStatic(c *gin.Context) {
-	p := "static" + c.Request.URL.Path
-	c.FileFromFS(p, http.FS(static))
+func getStatic(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/" {
+		r = r.Clone(r.Context())
+		r.URL.Path = "/index.html"
+	}
+	http.FileServer(http.FS(staticFiles)).ServeHTTP(w, r)
 }
 
 // 設定ファイルの読み込み
@@ -91,4 +97,23 @@ func loadSettingJson() {
 	} else if err := json.Unmarshal(b, &setting); err != nil {
 		panic(err)
 	}
+}
+
+func withLogging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s", r.Method, r.URL.Path)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func withRecovery(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if recovered := recover(); recovered != nil {
+				log.Printf("panic: %v", recovered)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
 }

@@ -12,8 +12,8 @@ import (
 func Move(value string, category string, id string) (string, error) {
 	idNumber, _ := strconv.Atoi(id)
 	id = fmt.Sprintf("%05d", idNumber)
-	newDirPath := path.Join(dataPath, category, id) + "/"
-	imageTemplate := fmt.Sprintf("![イメージ](/api/memos/%s/%s", category, id) + "/%s)"
+	newDirPath := path.Join(category, id) + "/"
+	imageTemplate := fmt.Sprintf("![イメージ](/api/%s/%s/images/%%s)", category, id)
 	d, err := images.MoveTempImages(value, newDirPath, imageTemplate)
 	if err != nil {
 		return d, err

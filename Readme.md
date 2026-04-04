@@ -28,8 +28,6 @@ vscode上での実行を前提。chromeを利用
 > mkdir srv
 > cd srv
 > go mod init main
-> go get github.com/gin-gonic/gin
-> go get github.com/go-playground/validator/v10
 
 wget https://golang.org/dl/go1.22.2.linux-amd64.tar.gz
 tar -C /usr/local -xzf go1.22.2.linux-amd64.tar.gz

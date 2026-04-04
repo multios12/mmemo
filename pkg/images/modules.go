@@ -1,56 +1,71 @@
 package images
 
 import (
-	"errors"
 	"fmt"
-	"os"
 	"path"
 	"regexp"
+
+	"github.com/multios12/mmemo/pkg/store"
 )
 
-var tmpImagePattern = regexp.MustCompile(`!\[[^\]]*\]\((/api/images/tmp_[^)\s]+)(?:\s+"[^"]*")?\)`)
+var tmpImagePattern = regexp.MustCompile(`!\[[^\]]*\]\((/images/tmp_[^)\s]+)(?:\s+"[^"]*")?\)`)
 
-func Rename(srcUrl string, newDirPath string) (newPath string, err error) {
-	srcUrl = srcUrl[len("/api/images/"):]
-	oldPath := path.Join(imagesPath, srcUrl)
-	if _, err = os.Stat(oldPath); err != nil {
-		return "", err
-	}
+func createPath(prefix string) (string, error) {
+	return store.NextImagePath(prefix)
+}
 
-	if err := os.MkdirAll(newDirPath, 0755); err != nil {
-		return "", err
-	}
+func saveImage(imagePath string, contentType string, data []byte) error {
+	return store.SaveImage(store.Image{
+		Path:        imagePath,
+		ContentType: contentType,
+		Data:        data,
+	})
+}
 
-	newPath, err = createPath(newDirPath)
+func findImage(imagePath string) (store.Image, error) {
+	return store.FindImage(imagePath)
+}
+
+func moveImage(srcURL string, destPrefix string) (string, error) {
+	srcPath := srcURL[len("/images/"):]
+	image, err := store.FindImage(srcPath)
 	if err != nil {
 		return "", err
 	}
-	if err = os.Rename(oldPath, newPath); err != nil {
+
+	destPath, err := createPath(destPrefix)
+	if err != nil {
 		return "", err
 	}
-	return newPath, nil
-}
 
-func createPath(prefix string) (string, error) {
-	for i := 1; i < 999; i++ {
-		n := prefix + fmt.Sprintf("%03d.png", i)
-		if _, err := os.Stat(n); err != nil {
-			return n, nil
-		}
+	if err := store.SaveImage(store.Image{
+		Path:        destPath,
+		ContentType: image.ContentType,
+		Data:        image.Data,
+	}); err != nil {
+		return "", err
 	}
-	return "", errors.New("image path limit reached")
+	if err := store.DeleteImage(srcPath); err != nil {
+		return "", err
+	}
+
+	return destPath, nil
 }
 
-// 一時保存画像をdiaryデータパスに移動
-func MoveTempImages(detail string, newDirPath string, imageTemplate string) (string, error) {
+func DeleteImagesByPrefix(prefix string) error {
+	return store.DeleteImagesByPrefix(prefix)
+}
+
+// 一時保存画像を保存先に移動
+func MoveTempImages(detail string, destPrefix string, imageTemplate string) (string, error) {
 	matches := tmpImagePattern.FindAllStringSubmatch(detail, -1)
 	replacements := make(map[string]string, len(matches))
 	for _, subMatches := range matches {
-		if newPath, err := Rename(subMatches[1], newDirPath); err != nil {
+		newPath, err := moveImage(subMatches[1], destPrefix)
+		if err != nil {
 			return detail, err
-		} else {
-			replacements[subMatches[0]] = fmt.Sprintf(imageTemplate, newPath[len(newPath)-7:])
 		}
+		replacements[subMatches[0]] = fmt.Sprintf(imageTemplate, path.Base(newPath))
 	}
 
 	return tmpImagePattern.ReplaceAllStringFunc(detail, func(match string) string {

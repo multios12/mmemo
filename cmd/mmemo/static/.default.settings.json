@@ -16,8 +16,8 @@
     {
       "Key": "sample",
       "Name": "サンプル",
-      "UseDate": true,
-      "UseTag": true,
+      "UseDate": false,
+      "UseTag": false,
       "Template": "## データ１\n----\n## データ2\n----",
       "Fields": {
         "Name": "名前",

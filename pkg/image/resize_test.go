@@ -1,15 +1,15 @@
-package images
+package image
 
 import (
 	"bytes"
-	"image"
+	stdimage "image"
 	"image/color"
 	"image/png"
 	"testing"
 )
 
 func TestNormalizeImageForStorage_ResizesLargePNG(t *testing.T) {
-	img := image.NewRGBA(image.Rect(0, 0, 3200, 1200))
+	img := stdimage.NewRGBA(stdimage.Rect(0, 0, 3200, 1200))
 	for y := 0; y < 1200; y++ {
 		for x := 0; x < 3200; x++ {
 			img.Set(x, y, color.RGBA{R: uint8(x % 255), G: uint8(y % 255), B: 120, A: 255})
@@ -21,7 +21,7 @@ func TestNormalizeImageForStorage_ResizesLargePNG(t *testing.T) {
 		t.Fatalf("png encode failed: %v", err)
 	}
 
-	contentType, out, err := normalizeImageForStorage("image/png", in.Bytes())
+	contentType, out, err := NormalizeImageForStorage("image/png", in.Bytes())
 	if err != nil {
 		t.Fatalf("normalizeImageForStorage failed: %v", err)
 	}
@@ -29,7 +29,7 @@ func TestNormalizeImageForStorage_ResizesLargePNG(t *testing.T) {
 		t.Fatalf("contentType = %s, want image/png", contentType)
 	}
 
-	cfg, _, err := image.DecodeConfig(bytes.NewReader(out))
+	cfg, _, err := stdimage.DecodeConfig(bytes.NewReader(out))
 	if err != nil {
 		t.Fatalf("DecodeConfig failed: %v", err)
 	}
@@ -45,7 +45,7 @@ func TestNormalizeImageForStorage_ResizesLargePNG(t *testing.T) {
 }
 
 func TestNormalizeImageForStorage_KeepsImageWithinResolutionLimit(t *testing.T) {
-	img := image.NewRGBA(image.Rect(0, 0, 1919, 1079))
+	img := stdimage.NewRGBA(stdimage.Rect(0, 0, 1919, 1079))
 	for y := 0; y < 1079; y++ {
 		for x := 0; x < 1919; x++ {
 			img.Set(x, y, color.RGBA{R: 10, G: 20, B: 30, A: 255})
@@ -57,7 +57,7 @@ func TestNormalizeImageForStorage_KeepsImageWithinResolutionLimit(t *testing.T) 
 		t.Fatalf("png encode failed: %v", err)
 	}
 
-	contentType, out, err := normalizeImageForStorage("image/png", in.Bytes())
+	contentType, out, err := NormalizeImageForStorage("image/png", in.Bytes())
 	if err != nil {
 		t.Fatalf("normalizeImageForStorage failed: %v", err)
 	}

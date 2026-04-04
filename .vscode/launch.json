@@ -18,9 +18,8 @@
             "request": "launch",
             "mode": "auto",
             "program": "./cmd/mmemo",
+            "cwd": "${workspaceFolder}/data",
             "args": [
-                "-d",
-                "../../data",
                 "-p",
                 ":3001"
             ],

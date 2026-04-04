@@ -2,52 +2,54 @@
   import { goto, type RouteResult } from "@mateothegreat/svelte5-router";
   import { onMount } from "svelte";
   import TagsInput from "../components/TagsInput.svelte";
-  import type { memoType } from "../models/memoModels.js";
+  import type { entryType } from "../models/entryModels.js";
   import RichInput from "../components/RichInput/index.svelte";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
   import { faTrash } from "@fortawesome/free-solid-svg-icons";
+  import { settingsStore } from "../store.js";
 
   library.add(faTrash);
   dom.watch();
 
   interface Props {
-    category?: string;
     route?: RouteResult;
-    template?: string;
-    showTags?: boolean;
-    dateEditableOnCreate?: boolean;
   }
 
-  let {
-    category = "",
-    route: currentRoute = undefined,
-    template = "",
-    showTags = undefined,
-    dateEditableOnCreate = undefined,
-  }: Props = $props();
+  type EntryRouteParams = {
+    id?: string | number | boolean;
+    category?: string | number | boolean;
+  };
 
-  const routeParams = $derived(
-    (currentRoute?.result?.path?.params ?? {}) as {
-      id?: string | number | boolean;
-      category?: string | number | boolean;
-    },
-  );
-  const entryCategory = $derived(
-    category || String(routeParams.category ?? ""),
-  );
-  const showsTags = $derived(showTags);
-  const allowsDateEditOnCreate = $derived(dateEditableOnCreate);
-
-  let innerHeight: number = $state(0);
-  let innerWidth: number = $state(0);
-
-  let memo = $state<memoType>({
+  const createEmptyEntry = (): entryType => ({
     Id: undefined,
-    Title: "",
+    Outline: "",
     Date: new Date().toISOString().substring(0, 10),
     Value: "",
     Tags: [],
   });
+
+  let { route: currentRoute = undefined }: Props = $props();
+
+  const routeParams = $derived(
+    (currentRoute?.result?.path?.params ?? {}) as EntryRouteParams,
+  );
+  const categoryKey = $derived(String(routeParams.category ?? ""));
+  const resolvedSettings = $derived.by(() => {
+    const categorySetting = $settingsStore?.Categories?.find(
+      (category) => category.Key === categoryKey,
+    );
+
+    return {
+      template: categorySetting?.Template || "",
+      showTags: categorySetting?.UseTag ?? false,
+      allowsDateEditOnCreate: categorySetting?.UseDate ?? false,
+    };
+  });
+
+  let innerHeight: number = $state(0);
+  let innerWidth: number = $state(0);
+
+  let entry = $state<entryType>(createEmptyEntry());
   let isErr = $state(false);
   let errMessage = $state("");
   let isLoading = $state(false);
@@ -73,26 +75,30 @@
   });
 
   const entryId = $derived(routeParams.id ? String(routeParams.id) : undefined);
-
-  const isAddRoute = () => entryId === "add";
+  const isAddRoute = $derived(entryId === "add");
+  const imageUploadPath = $derived(
+    isAddRoute
+      ? `/api/${categoryKey}/images/tmp`
+      : `/api/${categoryKey}/${entryId}/images`,
+  );
   const saveMethod = () => (isNew ? "put" : "post");
 
   const entryUrl = () => {
     if (isNew) {
-      return `/api/${entryCategory}`;
+      return `/api/${categoryKey}`;
     }
-    return `/api/${entryCategory}/${entryId}`;
+    return `/api/${categoryKey}/${entryId}`;
   };
 
-  const listPath = () => `/${entryCategory}/`;
+  const listPath = () => `/${categoryKey}/`;
 
   const goToList = async () => goto(listPath());
 
   const onOk = async () => {
-    memo.Value = changedValue || memo.Value;
+    entry.Value = changedValue || entry.Value;
     const response = await fetch(entryUrl(), {
       method: saveMethod(),
-      body: JSON.stringify(memo),
+      body: JSON.stringify(entry),
     });
 
     if (response.status !== 200) {
@@ -120,14 +126,6 @@
     changedValue = value;
   };
 
-  const resetMemo = () => ({
-    Id: undefined,
-    Title: "",
-    Date: new Date().toISOString().substring(0, 10),
-    Value: "",
-    Tags: [],
-  });
-
   onMount(() => {
     const headerRect = document
       .querySelector("header")
@@ -148,23 +146,23 @@
 
   $effect(() => {
     initialized;
-    entryCategory;
+    categoryKey;
     entryId;
     currentRoute;
 
-    if (!initialized || !entryCategory) {
+    if (!initialized || !categoryKey) {
       return;
     }
 
     isErr = false;
     errMessage = "";
-    memo = resetMemo();
-    isNew = isAddRoute();
+    entry = createEmptyEntry();
+    isNew = isAddRoute;
 
     if (isNew) {
-      const nextMemo = { ...resetMemo(), Value: template ?? "" };
-      memo = nextMemo;
-      changedValue = nextMemo.Value;
+      const nextEntry = { ...createEmptyEntry(), Value: resolvedSettings.template };
+      entry = nextEntry;
+      changedValue = nextEntry.Value;
       isLoading = false;
       return;
     }
@@ -178,11 +176,11 @@
     isLoading = true;
     (async () => {
       try {
-        const response = await fetch(`/api/${entryCategory}/${entryId}`);
-        const nextMemo = (await response.json()) as memoType;
-        nextMemo.Tags = nextMemo.Tags ?? [];
-        memo = nextMemo;
-        changedValue = nextMemo.Value ?? "";
+        const response = await fetch(`/api/${categoryKey}/${entryId}`);
+        const nextEntry = (await response.json()) as entryType;
+        nextEntry.Tags = nextEntry.Tags ?? [];
+        entry = nextEntry;
+        changedValue = nextEntry.Value ?? "";
       } finally {
         isLoading = false;
       }
@@ -203,14 +201,14 @@
         id="dateInput"
         type="date"
         class="input"
-        bind:value={memo.Date}
-        disabled={!allowsDateEditOnCreate || !isNew}
+        bind:value={entry.Date}
+        disabled={!resolvedSettings.allowsDateEditOnCreate || !isNew}
       />
       <input
         type="text"
         placeholder="outline"
         class="input"
-        bind:value={memo.Title}
+        bind:value={entry.Outline}
       />
     </div>
     {#if !isNew}
@@ -219,7 +217,7 @@
           <div class="column p-0">
             <button
               class="button has-text-danger"
-              aria-label={`delete ${entryCategory}`}
+              aria-label={`delete ${categoryKey}`}
               onclick={onDelete}
             >
               <i class="fa-solid fa-trash"></i>
@@ -229,9 +227,9 @@
       </div>
     {/if}
   </nav>
-  {#if showsTags}
+  {#if resolvedSettings.showTags}
     <div class="control">
-      <TagsInput bind:items={memo.Tags} />
+      <TagsInput bind:items={entry.Tags} />
     </div>
   {/if}
 </header>
@@ -239,7 +237,7 @@
 <section class="p-0">
   <div class="field">
     <div class="control py-2">
-      <RichInput bind:value={memo.Value} {onTextChange} />
+      <RichInput bind:value={entry.Value} {imageUploadPath} {onTextChange} />
     </div>
   </div>
 </section>

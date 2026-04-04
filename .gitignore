@@ -1,4 +1,6 @@
 /data
+/settings.json
+/memo.db
 /dist
 /front/.yarn
 /front/build

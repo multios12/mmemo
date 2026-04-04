@@ -2,51 +2,11 @@ package store
 
 import (
 	"errors"
-	"fmt"
-	"path/filepath"
-	"strings"
 	"time"
 
-	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
-var db *gorm.DB
-
-func Open(dataPath string) error {
-	filename := filepath.Join(dataPath, "memo.db")
-
-	var err error
-	db, err = gorm.Open(sqlite.Open(filename), &gorm.Config{})
-	if err != nil {
-		return err
-	}
-
-	if err := migrateSchema(); err != nil {
-		return err
-	}
-
-	return db.AutoMigrate(&Entry{}, &Image{})
-}
-
-func migrateSchema() error {
-	migrator := db.Migrator()
-
-	if migrator.HasTable("memos") && !migrator.HasTable("entries") {
-		if err := migrator.RenameTable("memos", "entries"); err != nil {
-			return fmt.Errorf("rename table memos -> entries: %w", err)
-		}
-	}
-
-	if migrator.HasTable("entries") && migrator.HasColumn("entries", "name") && !migrator.HasColumn("entries", "title") {
-		if err := migrator.RenameColumn("entries", "name", "title"); err != nil {
-			return fmt.Errorf("rename column entries.name -> title: %w", err)
-		}
-	}
-
-	return nil
-}
 
 func FindEntries(category string) (entries []Entry) {
 	if category == "" {
@@ -151,46 +111,4 @@ func DeleteEntry(category string, id string) {
 
 func DeleteEntryByDate(category string, day string) error {
 	return db.Where("category = ? and date = ?", category, day).Delete(&Entry{}).Error
-}
-
-func SaveImage(image Image) error {
-	return db.Save(&image).Error
-}
-
-func FindImage(path string) (Image, error) {
-	var image Image
-	result := db.Where("path = ?", path).First(&image)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return Image{}, gorm.ErrRecordNotFound
-	}
-	return image, result.Error
-}
-
-func DeleteImage(path string) error {
-	return db.Where("path = ?", path).Delete(&Image{}).Error
-}
-
-func DeleteImagesByPrefix(prefix string) error {
-	return db.Where("path LIKE ?", prefix+"%").Delete(&Image{}).Error
-}
-
-func NextImagePath(prefix string) (string, error) {
-	var images []Image
-	if err := db.Select("path").Where("path LIKE ?", prefix+"%").Find(&images).Error; err != nil {
-		return "", err
-	}
-
-	exists := make(map[string]struct{}, len(images))
-	for _, image := range images {
-		exists[image.Path] = struct{}{}
-	}
-
-	for i := 1; i < 999; i++ {
-		candidate := fmt.Sprintf("%s%03d.png", prefix, i)
-		if _, ok := exists[candidate]; !ok {
-			return candidate, nil
-		}
-	}
-
-	return "", fmt.Errorf("image path limit reached: %s", strings.TrimSuffix(prefix, "/"))
 }

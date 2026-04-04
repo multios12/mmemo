@@ -21,6 +21,8 @@
   interface Props {
     /** lexical Editor */
     editor: LexicalEditor;
+    /** 画像アップロード先 */
+    imageUploadPath?: string;
     /** アンドゥボタン表示状態 */
     canUndo: boolean;
     /** リドゥボタン表示状態 */
@@ -29,7 +31,7 @@
     para: string;
   }
 
-  let { editor, canUndo, canRedo, para }: Props = $props();
+  let { editor, imageUploadPath = "", canUndo, canRedo, para }: Props = $props();
 
   /** 選択ノードを太字に変更 */
   const formatBold = () => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
@@ -131,7 +133,7 @@
         </button>
       </div>
       <div class="level-item">
-        <ImageButton {editor} />
+        <ImageButton {editor} uploadPath={imageUploadPath} />
       </div>
     </div>
   </div>

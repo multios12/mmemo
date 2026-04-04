@@ -1,4 +1,4 @@
-package memo
+package entryapi
 
 import "github.com/multios12/mmemo/pkg/store"
 

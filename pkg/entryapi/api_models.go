@@ -1,4 +1,4 @@
-package memo
+package entryapi
 
 import (
 	"fmt"
@@ -11,12 +11,12 @@ import (
 
 var (
 	oldDiaryImagePattern = regexp.MustCompile(`/api/diary/(\d{4})/(\d{2})/(\d{2})/images/([^)"]+)`)
-	oldMemoImagePattern  = regexp.MustCompile(`/api/memos/([^/]+)/(\d{5})/([^)"]+)`)
+	oldEntryImagePattern = regexp.MustCompile(`/api/memos/([^/]+)/(\d{5})/([^)"]+)`)
 )
 
 type entryPayload struct {
 	Id        int      `json:"Id,omitempty"`
-	Title     string   `json:"Title"`
+	Outline   string   `json:"Outline"`
 	Date      string   `json:"Date"`
 	Category  string   `json:"Category,omitempty"`
 	Tags      []string `json:"Tags"`
@@ -28,7 +28,7 @@ func entryToPayload(entry store.Entry) entryPayload {
 	value := normalizeEntryValue(entry)
 	return entryPayload{
 		Id:        entry.Id,
-		Title:     entry.Title,
+		Outline:   entry.Outline,
 		Date:      entry.Date,
 		Category:  entry.Category,
 		Tags:      splitTags(entry.Tags),
@@ -40,7 +40,7 @@ func entryToPayload(entry store.Entry) entryPayload {
 func payloadToEntry(category string, payload entryPayload) store.Entry {
 	return store.Entry{
 		Id:       payload.Id,
-		Title:    strings.TrimSpace(payload.Title),
+		Outline:  strings.TrimSpace(payload.Outline),
 		Date:     strings.TrimSpace(payload.Date),
 		Category: category,
 		Tags:     strings.Join(payload.Tags, "#"),
@@ -75,8 +75,8 @@ func normalizeEntryValue(entry store.Entry) string {
 		})
 	}
 
-	return oldMemoImagePattern.ReplaceAllStringFunc(value, func(match string) string {
-		subMatches := oldMemoImagePattern.FindStringSubmatch(match)
+	return oldEntryImagePattern.ReplaceAllStringFunc(value, func(match string) string {
+		subMatches := oldEntryImagePattern.FindStringSubmatch(match)
 		if len(subMatches) != 4 {
 			return match
 		}

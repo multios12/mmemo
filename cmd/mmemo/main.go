@@ -5,6 +5,7 @@ import (
 	"embed"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
@@ -12,8 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/multios12/mmemo/pkg/images"
-	"github.com/multios12/mmemo/pkg/memo"
+	"github.com/multios12/mmemo/pkg/entryapi"
 )
 
 //go:embed static/*
@@ -21,13 +21,18 @@ var static embed.FS
 var staticFiles fs.FS
 
 var port string
-var dataPath string
-var setting memo.SettingModel
+var setting entryapi.SettingModel
 
 func init() {
-	// 環境変数またはコマンドライン引数の読み込み
 	flag.StringVar(&port, "p", ":3000", "Webサーバが使用するポートを指定します")
-	flag.StringVar(&dataPath, "d", "./data", "")
+	flag.Usage = func() {
+		out := flag.CommandLine.Output()
+		fmt.Fprintf(out, "Usage: %s [-p :3000]\n", os.Args[0])
+		fmt.Fprintln(out, "")
+		fmt.Fprintln(out, "起動ディレクトリに settings.json と memo.db を作成して利用します。")
+		fmt.Fprintln(out, "")
+		flag.PrintDefaults()
+	}
 	flag.Parse()
 
 	var err error
@@ -51,10 +56,7 @@ func main() {
 	router.HandleFunc("GET /manifest.json", getStatic)
 
 	// モジュールの初期化
-	if err := memo.Initial(router, dataPath, setting); err != nil {
-		log.Fatal(err)
-	}
-	if err := images.Initial(router, dataPath); err != nil {
+	if err := entryapi.Initial(router, setting); err != nil {
 		log.Fatal(err)
 	}
 	if err := http.ListenAndServe(port, withRecovery(withLogging(router))); err != nil {
@@ -87,9 +89,13 @@ func shouldServeSPA(path string) bool {
 
 // 設定ファイルの読み込み
 func loadSettingJson() {
+	dataPath, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
 
 	// データファイルパスの確認と、存在しない場合は作成
-	if _, err := os.Stat((dataPath)); err != nil {
+	if _, err := os.Stat(dataPath); err != nil {
 		if err := os.MkdirAll(dataPath, 0755); err != nil {
 			panic(err)
 		}

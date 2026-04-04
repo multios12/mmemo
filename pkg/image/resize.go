@@ -1,9 +1,9 @@
-package images
+package image
 
 import (
 	"bytes"
 	"fmt"
-	"image"
+	stdimage "image"
 	"image/jpeg"
 	"image/png"
 	"math"
@@ -16,7 +16,7 @@ const (
 	jpegQuality          = 85
 )
 
-func normalizeImageForStorage(contentType string, data []byte) (string, []byte, error) {
+func NormalizeImageForStorage(contentType string, data []byte) (string, []byte, error) {
 	if len(data) == 0 {
 		return contentType, data, nil
 	}
@@ -26,7 +26,7 @@ func normalizeImageForStorage(contentType string, data []byte) (string, []byte, 
 		contentType = detectedType
 	}
 
-	cfg, format, err := image.DecodeConfig(bytes.NewReader(data))
+	cfg, format, err := stdimage.DecodeConfig(bytes.NewReader(data))
 	if err != nil {
 		return contentType, data, nil
 	}
@@ -37,7 +37,7 @@ func normalizeImageForStorage(contentType string, data []byte) (string, []byte, 
 		return normalizeContentType(contentType, format), data, nil
 	}
 
-	img, _, err := image.Decode(bytes.NewReader(data))
+	img, _, err := stdimage.Decode(bytes.NewReader(data))
 	if err != nil {
 		return "", nil, fmt.Errorf("画像を読み込めません: %w", err)
 	}
@@ -84,9 +84,9 @@ func scaledSize(width int, height int) (int, int) {
 	return nextWidth, nextHeight
 }
 
-func resizeImage(src image.Image, width int, height int) image.Image {
+func resizeImage(src stdimage.Image, width int, height int) stdimage.Image {
 	srcBounds := src.Bounds()
-	dst := image.NewRGBA(image.Rect(0, 0, width, height))
+	dst := stdimage.NewRGBA(stdimage.Rect(0, 0, width, height))
 
 	for y := 0; y < height; y++ {
 		srcY := srcBounds.Min.Y + (y*srcBounds.Dy())/height
@@ -99,7 +99,7 @@ func resizeImage(src image.Image, width int, height int) image.Image {
 	return dst
 }
 
-func encodeImage(format string, img image.Image) ([]byte, error) {
+func encodeImage(format string, img stdimage.Image) ([]byte, error) {
 	var out bytes.Buffer
 	switch format {
 	case "jpeg":

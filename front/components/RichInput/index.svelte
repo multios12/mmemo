@@ -18,10 +18,11 @@
   interface Props {
     /** 入力値 */
     value?: string;
+    imageUploadPath?: string;
     onTextChange?: (value: string) => void;
   }
 
-  let { value = $bindable(""), onTextChange }: Props = $props();
+  let { value = $bindable(""), imageUploadPath = "", onTextChange }: Props = $props();
 
   /** lexical Editor */
   let editor = $state<LexicalEditor | undefined>(undefined);
@@ -90,7 +91,7 @@
 
 <div id="rich" class="panel is-dark">
   {#if editor}
-    <ToolbarPlugin {editor} {para} {canUndo} {canRedo} />
+    <ToolbarPlugin {editor} {imageUploadPath} {para} {canUndo} {canRedo} />
   {/if}
 
   <div class="panel-block p-0 is-fullwidth">

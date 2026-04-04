@@ -1,41 +1,42 @@
-package memo
+package entryapi
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"path"
-	"path/filepath"
 	"strconv"
 	"strings"
 
-	"github.com/multios12/mmemo/pkg/images"
+	entryimage "github.com/multios12/mmemo/pkg/image"
 	"github.com/multios12/mmemo/pkg/store"
 	"gorm.io/gorm"
 )
 
 var setting SettingModel
-var dataPath string
 
-func Initial(router *http.ServeMux, d string, s SettingModel) error {
+func Initial(router *http.ServeMux, s SettingModel) error {
 	setting = s
-	dataPath, _ = filepath.Abs(d)
-	if err := store.Open(dataPath); err != nil {
-		log.Printf("memo init failed: %v", err)
+	if err := store.Open("."); err != nil {
+		log.Printf("entry init failed: %v", err)
 		return err
 	}
 	entries := store.FindEntries("")
-	log.Printf("info: memo[dataPath=%s]", dataPath)
-	log.Printf("info: memo[count=%d]", len(entries))
+	log.Printf("info: entry[dataPath=.]")
+	log.Printf("info: entry[count=%d]", len(entries))
 
 	router.HandleFunc("GET /settings", getSetting)
 	router.HandleFunc("GET /api/{category}", getEntries)
+	router.HandleFunc("POST /api/{category}/images/tmp", postTempImage)
+	router.HandleFunc("GET /api/{category}/images/tmp/{file}", getTempImage)
 	router.HandleFunc("GET /api/{category}/{id}", getEntry)
 	router.HandleFunc("PUT /api/{category}", putEntry)
 	router.HandleFunc("POST /api/{category}/{id}", postEntry)
 	router.HandleFunc("DELETE /api/{category}/{id}", deleteEntry)
+	router.HandleFunc("POST /api/{category}/{id}/images", postEntryImage)
 	router.HandleFunc("GET /api/{category}/{id}/images/{file}", getImage)
 
 	return nil
@@ -166,19 +167,19 @@ func deleteEntry(w http.ResponseWriter, r *http.Request) {
 	store.DeleteEntry(category, id)
 	n, _ := strconv.Atoi(id)
 	paddedID := fmt.Sprintf("%05d", n)
-	_ = images.DeleteImagesByPrefix(path.Join(category, paddedID) + "/")
+	_ = entryimage.DeleteImagesByPrefix(path.Join(category, paddedID) + "/")
 	if category == "diary" && legacyDiaryDate != "" {
-		_ = images.DeleteImagesByPrefix(path.Join(category, strings.ReplaceAll(legacyDiaryDate, "-", "")) + "/")
+		_ = entryimage.DeleteImagesByPrefix(path.Join(category, strings.ReplaceAll(legacyDiaryDate, "-", "")) + "/")
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
 func getImage(w http.ResponseWriter, r *http.Request) {
 	imagePath := imagePathForRoute(r.PathValue("category"), r.PathValue("id"), r.PathValue("file"))
-	image, err := store.FindImage(imagePath)
+	storedImage, err := store.FindImage(imagePath)
 	if errors.Is(err, gorm.ErrRecordNotFound) && r.PathValue("category") == "diary" {
 		if legacyPath, legacyErr := legacyDiaryImagePath(r.PathValue("id"), r.PathValue("file")); legacyErr == nil {
-			image, err = store.FindImage(legacyPath)
+			storedImage, err = store.FindImage(legacyPath)
 		}
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -190,13 +191,59 @@ func getImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	contentType := image.ContentType
+	contentType := storedImage.ContentType
 	if contentType == "" {
 		contentType = "image/png"
 	}
 	w.Header().Set("Content-Type", contentType)
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(image.Data)
+	_, _ = w.Write(storedImage.Data)
+}
+
+func postTempImage(w http.ResponseWriter, r *http.Request) {
+	imageURL, err := saveUploadedImage(r, func(contentType string, data []byte) (string, error) {
+		return entryimage.SaveTempImage(r.PathValue("category"), contentType, data)
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(imageURL))
+}
+
+func getTempImage(w http.ResponseWriter, r *http.Request) {
+	storedImage, err := entryimage.FindTempImage(r.PathValue("category"), r.PathValue("file"))
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
+	contentType := storedImage.ContentType
+	if contentType == "" {
+		contentType = "image/png"
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(storedImage.Data)
+}
+
+func postEntryImage(w http.ResponseWriter, r *http.Request) {
+	imageURL, err := saveUploadedImage(r, func(contentType string, data []byte) (string, error) {
+		return entryimage.SaveEntryImage(r.PathValue("category"), r.PathValue("id"), contentType, data)
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(imageURL))
 }
 
 func imagePathForRoute(category string, id string, file string) string {
@@ -223,4 +270,31 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 
 func writeErrorJSON(w http.ResponseWriter, status int, err error) {
 	writeJSON(w, status, map[string]string{"error": err.Error()})
+}
+
+func saveUploadedImage(
+	r *http.Request,
+	save func(contentType string, data []byte) (string, error),
+) (string, error) {
+	inFile, header, err := r.FormFile("file")
+	if err != nil {
+		return "", err
+	}
+	defer inFile.Close()
+
+	data, err := io.ReadAll(inFile)
+	if err != nil {
+		return "", fmt.Errorf("ファイルが保存できません: %w", err)
+	}
+
+	contentType := header.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "image/png"
+	}
+	contentType, data, err = entryimage.NormalizeImageForStorage(contentType, data)
+	if err != nil {
+		return "", err
+	}
+
+	return save(contentType, data)
 }

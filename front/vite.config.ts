@@ -22,7 +22,6 @@ export default defineConfig(() => {
       proxy: {
         "^/api/.*": "http://localhost:3001",
         "^/settings$": "http://localhost:3001",
-        "^/images(?:/.*)?$": "http://localhost:3001",
       },
     },
   }

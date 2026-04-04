@@ -9,9 +9,10 @@
 
   interface Props {
     editor: LexicalEditor;
+    uploadPath?: string;
   }
 
-  let { editor }: Props = $props();
+  let { editor, uploadPath = "" }: Props = $props();
   /** メッセージ */
   let message = $state("");
 
@@ -26,9 +27,13 @@
     }
     const data = new FormData();
     data.append("file", file);
+    if (!uploadPath) {
+      message = "image upload path is empty";
+      return;
+    }
     try {
       const init = { method: "post", body: data };
-      const r = await fetch(`/images`, init);
+      const r = await fetch(uploadPath, init);
       if (r.status === 200) {
         document.querySelector("#dialog")?.classList.remove("is-active");
         const f = await r.text();

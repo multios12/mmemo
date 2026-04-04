@@ -3,11 +3,7 @@
   import { diffDays, format, monthEnd } from "@formkit/tempo";
   import type { dayType } from "./dayType.js";
   import Dropdown from "../../components/Dropdown.svelte";
-  interface Props {
-    year?: number;
-  }
-
-  let { year = 2024 }: Props = $props();
+  let year = 2024;
 
   /** 表示情報テーブル */
   let table: dayType[][] = $state([]);

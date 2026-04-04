@@ -20,6 +20,24 @@ vscode上での実行を前提。chromeを利用
 フロントデバッグサーバ：ポート3000
 バックエンドサーバ：ポート3001
 
+開発環境では Go サーバを `data` ディレクトリをカレントディレクトリにして起動します。
+そのため、開発用データは `data/settings.json` と `data/memo.db` に保存されます。
+`data` ディレクトリおよび生成されるデータファイルは Git にコミットしません。
+
+## 実行
+`mmemo` は起動したカレントディレクトリに `settings.json` と `memo.db` を作成して利用します。
+
+```
+mmemo
+mmemo -p :3001
+```
+
+ヘルプ:
+
+```
+mmemo -h
+```
+
 ## ビルド for Linux
 > ./.devcontainer/build.sh
 

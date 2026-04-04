@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { goto, type RouteResult, route } from "@mateothegreat/svelte5-router";
-  import type { listType } from "../models/diaryModels.js";
-  import type { memoType } from "../models/memoModels.js";
+  import { goto, type RouteResult } from "@mateothegreat/svelte5-router";
+  import type { entryType, listType } from "../models/entryModels.js";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
   import { faPlus, faNoteSticky } from "@fortawesome/free-solid-svg-icons";
   import { settingsStore } from "../store.js";
@@ -14,75 +13,64 @@
     ?.classList.remove("is-hidden");
 
   interface Props {
-    category?: string;
     route?: RouteResult;
-    selectMonth?: string | null;
-    useMonthFilter?: boolean;
-    showTags?: boolean;
   }
 
-  let {
-    category = "",
-    route: currentRoute = undefined,
-    selectMonth = $bindable(
-      `${new Date().getFullYear()}-${("00" + (new Date().getMonth() + 1)).slice(-2)}`,
-    ),
-    useMonthFilter = undefined,
-    showTags = undefined,
-  }: Props = $props();
+  const emptyListModel = (): listType => ({ WritedMonths: [], Lines: [] });
 
-  const entryCategory = $derived(
-    category || String(currentRoute?.result?.path?.params?.category ?? ""),
-  );
-  const categorySetting = $derived(
-    $settingsStore?.Categories?.find(
-      (category) => category.Key === entryCategory,
-    ),
-  );
-  const usesMonthFilter = $derived(
-    useMonthFilter ?? categorySetting?.UseDate ?? false,
-  );
-  const showsTags = $derived(showTags ?? categorySetting?.UseTag ?? false);
-  const settingsResolved = $derived(
-    useMonthFilter !== undefined ||
-      showTags !== undefined ||
-      categorySetting !== undefined,
+  let { route: currentRoute = undefined }: Props = $props();
+  let selectMonth = $state(
+    `${new Date().getFullYear()}-${("00" + (new Date().getMonth() + 1)).slice(-2)}`,
   );
 
-  let model: listType = $state({ WritedMonths: [], Lines: [] });
-  let memos: memoType[] = $state([]);
+  const categoryKey = $derived(String(currentRoute?.result?.path?.params?.category ?? ""));
+  const resolvedSettings = $derived.by(() => {
+    const categorySetting = $settingsStore?.Categories?.find(
+      (category) => category.Key === categoryKey,
+    );
 
-  const addPath = () => `/${entryCategory}/add`;
+    return {
+      ready: categorySetting !== undefined,
+      useMonthFilter: categorySetting?.UseDate ?? false,
+      showTags: categorySetting?.UseTag ?? false,
+    };
+  });
 
-  const detailPath = (entry: memoType) => `/${entryCategory}/${entry.Id}`;
+  let model: listType = $state(emptyListModel());
+  let entries: entryType[] = $state([]);
+
+  const addPath = () => `/${categoryKey}/add`;
+
+  const detailPath = (entry: entryType) => `/${categoryKey}/${entry.Id}`;
 
   const showList = async () => {
-    if (!entryCategory) {
-      model = { WritedMonths: [], Lines: [] };
-      memos = [];
+    if (!categoryKey) {
+      model = emptyListModel();
+      entries = [];
       return;
     }
 
-    if (usesMonthFilter) {
+    if (resolvedSettings.useMonthFilter) {
       const month = selectMonth ?? "";
       const [entriesResponse, monthsResponse] = await Promise.all([
-        fetch(`/api/${entryCategory}?month=${month}`),
-        fetch(`/api/${entryCategory}?months=1`),
+        fetch(`/api/${categoryKey}?month=${month}`),
+        fetch(`/api/${categoryKey}?months=1`),
       ]);
 
-      const entries = (await entriesResponse.json()) as memoType[];
+      const entries = (await entriesResponse.json()) as entryType[];
       const writedMonths = (await monthsResponse.json()) as string[];
+      const lines: entryType[] = entries.map((entry) => ({
+        Id: entry.Id,
+        Date: entry.Date,
+        Outline: entry.Outline,
+        Value: entry.Value,
+        Tags: entry.Tags ?? [],
+        HasDetail: entry.HasDetail ?? false,
+      }));
 
       model = {
         WritedMonths: writedMonths,
-        Lines: entries.map((entry) => ({
-          Id: entry.Id,
-          Day: entry.Date,
-          Outline: entry.Title,
-          Tags: entry.Tags ?? [],
-          IsDetail: entry.HasDetail ?? false,
-          HCount: 0,
-        })),
+        Lines: lines,
       };
 
       if (model.Lines.length === 0 && model.WritedMonths.length > 0) {
@@ -91,19 +79,18 @@
       return;
     }
 
-    const response = await fetch(`/api/${entryCategory}`);
-    memos = (await response.json()) as memoType[];
+    const response = await fetch(`/api/${categoryKey}`);
+    entries = (await response.json()) as entryType[];
   };
 
-  const listClick = (entry: memoType) => goto(detailPath(entry));
+  const listClick = (entry: entryType) => goto(detailPath(entry));
 
   $effect(() => {
-    entryCategory;
-    settingsResolved;
-    usesMonthFilter;
+    categoryKey;
+    resolvedSettings.ready;
     selectMonth;
 
-    if (!settingsResolved) {
+    if (!resolvedSettings.ready) {
       return;
     }
 
@@ -114,7 +101,7 @@
 <div class="card px-10">
   <div class="card-content">
     <div class="columns">
-      {#if usesMonthFilter}
+      {#if resolvedSettings.useMonthFilter}
         <div class="column">
           <div class="select">
             <select class="select" bind:value={selectMonth}>
@@ -128,7 +115,7 @@
       <div class="column">
         <button
           class="button is-primary"
-          aria-label={`add ${entryCategory}`}
+          aria-label={`add ${categoryKey}`}
           onclick={() => goto(addPath())}
         >
           <i class="fa-solid fa-plus"></i>
@@ -138,25 +125,25 @@
 
     <table
       class="table is-hoverable is-fullwidth"
-      class:is-striped={!usesMonthFilter}
+      class:is-striped={!resolvedSettings.useMonthFilter}
     >
       <tbody>
-        {#if usesMonthFilter}
+        {#if resolvedSettings.useMonthFilter}
           {#each model.Lines as v}
             <tr
               onclick={() =>
                 listClick({
                   Id: v.Id,
-                  Title: v.Outline,
-                  Date: v.Day,
+                  Outline: v.Outline,
+                  Date: v.Date,
                   Value: "",
                   Tags: v.Tags,
                 })}
             >
               <td>
                 <button>
-                  {v.Day}
-                  {v.Outline}{#if v.IsDetail}
+                  {v.Date}
+                  {v.Outline}{#if v.HasDetail}
                     <i
                       class="fa-solid fa-note-sticky has-text-grey-light"
                       style="vertical-align:middle"
@@ -164,7 +151,7 @@
                   {/if}
                 </button>
               </td>
-              {#if showsTags}
+              {#if resolvedSettings.showTags}
                 <td>
                   <div class="tags are-medium">
                     {#each v.Tags as t}
@@ -176,11 +163,11 @@
             </tr>
           {/each}
         {:else}
-          {#each memos as m}
+          {#each entries as entry}
             <tr>
-              <td onclick={() => listClick(m)} onkeypress={() => listClick(m)}>
+              <td onclick={() => listClick(entry)} onkeypress={() => listClick(entry)}>
                 <button class="is-fullwidth">
-                  {m.Date}&nbsp;{m.Title}
+                  {entry.Date}&nbsp;{entry.Outline}
                 </button>
               </td>
             </tr>

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
+	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -68,14 +69,30 @@ func main() {
 func getStatic(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	if path == "/" {
-		path = "/index.html"
+		serveEmbeddedFile(w, "index.html")
+		return
 	} else if shouldServeSPA(path) {
-		path = "/index.html"
+		serveEmbeddedFile(w, "index.html")
+		return
 	}
 
 	r = r.Clone(r.Context())
 	r.URL.Path = path
 	http.FileServer(http.FS(staticFiles)).ServeHTTP(w, r)
+}
+
+func serveEmbeddedFile(w http.ResponseWriter, name string) {
+	b, err := fs.ReadFile(staticFiles, name)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+
+	if contentType := mime.TypeByExtension(filepath.Ext(name)); contentType != "" {
+		w.Header().Set("Content-Type", contentType)
+	}
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(b)
 }
 
 func shouldServeSPA(path string) bool {

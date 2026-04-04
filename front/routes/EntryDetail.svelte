@@ -7,6 +7,7 @@
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
   import { faArrowLeft, faCloudArrowUp, faTags, faTrash } from "@fortawesome/free-solid-svg-icons";
   import { settingsStore } from "../store.js";
+  import { apiPath, appPath } from "../basePath.js";
 
   library.add(faTrash, faTags, faCloudArrowUp, faArrowLeft);
   dom.watch();
@@ -86,8 +87,8 @@
   const isAddRoute = $derived(entryId === "add");
   const imageUploadPath = $derived(
     isAddRoute
-      ? `/api/${categoryKey}/images/tmp`
-      : `/api/${categoryKey}/${entryId}/images`,
+      ? apiPath(`${categoryKey}/images/tmp`)
+      : apiPath(`${categoryKey}/${entryId}/images`),
   );
   const saveMethod = () => (isNew ? "put" : "post");
   const finishPageLoading = () => {
@@ -111,12 +112,12 @@
 
   const entryUrl = () => {
     if (isNew) {
-      return `/api/${categoryKey}`;
+      return apiPath(categoryKey);
     }
-    return `/api/${categoryKey}/${entryId}`;
+    return apiPath(`${categoryKey}/${entryId}`);
   };
 
-  const listPath = () => `/${categoryKey}/`;
+  const listPath = () => appPath(`/${categoryKey}/`);
 
   const goToList = async () => goto(listPath());
   const shouldLeave = () =>
@@ -126,7 +127,7 @@
     entry.Value = editorValue;
     if (!resolvedSettings.allowMultipleEntriesPerDate && entry.Date) {
       const month = entry.Date.slice(0, 7);
-      const response = await fetch(`/api/${categoryKey}?month=${month}`);
+      const response = await fetch(`${apiPath(categoryKey)}?month=${month}`);
       const monthlyEntries = (await response.json()) as entryType[];
       const hasDuplicateDate = monthlyEntries.some(
         (item) => item.Date === entry.Date && item.Id !== entry.Id,
@@ -235,7 +236,7 @@
     isLoading = true;
     (async () => {
       try {
-        const response = await fetch(`/api/${categoryKey}/${entryId}`);
+        const response = await fetch(apiPath(`${categoryKey}/${entryId}`));
         const nextEntry = (await response.json()) as entryType;
         nextEntry.Tags = nextEntry.Tags ?? [];
         entry = nextEntry;

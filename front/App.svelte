@@ -8,6 +8,7 @@
   import { onMount } from "svelte";
   import type { settingType } from "./models/settingType.js";
   import { settingsStore } from "./store.js";
+  import { appPath, routerBasePath, settingsPath, stripBasePath } from "./basePath.js";
 
   const routes = [
     { path: "/", component: Home },
@@ -44,13 +45,13 @@
   };
   const changeMobileCategory = async (value: string) => {
     if (value) {
-      await goto(`/${value}/`);
+      await goto(appPath(`/${value}/`));
     }
   };
 
   onMount(() => {
     const syncCurrentPath = () => {
-      currentPath = window.location.pathname;
+      currentPath = stripBasePath(window.location.pathname);
     };
     const dispatchLocationChange = () => {
       window.dispatchEvent(new Event("locationchange"));
@@ -84,7 +85,7 @@
     });
 
     (async () => {
-      const r = await fetch("/settings");
+      const r = await fetch(settingsPath());
       settings = (await r.json()) as settingType;
       settingsStore.set(settings);
     })();
@@ -136,7 +137,7 @@
         {#each settings.Categories as category}
           <a
             class="navbar-item is-unselectable is-tab"
-            href={`/${category.Key}/`}
+            href={appPath(`/${category.Key}/`)}
             use:route={{ active: { class: "is-active", absolute: false } }}
             onclick={closeNavbarMenu}
           >
@@ -148,7 +149,7 @@
   </div>
 </nav>
 <main class="app-main">
-  <Router {routes} />
+  <Router {routes} basePath={routerBasePath || "/"} />
 </main>
 
 <style>

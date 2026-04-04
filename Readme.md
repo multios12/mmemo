@@ -158,6 +158,20 @@ mmemo -h
 ## ビルド for Linux
 > ./.devcontainer/build.sh
 
+`BASE_URL` を指定すると、サブパス配下へ配置する前提でフロントをビルドできます。
+
+例:
+
+```sh
+./build.sh
+BASE_URL=/mmemo/ ./build.sh
+```
+
+- `./build.sh`
+  ルート配下で使う通常ビルドです
+- `BASE_URL=/mmemo/ ./build.sh`
+  `https://example.com/mmemo/` のようなサブパス配下へ配置するときに使います
+
 -------------------------------------------------------------
 ## create new go project
 > mkdir srv

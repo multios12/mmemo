@@ -4,6 +4,7 @@
   import { format } from "@formkit/tempo";
   import { settingsStore } from "../store.js";
   import Calendar from "../components/Calendar.svelte";
+  import { apiPath, appPath } from "../basePath.js";
 
   document
     .querySelector<HTMLDivElement>(".navbar")
@@ -58,8 +59,8 @@
   let hasLoadedInitialList = $state(false);
   let isCalendarExpanded = $state(false);
 
-  const addPath = () => `/${categoryKey}/add`;
-  const detailPath = (entry: entryType) => `/${categoryKey}/${entry.Id}`;
+  const addPath = () => appPath(`/${categoryKey}/add`);
+  const detailPath = (entry: entryType) => appPath(`/${categoryKey}/${entry.Id}`);
   const isPreviewLine = (line: string) =>
     line !== "" &&
     !/^[-*_]{3,}$/.test(line) &&
@@ -182,8 +183,8 @@
       if (resolvedSettings.useMonthFilter) {
         const month = selectMonth ?? "";
         const [entriesResponse, monthsResponse] = await Promise.all([
-          fetch(`/api/${categoryKey}?month=${month}`),
-          fetch(`/api/${categoryKey}?months=1`),
+          fetch(`${apiPath(categoryKey)}?month=${month}`),
+          fetch(`${apiPath(categoryKey)}?months=1`),
         ]);
 
         const entries = (await entriesResponse.json()) as entryType[];
@@ -208,7 +209,7 @@
         return;
       }
 
-      const response = await fetch(`/api/${categoryKey}`);
+      const response = await fetch(apiPath(categoryKey));
       entries = (await response.json()) as entryType[];
     } finally {
       isLoading = false;

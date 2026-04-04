@@ -5,8 +5,9 @@ import { PurgeCSS, UserDefinedOptions } from "purgecss";
 
 export default defineConfig(() => {
   const html = process.env.HTML || "index.html"
+  const base = process.env.BASE_URL || "./"
   return {
-    plugins: [svelte(), purgeCssPlugin(), singleFilePlugin()],
+    plugins: [svelte(), purgeCssPlugin(), singleFilePlugin(base)],
     optimizeDeps: {
       exclude: ["@lexical/code", "prismjs"],
     },
@@ -15,7 +16,7 @@ export default defineConfig(() => {
         input: html,
       },
     },
-    base: "./",
+    base,
     server: {
       watch: { usePolling: true },
       port: 3000,
@@ -66,7 +67,11 @@ function purgeCssPlugin(): Plugin {
   }
 }
 
-function singleFilePlugin(): Plugin {
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function singleFilePlugin(base: string): Plugin {
   return {
     name: 'vite:singleFile',
     enforce: 'post',
@@ -81,13 +86,14 @@ function singleFilePlugin(): Plugin {
       const htmlAsset = bundle[htmlNames[0]] as OutputAsset
       let filter = htmlNames[0].replace(".html", "")
       let body = htmlAsset.source as string
+      const normalizedBase = base.endsWith("/") ? base : `${base}/`
 
       let re = new RegExp(`^assets/${filter}.*js$`)
       const jsNames = Object.keys(bundle).filter(key => re.test(key));
 
       for (const jsName of jsNames) {
-        const target = `<script type="module" crossorigin src="./${jsName}"></script>`
-        re = new RegExp(target)
+        const target = `<script type="module" crossorigin src="${normalizedBase}${jsName}"></script>`
+        re = new RegExp(escapeRegExp(target))
         if (re.test(body)) {
           const jsChunk = bundle[jsName] as OutputChunk
           const replaced = `<script type="module" crossorigin>\n${jsChunk.code}\n</script>`
@@ -101,8 +107,8 @@ function singleFilePlugin(): Plugin {
       const cssNames = Object.keys(bundle).filter(key => re.test(key));
 
       for (const css of cssNames) {
-        const target = `<link rel="stylesheet" crossorigin href="./${css}">`
-        re = new RegExp(target)
+        const target = `<link rel="stylesheet" crossorigin href="${normalizedBase}${css}">`
+        re = new RegExp(escapeRegExp(target))
         if (re.test(body)) {
           const replaced = `<style type="text/css">\n${(bundle[css] as any).source}\n</style>`
           body = body.replace(target, replaced);

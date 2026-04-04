@@ -1,25 +1,21 @@
 <script lang="ts">
   import "bulma/css/bulma.css";
-  import Router, { location, link } from "svelte-spa-router";
-  import { wrap } from "svelte-spa-router/wrap";
-  import { type RouteDefinition } from "svelte-spa-router";
-  import type { ComponentType } from "svelte";
+  import { Router, route } from "@mateothegreat/svelte5-router";
   import EntryList from "./routes/EntryList.svelte";
   import EntryDetail from "./routes/EntryDetail.svelte";
+  import Home from "./routes/Home.svelte";
   import Planner from "./routes/Planner/Planner.svelte";
   import { onMount } from "svelte";
   import type { settingType } from "./models/settingType.js";
   import { settingsStore } from "./store.js";
-  let page = "";
-  const EntryListRoute = EntryList as unknown as ComponentType;
-  const EntryDetailRoute = EntryDetail as unknown as ComponentType;
 
-  const routes = {
-    "/planner/": Planner,
-    "/:category/": EntryListRoute,
-    "/:category/:id": EntryDetailRoute,
-    "/:category/add": EntryDetailRoute,
-  } as unknown as RouteDefinition;
+  const routes = [
+    { path: "/", component: Home },
+    { path: "/planner/", component: Planner },
+    { path: /^\/(?<category>[^/]+)\/$/, component: EntryList },
+    { path: /^\/(?<category>[^/]+)\/add$/, component: EntryDetail },
+    { path: /^\/(?<category>[^/]+)\/(?<id>[^/]+)$/, component: EntryDetail },
+  ];
   let settings: settingType;
 
   onMount(async () => {
@@ -27,17 +23,6 @@
     settings = <settingType>await r.json();
     settingsStore.update((s) => settings);
   });
-
-  $: {
-    if (settings !== undefined) {
-      page = "";
-      for (const category of settings.Categories) {
-        if ($location.indexOf("/" + category.Key) >= 0) {
-          page = category.Key;
-        }
-      }
-    }
-  }
 
   // navbarのバーガー開閉イベント
   document.addEventListener("DOMContentLoaded", () => {
@@ -79,23 +64,13 @@
         {#each settings.Categories as category}
           <a
             class="navbar-item is-unselectable is-tab"
-            class:is-active={page === category.Key}
             href={`/${category.Key}/`}
-            use:link
+            use:route={{ active: { class: "is-active", absolute: false } }}
           >
             {category.Name}
           </a>
         {/each}
       {/if}
-      <!--
-      <a
-        class="navbar-item is-unselectable is-tab"
-        class:is-active={page === "/planner/"}
-        href="/planner"
-        use:link
-        >planner
-      </a>
-      -->
     </div>
   </div>
 </nav>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { link, push } from "svelte-spa-router";
+  import { goto, type RouteResult, route } from "@mateothegreat/svelte5-router";
   import type { listType } from "../models/diaryModels.js";
   import type { memoType } from "../models/memoModels.js";
   import { dom, library } from "@fortawesome/fontawesome-svg-core";
@@ -15,7 +15,7 @@
 
   interface Props {
     category?: string;
-    params?: { category?: string };
+    route?: RouteResult;
     selectMonth?: string | null;
     useMonthFilter?: boolean;
     showTags?: boolean;
@@ -23,7 +23,7 @@
 
   let {
     category = "",
-    params = {},
+    route: currentRoute = undefined,
     selectMonth = $bindable(
       `${new Date().getFullYear()}-${("00" + (new Date().getMonth() + 1)).slice(-2)}`,
     ),
@@ -31,9 +31,13 @@
     showTags = undefined,
   }: Props = $props();
 
-  const entryCategory = $derived(category || params.category || "");
+  const entryCategory = $derived(
+    category || String(currentRoute?.result?.path?.params?.category ?? ""),
+  );
   const categorySetting = $derived(
-    $settingsStore?.Categories?.find((category) => category.Key === entryCategory),
+    $settingsStore?.Categories?.find(
+      (category) => category.Key === entryCategory,
+    ),
   );
   const usesMonthFilter = $derived(
     useMonthFilter ?? categorySetting?.UseDate ?? false,
@@ -91,7 +95,7 @@
     memos = (await response.json()) as memoType[];
   };
 
-  const listClick = (entry: memoType) => push(detailPath(entry));
+  const listClick = (entry: memoType) => goto(detailPath(entry));
 
   $effect(() => {
     entryCategory;
@@ -122,20 +126,13 @@
         </div>
       {/if}
       <div class="column">
-        {#if usesMonthFilter}
-          <button
-            class="button is-primary"
-            aria-label={`add ${entryCategory}`}
-            onclick={() => push(addPath())}
-          >
-            <i class="fa-solid fa-plus"></i>
-          </button>
-        {:else}
-          <a class="button is-primary" href={addPath()} use:link>
-            <i class="fa-solid fa-plus"></i>
-            add
-          </a>
-        {/if}
+        <button
+          class="button is-primary"
+          aria-label={`add ${entryCategory}`}
+          onclick={() => goto(addPath())}
+        >
+          <i class="fa-solid fa-plus"></i>
+        </button>
       </div>
     </div>
 

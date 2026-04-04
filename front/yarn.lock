@@ -230,6 +230,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mateothegreat/svelte5-router@npm:^2.16.19":
+  version: 2.16.19
+  resolution: "@mateothegreat/svelte5-router@npm:2.16.19"
+  peerDependencies:
+    svelte: ^5.0.0
+  checksum: 10c0/5d5220b24d33263f7a560f82bf8644290676eac538ba06282bbde9059afaf8941f53148c0863672e0f886d63d4c11bd3911f491a92cef91d13a291df0eab2e95
+  languageName: node
+  linkType: hard
+
 "@napi-rs/wasm-runtime@npm:^1.1.1":
   version: 1.1.2
   resolution: "@napi-rs/wasm-runtime@npm:1.1.2"
@@ -1145,6 +1154,7 @@ __metadata:
     "@lexical/markdown": "npm:0.24.0"
     "@lexical/rich-text": "npm:0.24.0"
     "@lexical/utils": "npm:0.24.0"
+    "@mateothegreat/svelte5-router": "npm:^2.16.19"
     "@sveltejs/vite-plugin-svelte": "npm:^7.0.0"
     "@tsconfig/svelte": "npm:5.0.8"
     "@types/node": "npm:25.5.0"
@@ -1153,7 +1163,6 @@ __metadata:
     purgecss: "npm:^8.0.0"
     svelte: "npm:^5.55.1"
     svelte-check: "npm:^4.4.6"
-    svelte-spa-router: "npm:^4.0.1"
     tslib: "npm:^2.8.1"
     typescript: "npm:^6.0.2"
     vite: "npm:^8.0.3"
@@ -1329,13 +1338,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"regexparam@npm:2.0.2":
-  version: 2.0.2
-  resolution: "regexparam@npm:2.0.2"
-  checksum: 10c0/836b1f56f463dd5220719e9225a4e3059304672e9a441fdfed9882bb390860295890001e9f62325845b4caa9ea848f242debcc9a56173375eb171253619748a3
-  languageName: node
-  linkType: hard
-
 "reusify@npm:^1.0.4":
   version: 1.1.0
   resolution: "reusify@npm:1.1.0"
@@ -1494,15 +1496,6 @@ __metadata:
   bin:
     svelte-check: bin/svelte-check
   checksum: 10c0/583603c5c4e88db613312c21fe60e948bf626a5b53126914f99ef8cca91143a95dafedfa4c4c03322a29bc54d89d304ee3253166665ec819657b1f5320b59862
-  languageName: node
-  linkType: hard
-
-"svelte-spa-router@npm:^4.0.1":
-  version: 4.0.1
-  resolution: "svelte-spa-router@npm:4.0.1"
-  dependencies:
-    regexparam: "npm:2.0.2"
-  checksum: 10c0/4d883af89574de160732f70b31e0751144e0b88aa186526358532d52ca07b6f3ec3b3c613e0d88e5f8dd8ee93b277eb7411724bb43df3f401c5bc9d9e09b38c2
   languageName: node
   linkType: hard
 

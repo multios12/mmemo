@@ -1,6 +1,6 @@
 <script lang="ts">
+  import { goto, type RouteResult } from "@mateothegreat/svelte5-router";
   import { onMount } from "svelte";
-  import { location, pop, push } from "svelte-spa-router";
   import TagsInput from "../components/TagsInput.svelte";
   import type { memoType } from "../models/memoModels.js";
   import RichInput from "../components/RichInput/index.svelte";
@@ -12,7 +12,7 @@
 
   interface Props {
     category?: string;
-    params?: { id?: string; category?: string };
+    route?: RouteResult;
     template?: string;
     showTags?: boolean;
     dateEditableOnCreate?: boolean;
@@ -20,13 +20,21 @@
 
   let {
     category = "",
-    params = { id: undefined, category: undefined },
+    route: currentRoute = undefined,
     template = "",
     showTags = undefined,
     dateEditableOnCreate = undefined,
   }: Props = $props();
 
-  const entryCategory = $derived(category || params.category || "");
+  const routeParams = $derived(
+    (currentRoute?.result?.path?.params ?? {}) as {
+      id?: string | number | boolean;
+      category?: string | number | boolean;
+    },
+  );
+  const entryCategory = $derived(
+    category || String(routeParams.category ?? ""),
+  );
   const showsTags = $derived(showTags);
   const allowsDateEditOnCreate = $derived(dateEditableOnCreate);
 
@@ -64,15 +72,21 @@
     }
   });
 
-  const isAddRoute = () => params.id === "add";
+  const entryId = $derived(routeParams.id ? String(routeParams.id) : undefined);
+
+  const isAddRoute = () => entryId === "add";
   const saveMethod = () => (isNew ? "put" : "post");
 
   const entryUrl = () => {
     if (isNew) {
       return `/api/${entryCategory}`;
     }
-    return `/api/${entryCategory}/${params.id}`;
+    return `/api/${entryCategory}/${entryId}`;
   };
+
+  const listPath = () => `/${entryCategory}/`;
+
+  const goToList = async () => goto(listPath());
 
   const onOk = async () => {
     memo.Value = changedValue || memo.Value;
@@ -87,19 +101,19 @@
       return;
     }
 
-    push(`/${entryCategory}/`);
+    await goToList();
   };
 
-  const onCancel = () => push(`/${entryCategory}/`);
+  const onCancel = async () => await goToList();
 
   const onDelete = async () => {
     if (isNew) {
-      push(`/${entryCategory}/`);
+      await goToList();
       return;
     }
 
     await fetch(entryUrl(), { method: "delete" });
-    push(`/${entryCategory}/`);
+    await goToList();
   };
 
   const onTextChange = (value: string) => {
@@ -135,8 +149,8 @@
   $effect(() => {
     initialized;
     entryCategory;
-    params.id;
-    $location;
+    entryId;
+    currentRoute;
 
     if (!initialized || !entryCategory) {
       return;
@@ -148,13 +162,14 @@
     isNew = isAddRoute();
 
     if (isNew) {
-      memo = { ...resetMemo(), Value: template ?? "" };
-      changedValue = memo.Value;
+      const nextMemo = { ...resetMemo(), Value: template ?? "" };
+      memo = nextMemo;
+      changedValue = nextMemo.Value;
       isLoading = false;
       return;
     }
 
-    if (params.id == undefined || params.id === "") {
+    if (entryId == undefined || entryId === "") {
       changedValue = "";
       isLoading = false;
       return;
@@ -163,10 +178,11 @@
     isLoading = true;
     (async () => {
       try {
-        const response = await fetch(`/api/${entryCategory}/${params.id}`);
-        memo = (await response.json()) as memoType;
-        memo.Tags = memo.Tags ?? [];
-        changedValue = memo.Value ?? "";
+        const response = await fetch(`/api/${entryCategory}/${entryId}`);
+        const nextMemo = (await response.json()) as memoType;
+        nextMemo.Tags = nextMemo.Tags ?? [];
+        memo = nextMemo;
+        changedValue = nextMemo.Value ?? "";
       } finally {
         isLoading = false;
       }

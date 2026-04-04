@@ -7,4 +7,3 @@ export type lineType = {
   IsDetail: boolean;
   HCount: number;
 };
-export type detailType = { Day: string; Outline: string; Tags: string[]; Detail: string };

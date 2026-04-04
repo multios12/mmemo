@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"embed"
 	"encoding/json"
 	"flag"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/multios12/mmemo/pkg/images"
 	"github.com/multios12/mmemo/pkg/memo"
@@ -62,11 +64,25 @@ func main() {
 
 // スタティックリソース GET API
 func getStatic(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/" {
-		r = r.Clone(r.Context())
-		r.URL.Path = "/index.html"
+	path := r.URL.Path
+	if path == "/" {
+		path = "/index.html"
+	} else if shouldServeSPA(path) {
+		path = "/index.html"
 	}
+
+	r = r.Clone(r.Context())
+	r.URL.Path = path
 	http.FileServer(http.FS(staticFiles)).ServeHTTP(w, r)
+}
+
+func shouldServeSPA(path string) bool {
+	if strings.Contains(filepath.Base(path), ".") {
+		return false
+	}
+
+	_, err := fs.Stat(staticFiles, strings.TrimPrefix(path, "/"))
+	return errors.Is(err, fs.ErrNotExist)
 }
 
 // 設定ファイルの読み込み

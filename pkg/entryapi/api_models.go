@@ -5,6 +5,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/multios12/mmemo/pkg/store"
 )
@@ -22,6 +23,8 @@ type entryPayload struct {
 	Tags      []string `json:"Tags"`
 	Value     string   `json:"Value"`
 	HasDetail bool     `json:"HasDetail"`
+	CreatedAt string   `json:"CreatedAt,omitempty"`
+	UpdatedAt string   `json:"UpdatedAt,omitempty"`
 }
 
 func entryToPayload(entry store.Entry) entryPayload {
@@ -34,6 +37,8 @@ func entryToPayload(entry store.Entry) entryPayload {
 		Tags:      splitTags(entry.Tags),
 		Value:     value,
 		HasDetail: strings.TrimSpace(value) != "",
+		CreatedAt: entry.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: entry.UpdatedAt.Format(time.RFC3339),
 	}
 }
 

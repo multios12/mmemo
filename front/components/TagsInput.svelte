@@ -48,7 +48,7 @@
     <input
       class="input"
       type="text"
-      placeholder="Choose Tags"
+      placeholder="タグ（複数指定可）"
       bind:value
       onkeydown={onKeydown}
       onblur={onBlur}

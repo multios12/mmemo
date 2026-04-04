@@ -1,9 +1,4 @@
 <script lang="ts">
-  import { dom, library } from "@fortawesome/fontawesome-svg-core";
-  import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
-  library.add(faCaretDown);
-  dom.watch();
-
   interface Props {
     /** 選択アイテムのリスト */
     items: { key: string; value: string }[];
@@ -14,43 +9,37 @@
   }
 
   let { items, key = $bindable(""), tabindex, onchange }: Props = $props();
-  /** 表示値 */
-  let value = $derived(items.find((item) => item.key === key)?.value ?? "");
-  /** ドロップダウン トグルイベント */
-  const onToggle = () =>
-    document.getElementById("dropdown")?.classList.toggle("is-active");
+  $effect(() => {
+    if (items.length > 0 && !items.some((item) => item.key === key)) {
+      key = items[0].key;
+    }
+  });
 
-  /** アイテム変更イベント */
-  const onChange = (nextKey: string) => {
+  const onChange = (event: Event) => {
+    const nextKey = (event.currentTarget as HTMLSelectElement).value;
     key = nextKey;
     onchange?.(nextKey);
-    onToggle();
   };
 </script>
 
-<div class="dropdown" id="dropdown">
-  <div class="dropdown-trigger">
-    <button
-      class="button"
-      aria-haspopup="true"
-      aria-controls="dropdown-menu"
-      id="para-button"
-      {tabindex}
-      onclick={onToggle}
-    >
-      <span>{value}</span>
-      <span class="icon is-small">
-        <i class="fa-solid fa-caret-down"></i>
-      </span>
-    </button>
-  </div>
-  <div class="dropdown-menu" id="dropdown-menu" role="menu">
-    <div class="dropdown-content">
-      {#each items as i}
-        <button class="dropdown-item" onclick={() => onChange(i.key)}>
-          {i.value}
-        </button>
-      {/each}
-    </div>
-  </div>
+<div class="select">
+  <select bind:value={key} {tabindex} onchange={onChange}>
+    {#each items as item}
+      <option value={item.key}>{item.value}</option>
+    {/each}
+  </select>
 </div>
+
+<style>
+  .select {
+    display: flex;
+    align-items: center;
+  }
+
+  .select select {
+    min-height: 2.35rem;
+    line-height: 1.2;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+</style>

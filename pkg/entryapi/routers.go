@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -43,7 +44,24 @@ func Initial(router *http.ServeMux, s SettingModel) error {
 }
 
 func getSetting(w http.ResponseWriter, _ *http.Request) {
+	latestSetting, err := loadSettingFromFile()
+	if err == nil {
+		setting = latestSetting
+	}
 	writeJSON(w, http.StatusOK, setting)
+}
+
+func loadSettingFromFile() (SettingModel, error) {
+	b, err := os.ReadFile("settings.json")
+	if err != nil {
+		return SettingModel{}, err
+	}
+
+	var latest SettingModel
+	if err := json.Unmarshal(b, &latest); err != nil {
+		return SettingModel{}, err
+	}
+	return latest, nil
 }
 
 func getEntries(w http.ResponseWriter, r *http.Request) {
@@ -112,6 +130,10 @@ func saveEntry(w http.ResponseWriter, r *http.Request, pathID string) {
 		writeErrorJSON(w, http.StatusBadRequest, err)
 		return
 	}
+	if err := validateEntryDateDuplication(category, entry); err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, err)
+		return
+	}
 
 	isNewEntry := entry.Id == 0
 	if isNewEntry {
@@ -130,6 +152,30 @@ func saveEntry(w http.ResponseWriter, r *http.Request, pathID string) {
 	entry.Value = value
 	entry = store.UpsertEntry(entry)
 	w.WriteHeader(http.StatusOK)
+}
+
+func validateEntryDateDuplication(category string, entry store.Entry) error {
+	for _, categorySetting := range setting.Categories {
+		if categorySetting.Key != category {
+			continue
+		}
+		if categorySetting.AllowMultipleEntriesPerDate || entry.Date == "" {
+			return nil
+		}
+
+		current, err := store.FindEntryByDate(category, entry.Date)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if entry.Id != 0 && current.Id == entry.Id {
+			return nil
+		}
+		return errors.New("同じ日付のエントリは登録できません")
+	}
+	return nil
 }
 
 func validatePathID(entry *store.Entry, pathID string) error {

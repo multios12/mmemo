@@ -5,6 +5,8 @@ export type entryType = {
   Value: string;
   Tags: string[];
   HasDetail?: boolean;
+  CreatedAt?: string;
+  UpdatedAt?: string;
 };
 
 export type listType = {

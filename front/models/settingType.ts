@@ -1,7 +1,14 @@
 export type settingType = {
     Diary: { Name: string }
+    Holidays: HolidayType[]
     Categories: CategoryType[]
 }
+
+export type HolidayType = {
+    Date: string,
+    Name: string,
+}
+
 export type CategoryType = {
     Key: string,
     // 種類名
@@ -12,7 +19,16 @@ export type CategoryType = {
     UseDate: boolean,
     // タグ表示 
     UseTag: boolean,
+    // 同一日付の複数登録可否
+    AllowMultipleEntriesPerDate: boolean,
     // テンプレート
     Template: string,
-    Fields: {}
+    Fields: {
+        Name?: string,
+        Date?: string,
+        Tags?: string,
+        Value?: string,
+        Outline?: string,
+        OutlineIcon?: string,
+    }
 }

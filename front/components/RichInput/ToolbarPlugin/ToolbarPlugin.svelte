@@ -54,93 +54,129 @@
 </script>
 
 <div id="toolbar" class="panel-heading py-1">
-  <div class="level is-mobile">
-    <div class="level-left">
-      <div class="level-item">
-        <!-- svelte-ignore a11y_consider_explicit_label -->
-        <button
-          class="button is-ghost p-0"
-          disabled={!canUndo}
-          tabindex="-1"
-          onclick={undo}
-        >
-          <i class="fa-solid fa-rotate-left"></i>
-        </button>
-      </div>
-      <div class="level-item">
-        <!-- svelte-ignore a11y_consider_explicit_label -->
-        <button
-          class="button is-ghost p-0"
-          disabled={!canRedo}
-          tabindex="-1"
-          onclick={redo}
-        >
-          <i class="fa-solid fa-rotate-right"></i>
-        </button>
-      </div>
+  <div class="toolbar-scroll">
+    <div class="level is-mobile">
+      <div class="level-left">
+        <div class="level-item">
+          <!-- svelte-ignore a11y_consider_explicit_label -->
+          <button
+            class="button is-ghost p-0"
+            disabled={!canUndo}
+            tabindex="-1"
+            onclick={undo}
+          >
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+        </div>
+        <div class="level-item">
+          <!-- svelte-ignore a11y_consider_explicit_label -->
+          <button
+            class="button is-ghost p-0"
+            disabled={!canRedo}
+            tabindex="-1"
+            onclick={redo}
+          >
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+        </div>
 
-      <div class="level-item">
-        <Dropdown
-          items={paragraphs}
-          key={para}
-          tabindex={-1}
-          onchange={onChange}
-        />
-      </div>
+        <div class="level-item">
+          <Dropdown
+            items={paragraphs}
+            key={para}
+            tabindex={-1}
+            onchange={onChange}
+          />
+        </div>
 
-      <div class="level-item">
-        <!-- svelte-ignore a11y_consider_explicit_label -->
-        <button
-          id="boldButton"
-          class="button is-ghost p-0"
-          tabindex="-1"
-          onclick={formatBold}
-        >
-          <i class="fa-solid fa-bold"></i>
-        </button>
-      </div>
-      <div class="level-item is-hidden">
-        <!-- svelte-ignore a11y_consider_explicit_label -->
-        <button
-          id="italicButton"
-          class="button is-ghost p-0"
-          tabindex="-1"
-          onclick={formatItalic}
-        >
-          <i class="fa-solid fa-italic"></i>
-        </button>
-      </div>
-      <div class="level-item is-hidden">
-        <!-- svelte-ignore a11y_consider_explicit_label -->
-        <button
-          id="underButton"
-          class="button is-ghost p-0"
-          tabindex="-1"
-          onclick={formatUnderline}
-        >
-          <i class="fa-solid fa-underline"></i>
-        </button>
-      </div>
-      <div class="level-item">
-        <!-- svelte-ignore a11y_consider_explicit_label -->
-        <button
-          id="linkButton"
-          class="button is-ghost p-0"
-          tabindex="-1"
-          onclick={toggleLink}
-        >
-          <i class="fa-solid fa-link"></i>
-        </button>
-      </div>
-      <div class="level-item">
-        <ImageButton {editor} uploadPath={imageUploadPath} />
+        <div class="level-item">
+          <!-- svelte-ignore a11y_consider_explicit_label -->
+          <button
+            id="boldButton"
+            class="button is-ghost p-0"
+            tabindex="-1"
+            onclick={formatBold}
+          >
+            <i class="fa-solid fa-bold"></i>
+          </button>
+        </div>
+        <div class="level-item is-hidden">
+          <!-- svelte-ignore a11y_consider_explicit_label -->
+          <button
+            id="italicButton"
+            class="button is-ghost p-0"
+            tabindex="-1"
+            onclick={formatItalic}
+          >
+            <i class="fa-solid fa-italic"></i>
+          </button>
+        </div>
+        <div class="level-item is-hidden">
+          <!-- svelte-ignore a11y_consider_explicit_label -->
+          <button
+            id="underButton"
+            class="button is-ghost p-0"
+            tabindex="-1"
+            onclick={formatUnderline}
+          >
+            <i class="fa-solid fa-underline"></i>
+          </button>
+        </div>
+        <div class="level-item">
+          <!-- svelte-ignore a11y_consider_explicit_label -->
+          <button
+            id="linkButton"
+            class="button is-ghost p-0"
+            tabindex="-1"
+            onclick={toggleLink}
+          >
+            <i class="fa-solid fa-link"></i>
+          </button>
+        </div>
+        <div class="level-item">
+          <ImageButton {editor} uploadPath={imageUploadPath} />
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <style>
+  #toolbar {
+    overflow: visible;
+    position: relative;
+    z-index: 2;
+  }
+
+  .toolbar-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  .level {
+    margin-bottom: 0;
+  }
+
   .level-left {
     flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.15rem;
+  }
+
+  @media screen and (max-width: 768px) {
+    #toolbar {
+      padding-top: 0.15rem;
+      padding-bottom: 0.15rem;
+    }
+
+    .level-item {
+      margin-right: 0;
+      flex: 0 0 auto;
+    }
+
+    .button.is-ghost {
+      min-width: 2rem;
+      min-height: 2rem;
+    }
   }
 </style>

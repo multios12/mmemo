@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { CLEAR_HISTORY_COMMAND } from "lexical";
-  import { type LexicalEditor } from "lexical";
+  import { type LexicalEditor, type UpdateListener } from "lexical";
   import { $toggleLink as _toggleLink } from "@lexical/link";
   import { $convertFromMarkdownString as _convertFromMarkdownString } from "@lexical/markdown";
   import { TRANSFORMERS } from "@lexical/markdown";
@@ -34,13 +34,20 @@
   let canRedo = $state(false);
   /** リンクポップアップ表示値 */
   let linkValue = $state("");
+  /** 直近でエディタから通知された値 */
+  let emittedValue = $state("");
+
+  const handleTextChange = (nextValue: string) => {
+    emittedValue = nextValue;
+    onTextChange?.(nextValue);
+  };
 
   /** マウントイベント */
   onMount(async () => {
     let detailRect = document.querySelector("#detail")?.getBoundingClientRect();
     let footerRect = document.querySelector("footer")?.getBoundingClientRect();
     if (detailRect !== undefined && footerRect !== undefined) {
-      let height = footerRect.top - detailRect.top - 100;
+      let height = footerRect.top - detailRect.top - 36;
       let a = height + "px";
       document
         .querySelector<HTMLDivElement>("#detail")
@@ -54,22 +61,26 @@
       document.getElementById("link-menu") as HTMLDivElement,
       (p: boolean) => (canUndo = p),
       (p: boolean) => (canRedo = p),
-      (arg) => {
+      ((arg) => {
         arg.editorState.read(() => {
           const { para: ppara, linkValue: plinkValue } = updateToolbar();
           para = ppara;
           linkValue = <string>plinkValue;
         });
-      },
-      onTextChange,
+      }) satisfies UpdateListener,
+      handleTextChange,
     );
   });
 
   $effect(() => {
     // 入力値が更新されたとき、マークダウン変換と、履歴クリア
-    if (editor !== undefined && value !== undefined && value !== "") {
+    if (
+      editor !== undefined &&
+      value !== undefined &&
+      value !== emittedValue
+    ) {
       const trans = [IMAGE, ...TRANSFORMERS];
-      editor.update(() => _convertFromMarkdownString(value, trans));
+      editor.update(() => _convertFromMarkdownString(value ?? "", trans));
       editor.dispatchCommand(CLEAR_HISTORY_COMMAND, undefined);
     }
   });
@@ -129,12 +140,22 @@
 </div>
 
 <style>
+  #rich {
+    overflow: visible;
+  }
+
+  #rich :global(.panel-block) {
+    overflow: visible;
+    align-items: stretch;
+  }
+
   #detail {
     overflow: auto;
-    width: 99%;
+    width: 100%;
     min-height: 150px;
-    margin-left: 2px;
-    padding: 5px;
+    margin-left: 0;
+    padding: 8px 10px;
+    box-sizing: border-box;
   }
 
   #link-menu {

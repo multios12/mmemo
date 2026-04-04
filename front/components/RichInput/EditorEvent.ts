@@ -3,7 +3,7 @@ import "prismjs";
 import { $isRangeSelection as _isRangeSelection } from "lexical";
 import { $createParagraphNode as _createParagraphNode } from "lexical";
 import { $getSelection as _getSelection } from "lexical";
-import { createEditor } from "lexical";
+import { createEditor, type UpdateListener } from "lexical";
 import { CAN_REDO_COMMAND, CAN_UNDO_COMMAND } from "lexical";
 import { $isLinkNode as _isLinkNode, LinkNode } from "@lexical/link";
 import { $toggleLink as _toggleLink } from "@lexical/link";
@@ -17,7 +17,6 @@ import { $createCodeNode as _createCodeNode, CodeNode } from "@lexical/code";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { createEmptyHistoryState, registerHistory } from "@lexical/history";
 import { TRANSFORMERS } from "@lexical/markdown";
-import type { UpdateListener } from "node_modules/lexical/LexicalEditor.js";
 import { ImageNode } from "./ImagesPlugin/ImageNode.js"
 import { registerInsertImageCommand } from "./ImagesPlugin/index.js";
 import { IMAGE } from "./MarkdownTransformers.js"

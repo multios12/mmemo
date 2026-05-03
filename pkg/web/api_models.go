@@ -24,9 +24,17 @@ type entryRequest struct {
 	Tags      []string `json:"Tags"`
 	Value     string   `json:"Value"`
 	HTML      string   `json:"HTML,omitempty"`
+	Images    []imageRequest `json:"Images,omitempty"`
 	HasDetail bool     `json:"HasDetail"`
 	CreatedAt string   `json:"CreatedAt,omitempty"`
 	UpdatedAt string   `json:"UpdatedAt,omitempty"`
+}
+
+type imageRequest struct {
+	Id       string `json:"Id"`
+	Src      string `json:"Src"`
+	Alt      string `json:"Alt"`
+	Markdown string `json:"Markdown,omitempty"`
 }
 
 func entryToPayload(entry store.Entry) entryRequest {

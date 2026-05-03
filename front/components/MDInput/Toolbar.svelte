@@ -1,13 +1,15 @@
 <script lang="ts">
+  import AppIcon from "../AppIcon.svelte";
+
   export const paragraphs = [
-    { key: "normal", value: "本文", icon: "fa-grip-lines" },
+    { key: "normal", value: "本文", icon: "grip-lines" },
     { key: "h1", value: "見出し1", badge: "H1" },
     { key: "h2", value: "見出し2", badge: "H2" },
     { key: "h3", value: "見出し3", badge: "H3" },
-    { key: "ol", value: "番号リスト", icon: "fa-list-ol" },
-    { key: "ul", value: "段落リスト", icon: "fa-list-ul" },
-    { key: "code", value: "コード", icon: "fa-code" },
-    { key: "quote", value: "引用", icon: "fa-quote-left" },
+    { key: "ol", value: "番号リスト", icon: "list-ol" },
+    { key: "ul", value: "段落リスト", icon: "list-ul" },
+    { key: "code", value: "コード", icon: "code" },
+    { key: "quote", value: "引用", icon: "quote-left" },
   ];
 
   interface Props {
@@ -81,12 +83,12 @@
           </span>
         {:else}
           <span class="icon md-paragraph-icon-slot">
-            <i class={`fa-solid ${currentParagraph.icon}`}></i>
+            <AppIcon name={currentParagraph.icon ?? "grip-lines"} />
           </span>
         {/if}
       {/key}
       <span class="icon is-small">
-        <i class="fa-solid fa-chevron-down"></i>
+        <AppIcon name="chevron-down" size={16} />
       </span>
     </button>
 
@@ -107,7 +109,7 @@
               </span>
             {:else}
               <span class="icon md-paragraph-icon-slot">
-                <i class={`fa-solid ${item.icon}`}></i>
+                <AppIcon name={item.icon ?? "grip-lines"} />
               </span>
             {/if}
             <span>{item.value}</span>
@@ -123,7 +125,7 @@
     aria-label="bold"
     onclick={onBold}
   >
-    <i class="fa-solid fa-bold"></i>
+    <AppIcon name="bold" />
   </button>
   <button
     class="button is-ghost md-toolbar-button"
@@ -132,7 +134,7 @@
     aria-label="italic"
     onclick={onItalic}
   >
-    <i class="fa-solid fa-italic"></i>
+    <AppIcon name="italic" />
   </button>
   <button
     class="button is-ghost md-toolbar-button"
@@ -141,7 +143,7 @@
     aria-label="strike"
     onclick={onStrike}
   >
-    <i class="fa-solid fa-strikethrough"></i>
+    <AppIcon name="strikethrough" />
   </button>
   <button
     class="button is-ghost md-toolbar-button"
@@ -150,7 +152,7 @@
     title="次回グループ追加へ引き継ぐ位置を挿入"
     onclick={onCarryOver}
   >
-    <i class="fa-solid fa-arrows-rotate"></i>
+    <AppIcon name="arrows-rotate" />
   </button>
   <button
     class="button is-ghost md-toolbar-button"
@@ -158,7 +160,7 @@
     aria-label="image"
     onclick={onImage}
   >
-    <i class="fa-solid fa-image"></i>
+    <AppIcon name="image" />
   </button>
   <button
     class="button is-ghost md-toolbar-button"
@@ -167,7 +169,7 @@
     aria-label="link"
     onclick={onLink}
   >
-    <i class="fa-solid fa-link"></i>
+    <AppIcon name="link" />
   </button>
 </div>
 

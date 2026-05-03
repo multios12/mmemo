@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AppIcon from "./AppIcon.svelte";
   import type { TemplateType } from "../models/settingType.js";
 
   interface Props {
@@ -81,7 +82,7 @@
           aria-selected={mode === "new"}
           onclick={() => (mode = "new")}
         >
-          <span class="icon"><i class="fa-solid fa-plus"></i></span>
+          <span class="icon"><AppIcon name="plus" /></span>
           <span>新規作成</span>
         </button>
         <button
@@ -93,7 +94,7 @@
           disabled={!hasTemplates}
           onclick={() => (mode = "overwrite")}
         >
-          <span class="icon"><i class="fa-solid fa-pen-to-square"></i></span>
+          <span class="icon"><AppIcon name="pen-to-square" /></span>
           <span>上書き</span>
         </button>
       </div>
@@ -142,7 +143,7 @@
           disabled={isSaving || isDeleting}
           onclick={onClose}
         >
-          <span class="icon"><i class="fa-solid fa-xmark"></i></span>
+          <span class="icon"><AppIcon name="xmark" /></span>
           <span>キャンセル</span>
         </button>
         {#if mode === "overwrite" && hasTemplates}
@@ -153,7 +154,7 @@
             disabled={isSaving || isDeleting}
             onclick={onDeleteClick}
           >
-            <span class="icon"><i class="fa-solid fa-trash"></i></span>
+            <span class="icon"><AppIcon name="trash" /></span>
             <span>削除</span>
           </button>
         {/if}
@@ -164,7 +165,7 @@
           disabled={isSaving || isDeleting}
           onclick={onSubmit}
         >
-          <span class="icon"><i class="fa-solid fa-floppy-disk"></i></span>
+          <span class="icon"><AppIcon name="floppy-disk" /></span>
           <span>保存</span>
         </button>
       </div>

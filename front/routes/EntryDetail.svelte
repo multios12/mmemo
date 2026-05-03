@@ -1,6 +1,8 @@
 <script lang="ts">
   import { goto, type RouteResult } from "@mateothegreat/svelte5-router";
   import { onMount } from "svelte";
+  import AppIcon from "../components/AppIcon.svelte";
+  import ImageSelectionCard from "../components/ImageSelectionCard.svelte";
   import MDInput from "../components/MDInput/index.svelte";
   import TagsInput from "../components/TagsInput.svelte";
   import TemplateSaveModal from "../components/TemplateSaveModal.svelte";
@@ -86,6 +88,14 @@
       ? apiPath(`${categoryKey}/images/tmp`)
       : apiPath(`${categoryKey}/${entryId}/images`),
   );
+  const previewImages = $derived.by(() =>
+    (entry.Images ?? []).map((image) => ({
+      id: image.Id,
+      src: image.Src,
+      alt: image.Alt,
+      markdown: image.Markdown,
+    })),
+  );
   const saveMethod = () => (isNew ? "put" : "post");
   const finishPageLoading = () => {
     requestAnimationFrame(() => {
@@ -98,7 +108,12 @@
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         editorValue = value;
-        initialSnapshot = snapshotEntry(outlineValue, dateValue, tagsValue, value);
+        initialSnapshot = snapshotEntry(
+          outlineValue,
+          dateValue,
+          tagsValue,
+          value,
+        );
       });
     });
   };
@@ -136,7 +151,10 @@
   const hasTemplates = $derived(resolvedSettings.templates.length > 0);
   const initKey = $derived.by(() => {
     const templateSignature = resolvedSettings.templates
-      .map((template) => `${template.Name}:${template.Value}:${(template.Tags ?? []).join("#")}`)
+      .map(
+        (template) =>
+          `${template.Name}:${template.Value}:${(template.Tags ?? []).join("#")}`,
+      )
       .join("|");
     const querySignature = JSON.stringify(routeQuery);
     return `${initialized ? "1" : "0"}:${categoryKey}:${entryId ?? ""}:${isAddRoute ? "1" : "0"}:${templateSignature}:${querySignature}`;
@@ -185,7 +203,9 @@
   };
   const applyTemplateValue = (templateValue: string) => {
     const lines = templateValue.split(/\r?\n/);
-    const markerIndex = lines.findIndex((line) => line.trim() === carryOverMarker);
+    const markerIndex = lines.findIndex(
+      (line) => line.trim() === carryOverMarker,
+    );
     if (markerIndex < 0) {
       return templateValue;
     }
@@ -200,7 +220,9 @@
         (line) => line.trim() === carryOverMarker,
       );
       if (previousMarkerIndex >= 0) {
-        carriedPrefix = previousLines.slice(0, previousMarkerIndex + 1).join("\n");
+        carriedPrefix = previousLines
+          .slice(0, previousMarkerIndex + 1)
+          .join("\n");
       }
     }
 
@@ -256,7 +278,12 @@
     }
 
     entry = nextEntry;
-    initialSnapshot = snapshotEntry(outlineValue, dateValue, tagsValue, editorValue);
+    initialSnapshot = snapshotEntry(
+      outlineValue,
+      dateValue,
+      tagsValue,
+      editorValue,
+    );
     canCheckDirty = true;
     await goToReference();
   };
@@ -281,6 +308,15 @@
   const onTextChange = (value: string) => {
     editorValue = value;
   };
+  const onEmbedImage = (markdown: string) => {
+    const nextMarkdown = markdown.trim();
+    if (nextMarkdown === "") {
+      return;
+    }
+
+    const separator = editorValue.trim() === "" ? "" : "\n";
+    editorValue = `${editorValue}${separator}${nextMarkdown}`;
+  };
   const onSelectTemplate = (payload: {
     template: TemplateType;
     index: number;
@@ -294,9 +330,7 @@
   const openTemplateSaveModal = () => {
     const suggestedName = outlineValue.trim() || "新しいテンプレート";
     const defaultOverwriteName =
-      selectedTemplateName ||
-      resolvedSettings.templates[0]?.Name ||
-      "";
+      selectedTemplateName || resolvedSettings.templates[0]?.Name || "";
     templateSaveInitialMode = hasTemplates ? "overwrite" : "new";
     templateSaveInitialDraftName = suggestedName;
     templateSaveInitialOverwriteName = defaultOverwriteName;
@@ -423,7 +457,10 @@
     if (nextIsNew) {
       if (previousEntryId != undefined) {
         try {
-          const previousEntry = await loadEntry(categoryKey, String(previousEntryId));
+          const previousEntry = await loadEntry(
+            categoryKey,
+            String(previousEntryId),
+          );
           if (currentLoadSequence === loadSequence) {
             previousCardEntryValue = previousEntry.Value ?? "";
           }
@@ -437,7 +474,11 @@
       const nextEntry = createEmptyEntry();
       const nextOutline = hasPresetOutline ? presetOutline : nextEntry.Outline;
       const nextDate = nextEntry.Date;
-      const nextTags = hasPresetTag ? (presetTag ? [presetTag] : []) : [...initialTemplateTags];
+      const nextTags = hasPresetTag
+        ? presetTag
+          ? [presetTag]
+          : []
+        : [...initialTemplateTags];
       entry = nextEntry;
       outlineValue = nextOutline;
       dateValue = nextDate;
@@ -484,7 +525,12 @@
       dateValue = nextDate;
       tagsValue = nextTags;
       editorValue = nextEditorValue;
-      initialSnapshot = snapshotEntry(nextOutline, nextDate, nextTags, nextEditorValue);
+      initialSnapshot = snapshotEntry(
+        nextOutline,
+        nextDate,
+        nextTags,
+        nextEditorValue,
+      );
       canCheckDirty = true;
     } finally {
       if (currentLoadSequence === loadSequence) {
@@ -561,7 +607,7 @@
                 aria-label={`delete ${categoryKey}`}
                 onclick={onDelete}
               >
-                <span class="icon"><i class="fa-solid fa-trash"></i></span>
+                <span class="icon"><AppIcon name="trash" /></span>
                 <span>削除</span>
               </button>
             </div>
@@ -592,7 +638,7 @@
                   aria-label="toggle tags"
                   onclick={() => (showTagsOnMobile = !showTagsOnMobile)}
                 >
-                  <span class="icon"><i class="fa-solid fa-tags"></i></span>
+                  <span class="icon"><AppIcon name="tags" /></span>
                 </button>
               </div>
             {/if}
@@ -639,6 +685,16 @@
         <MDInput value={editorValue} {imageUploadPath} {onTextChange} />
       </div>
     </div>
+
+    <div class="field detail-image-selection-field">
+      <div class="control">
+        <ImageSelectionCard
+          {onEmbedImage}
+          {imageUploadPath}
+          images={previewImages}
+        />
+      </div>
+    </div>
   </section>
   <footer class="is-dark m-0">
     <div class="footer-actions">
@@ -648,15 +704,18 @@
         {/if}
       </div>
       <div class="footer-buttons">
-        <button class="button footer-button detail-secondary-button" onclick={onCancel}>
-          <span class="icon"><i class="fa-solid fa-arrow-left"></i></span>
+        <button
+          class="button footer-button detail-secondary-button"
+          onclick={onCancel}
+        >
+          <span class="icon"><AppIcon name="arrow-left" /></span>
           <span>戻る</span>
         </button>
         <button
           class="button footer-button footer-template-button detail-secondary-button"
           onclick={openTemplateSaveModal}
         >
-          <span class="icon"><i class="fa-solid fa-book"></i></span>
+          <span class="icon"><AppIcon name="book" /></span>
           <span>テンプレート</span>
         </button>
         <button
@@ -668,7 +727,7 @@
           class:is-loading={isLoading}
           onclick={onOk}
         >
-          <span class="icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+          <span class="icon"><AppIcon name="cloud-arrow-up" /></span>
           <span>{saveButtonLabel}</span>
         </button>
       </div>
@@ -684,7 +743,7 @@
   .detail-body {
     position: relative;
     min-height: calc(100vh - 15rem);
-    padding-bottom: 5.5rem;
+    margin-bottom: 4.25rem;
   }
 
   .detail-page.is-page-loading {
@@ -781,7 +840,11 @@
   }
 
   .detail-secondary-button {
-    background: color-mix(in srgb, var(--bulma-border) 74%, var(--bulma-scheme-main));
+    background: color-mix(
+      in srgb,
+      var(--bulma-border) 74%,
+      var(--bulma-scheme-main)
+    );
     border: 1px solid color-mix(in srgb, var(--bulma-border) 86%, white 14%);
     color: color-mix(in srgb, var(--bulma-text) 90%, white 10%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -873,6 +936,14 @@
   .detail-editor-control {
     display: flex;
     min-height: max(22rem, calc(100vh - 23rem));
+  }
+
+  .detail-image-selection-field {
+    margin-top: 0.9rem;
+  }
+
+  .detail-image-selection-field .control {
+    width: 100%;
   }
 
   .detail-editor-control :global(.md-input) {
@@ -985,11 +1056,15 @@
 
     .detail-body {
       min-height: calc(100vh - 13rem);
-      padding-bottom: 6rem;
+      margin-bottom: 4.25rem;
     }
 
     .detail-editor-control {
       min-height: max(18rem, calc(100vh - 19rem));
+    }
+
+    .detail-image-selection-field {
+      margin-top: 0.7rem;
     }
 
     .footer-status,

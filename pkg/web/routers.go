@@ -42,6 +42,7 @@ func Initial(router *http.ServeMux, s SettingModel) error {
 	router.HandleFunc("DELETE /api/{category}/{id}", deleteEntry)
 	router.HandleFunc("POST   /api/{category}/{id}/images", postEntryImage)
 	router.HandleFunc("GET    /api/{category}/{id}/images/{file}", getImage)
+	router.HandleFunc("DELETE /api/{category}/{id}/images/{file}", deleteImage)
 
 	return nil
 }
@@ -259,7 +260,14 @@ func getEntry(w http.ResponseWriter, r *http.Request) {
 		writeErrorJSON(w, http.StatusBadRequest, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, entryToPayload(entry))
+	payload := entryToPayload(entry)
+	images, err := findEntryImages(r.PathValue("category"), r.PathValue("id"))
+	if err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, err)
+		return
+	}
+	payload.Images = images
+	writeJSON(w, http.StatusOK, payload)
 }
 
 func putEntry(w http.ResponseWriter, r *http.Request) {
@@ -398,6 +406,92 @@ func getImage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", contentType)
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(storedImage.Data)
+}
+
+func deleteImage(w http.ResponseWriter, r *http.Request) {
+	imagePath := imagePathForRoute(r.PathValue("category"), r.PathValue("id"), r.PathValue("file"))
+	if err := entryStore.DeleteImage(imagePath); err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if r.PathValue("category") == "diary" {
+		if legacyPath, err := legacyDiaryImagePath(r.PathValue("id"), r.PathValue("file")); err == nil {
+			_ = entryStore.DeleteImage(legacyPath)
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func findEntryImages(category string, id string) ([]imageRequest, error) {
+	prefixes := entryImagePrefixes(category, id)
+
+	seen := make(map[string]struct{})
+	items := make([]imageRequest, 0)
+	for _, prefix := range prefixes {
+		images, err := entryStore.FindImagesByPrefix(prefix)
+		if err != nil {
+			return nil, err
+		}
+		for _, image := range images {
+			src := imagePathToURL(image.Path, category, id)
+			if src == "" {
+				continue
+			}
+			if _, ok := seen[src]; ok {
+				continue
+			}
+			seen[src] = struct{}{}
+			alt := path.Base(image.Path)
+			items = append(items, imageRequest{
+				Id:       src,
+				Src:      src,
+				Alt:      alt,
+				Markdown: fmt.Sprintf("![%s](%s)", alt, src),
+			})
+		}
+	}
+
+	return items, nil
+}
+
+func entryImagePrefixes(category string, id string) []string {
+	prefixes := []string{path.Join(category, fmt.Sprintf("%05d", mustAtoi(id))) + "/"}
+	if category != "diary" {
+		return prefixes
+	}
+
+	if entry, err := entryStore.FindEntryByID(category, id); err == nil && strings.TrimSpace(entry.Date) != "" {
+		prefixes = append(prefixes, path.Join(category, strings.ReplaceAll(entry.Date, "-", ""))+"/")
+	}
+	return prefixes
+}
+
+func mustAtoi(v string) int {
+	n, err := strconv.Atoi(v)
+	if err != nil {
+		return 0
+	}
+	return n
+}
+
+func imagePathToURL(imagePath string, category string, id string) string {
+	n, err := strconv.Atoi(id)
+	if err == nil {
+		padded := fmt.Sprintf("%05d", n)
+		if strings.HasPrefix(imagePath, path.Join(category, padded)+"/") {
+			return fmt.Sprintf("/api/%s/%s/images/%s", category, id, path.Base(imagePath))
+		}
+	}
+	if category == "diary" {
+		for _, prefix := range entryImagePrefixes(category, id) {
+			if strings.HasPrefix(imagePath, prefix) {
+				return fmt.Sprintf("/api/%s/%s/images/%s", category, id, path.Base(imagePath))
+			}
+		}
+	}
+	return ""
 }
 
 func postTempImage(w http.ResponseWriter, r *http.Request) {

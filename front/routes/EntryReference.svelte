@@ -1,6 +1,9 @@
 <script lang="ts">
   import { goto, type RouteResult } from "@mateothegreat/svelte5-router";
   import { onMount } from "svelte";
+  import AppIcon from "../components/AppIcon.svelte";
+  import ImageSelectionCard from "../components/ImageSelectionCard.svelte";
+  import ImagePreviewModal from "../components/ImagePreviewModal.svelte";
   import type { entryType } from "../models/entryModels.js";
   import { settingsStore } from "../store.js";
   import { appPath } from "../basePath.js";
@@ -37,6 +40,7 @@
   let isPageLoading = $state(true);
   let isErr = $state(false);
   let errMessage = $state("");
+  let previewImageIndex = $state<number | null>(null);
 
   document.querySelector<HTMLDivElement>(".navbar")?.classList.add("is-hidden");
 
@@ -58,10 +62,33 @@
   };
   const renderedHTML = $derived.by(() => {
     if (entry.HTML && entry.HTML.trim() !== "") {
-      return entry.HTML;
+      return entry.HTML.replace(/<img\b[^>]*>/gi, "");
     }
     return "";
   });
+  const previewImages = $derived.by(() =>
+    (entry.Images ?? []).map((image) => ({
+      id: image.Id,
+      src: image.Src,
+      alt: image.Alt,
+      markdown: image.Markdown,
+    })),
+  );
+  const openPreviewImage = (image: { src: string; alt: string }) => {
+    const index = previewImages.findIndex((item) => item.src === image.src);
+    previewImageIndex = index >= 0 ? index : 0;
+  };
+  const closePreviewImage = () => {
+    previewImageIndex = null;
+  };
+  const showPreviewImage = (nextIndex: number) => {
+    if (previewImages.length === 0) {
+      previewImageIndex = null;
+      return;
+    }
+    previewImageIndex =
+      (nextIndex + previewImages.length) % previewImages.length;
+  };
 
   onMount(() => {
     initialized = true;
@@ -89,7 +116,9 @@
       } catch (error) {
         isErr = true;
         errMessage =
-          error instanceof Error ? error.message : "エントリを読み込めませんでした";
+          error instanceof Error
+            ? error.message
+            : "エントリを読み込めませんでした";
       } finally {
         isLoading = false;
         finishPageLoading();
@@ -117,7 +146,7 @@
     {#if resolvedSettings.showTags && entry.Tags.length > 0}
       <div class="reference-tags">
         <span class="reference-tags-icon" aria-hidden="true">
-          <i class="fa-solid fa-tags"></i>
+          <AppIcon name="tags" />
         </span>
         {#each entry.Tags as tag}
           <span class="reference-tag">{tag}</span>
@@ -143,14 +172,39 @@
     </div>
   </button>
 
+  {#if previewImages.length > 0}
+    <section class="reference-image-section">
+      <ImageSelectionCard
+        images={previewImages}
+        interactive={false}
+        showAddButton={false}
+        onPreviewImage={openPreviewImage}
+      />
+    </section>
+    <ImagePreviewModal
+      open={previewImageIndex !== null}
+      images={previewImages}
+      currentIndex={previewImageIndex ?? 0}
+      onClose={closePreviewImage}
+      onPrev={() => showPreviewImage((previewImageIndex ?? 0) - 1)}
+      onNext={() => showPreviewImage((previewImageIndex ?? 0) + 1)}
+    />
+  {/if}
+
   <footer class="reference-footer">
     <div class="reference-footer-actions">
-      <button class="button reference-footer-button reference-footer-button-secondary" onclick={goToList}>
-        <span class="icon"><i class="fa-solid fa-arrow-left"></i></span>
+      <button
+        class="button reference-footer-button reference-footer-button-secondary"
+        onclick={goToList}
+      >
+        <span class="icon"><AppIcon name="arrow-left" /></span>
         <span>戻る</span>
       </button>
-      <button class="button reference-footer-button reference-footer-button-primary" onclick={goToEdit}>
-        <span class="icon"><i class="fa-solid fa-pen"></i></span>
+      <button
+        class="button reference-footer-button reference-footer-button-primary"
+        onclick={goToEdit}
+      >
+        <span class="icon"><AppIcon name="pen" /></span>
         <span>編集</span>
       </button>
     </div>
@@ -238,7 +292,11 @@
 
   .reference-body-inner {
     min-height: calc(100vh - 16rem);
-    padding: 1rem 1rem 6rem;
+    padding: 1rem 1rem 1rem;
+  }
+
+  .reference-image-section {
+    padding: 0 1rem 7rem;
   }
 
   .reference-markdown,
@@ -279,14 +337,16 @@
   .reference-markdown :global(h1) {
     margin-top: 1.8rem;
     padding-bottom: 0.45rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--bulma-link) 35%, transparent);
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--bulma-link) 35%, transparent);
     font-size: 1.45rem;
   }
 
   .reference-markdown :global(h2) {
     margin-top: 1.55rem;
     padding-left: 0.7rem;
-    border-left: 0.25rem solid color-mix(in srgb, var(--bulma-link) 55%, transparent);
+    border-left: 0.25rem solid
+      color-mix(in srgb, var(--bulma-link) 55%, transparent);
     font-size: 1.2rem;
   }
 
@@ -361,10 +421,7 @@
   }
 
   .reference-markdown :global(img) {
-    display: block;
-    height: auto;
-    margin: 0.75rem 0;
-    border-radius: 0.75rem;
+    display: none;
   }
 
   .reference-markdown :global(pre) {
@@ -403,7 +460,11 @@
   }
 
   .reference-footer-button-secondary {
-    background: color-mix(in srgb, var(--bulma-border) 74%, var(--bulma-scheme-main));
+    background: color-mix(
+      in srgb,
+      var(--bulma-border) 74%,
+      var(--bulma-scheme-main)
+    );
     border-color: color-mix(in srgb, var(--bulma-border) 88%, white 12%);
     color: color-mix(in srgb, var(--bulma-text) 90%, white 10%);
   }

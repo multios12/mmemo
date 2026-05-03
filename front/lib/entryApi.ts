@@ -21,5 +21,6 @@ export const loadEntry = async (
   const nextEntry = (await response.json()) as entryType;
   nextEntry.Tags = nextEntry.Tags ?? [];
   nextEntry.HTML = nextEntry.HTML ?? "";
+  nextEntry.Images = nextEntry.Images ?? [];
   return nextEntry;
 };

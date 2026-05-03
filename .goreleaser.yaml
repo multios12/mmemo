@@ -26,10 +26,6 @@ builds:
     goarch:
       #- 386
       - amd64
-    hooks:
-      pre: 
-        - cmd: go mod tidy
-          dir: .
 
 archives:
   - format: tar.gz

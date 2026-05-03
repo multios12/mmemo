@@ -21,6 +21,12 @@ func FindImage(path string) (Image, error) {
 	return image, result.Error
 }
 
+func FindImagesByPrefix(prefix string) ([]Image, error) {
+	var images []Image
+	result := db.Where("path LIKE ?", prefix+"%").Order("path asc").Find(&images)
+	return images, result.Error
+}
+
 func DeleteImage(path string) error {
 	return db.Where("path = ?", path).Delete(&Image{}).Error
 }

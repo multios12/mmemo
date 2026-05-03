@@ -3,6 +3,7 @@
   import type { entryType, listType } from "../models/entryModels.js";
   import { format } from "@formkit/tempo";
   import { settingsStore } from "../store.js";
+  import AppIcon from "../components/AppIcon.svelte";
   import Calendar from "../components/Calendar.svelte";
   import { apiPath, appPath } from "../basePath.js";
 
@@ -296,24 +297,24 @@
     (sortOrder = sortOrder === "asc" ? "desc" : "asc");
   const setViewMode = (nextMode: viewModeType) => (viewMode = nextMode);
   const outlineIconMap: Record<string, string> = {
-    note: "fa-solid fa-note-sticky",
-    tree: "fa-solid fa-folder-tree",
-    book: "fa-solid fa-book",
-    group: "fa-solid fa-layer-group",
-    tag: "fa-solid fa-tags",
-    calendar: "fa-solid fa-calendar-days",
-    document: "fa-solid fa-file-lines",
-    list: "fa-solid fa-list-ul",
-    person: "fa-solid fa-user",
-    user: "fa-solid fa-user",
-    "address-card": "fa-solid fa-address-card",
-    "note-sticky": "fa-solid fa-note-sticky",
-    "folder-tree": "fa-solid fa-folder-tree",
-    "layer-group": "fa-solid fa-layer-group",
-    "calendar-days": "fa-solid fa-calendar-days",
-    "file-lines": "fa-solid fa-file-lines",
+    note: "note-sticky",
+    tree: "folder-tree",
+    book: "book",
+    group: "layer-group",
+    tag: "tags",
+    calendar: "calendar-days",
+    document: "file-lines",
+    list: "list-ul",
+    person: "user",
+    user: "user",
+    "address-card": "address-card",
+    "note-sticky": "note-sticky",
+    "folder-tree": "folder-tree",
+    "layer-group": "layer-group",
+    "calendar-days": "calendar-days",
+    "file-lines": "file-lines",
   };
-  const outlineIconClass = $derived.by(() => {
+  const outlineIconName = $derived.by(() => {
     const rawIcon = (resolvedSettings.outlineIcon || "tree").trim().toLowerCase();
     return outlineIconMap[rawIcon] ?? outlineIconMap.note;
   });
@@ -384,19 +385,7 @@
                 onclick={toggleSortOrder}
               >
                 <span class="sort-icon" aria-hidden="true">
-                  {#if sortOrder === "asc"}
-                    <svg viewBox="0 0 20 20" class="sort-svg">
-                      <path d="M3 5h8M3 10h6M3 15h4" />
-                      <path d="M14 15V5" />
-                      <path d="M11.5 7.5 14 5l2.5 2.5" />
-                    </svg>
-                  {:else}
-                    <svg viewBox="0 0 20 20" class="sort-svg">
-                      <path d="M3 5h4M3 10h6M3 15h8" />
-                      <path d="M14 5v10" />
-                      <path d="M11.5 12.5 14 15l2.5-2.5" />
-                    </svg>
-                  {/if}
+                  <AppIcon name={sortOrder === "asc" ? "sort-asc" : "sort-desc"} />
                 </span>
               </button>
               <div class="view-mode-picker" role="group" aria-label="表示モード">
@@ -409,7 +398,7 @@
                     aria-pressed={viewMode === "default"}
                     onclick={() => setViewMode("default")}
                   >
-                    <span class="icon"><i class="fa-solid fa-layer-group"></i></span>
+                    <span class="icon"><AppIcon name="layer-group" /></span>
                     <span>通常</span>
                   </button>
                   {#if resolvedSettings.showTags}
@@ -420,7 +409,7 @@
                       aria-pressed={viewMode === "tag"}
                       onclick={() => setViewMode("tag")}
                     >
-                      <span class="icon"><i class="fa-solid fa-tags"></i></span>
+                      <span class="icon"><AppIcon name="tags" /></span>
                       <span>{resolvedSettings.tagsLabel}</span>
                     </button>
                   {/if}
@@ -431,7 +420,7 @@
                   aria-pressed={viewMode === "outline"}
                   onclick={() => setViewMode("outline")}
                 >
-                  <span class="icon"><i class={outlineIconClass} aria-hidden="true"></i></span>
+                  <span class="icon"><AppIcon name={outlineIconName} /></span>
                   <span>{resolvedSettings.outlineLabel}</span>
                 </button>
                 </div>
@@ -445,7 +434,7 @@
         aria-label={`add ${categoryKey}`}
         onclick={() => goto(addPath())}
       >
-        <span class="icon"><i class="fa-solid fa-plus"></i></span>
+        <span class="icon"><AppIcon name="plus" /></span>
         <span>新規</span>
       </button>
     </div>
@@ -479,7 +468,7 @@
                 <span class="entry-date">{entry.Date}</span>
                 {#if entry.HasDetail}
                   <span class="icon has-text-grey-light">
-                    <i class="fa-solid fa-note-sticky"></i>
+                    <AppIcon name="note-sticky" />
                   </span>
                 {/if}
               </div>
@@ -491,7 +480,7 @@
             {#if resolvedSettings.showTags && entry.Tags.length > 0}
               <div class="tags are-medium entry-tags entry-tags-badge">
                 {#each entry.Tags as tag}
-                  <span class="tag"><span class="icon"><i class="fa-solid fa-tags"></i></span><span>{tag}</span></span>
+                  <span class="tag"><span class="icon"><AppIcon name="tags" /></span><span>{tag}</span></span>
                 {/each}
               </div>
             {/if}
@@ -505,7 +494,7 @@
             <div class="entry-group-header">
               <div class="entry-group-heading">
                 <div class="entry-group-title">
-                  <span class="icon"><i class="fa-solid fa-tags"></i></span>
+                  <span class="icon"><AppIcon name="tags" /></span>
                   <span>{group.label}</span>
                 </div>
                 {#if extractGroupedPreviews(latestUpdatedEntry(group.entries)?.Value ?? "").hasMarker &&
@@ -527,7 +516,7 @@
                       }),
                     )}
                 >
-                  <span class="icon"><i class="fa-solid fa-plus"></i></span>
+                  <span class="icon"><AppIcon name="plus" /></span>
                   <span>新規</span>
                 </button>
               </div>
@@ -548,7 +537,7 @@
                       {/if}
                       {#if entry.HasDetail}
                         <span class="icon has-text-grey-light">
-                          <i class="fa-solid fa-note-sticky"></i>
+                          <AppIcon name="note-sticky" />
                         </span>
                       {/if}
                     </div>
@@ -573,7 +562,7 @@
             <div class="entry-group-header">
               <div class="entry-group-heading">
                 <div class="entry-group-title">
-                  <span class="icon"><i class={outlineIconClass} aria-hidden="true"></i></span>
+                  <span class="icon"><AppIcon name={outlineIconName} /></span>
                   <span>{group.outline}</span>
                 </div>
                 {#if extractGroupedPreviews(latestUpdatedEntry(group.entries)?.Value ?? "").hasMarker &&
@@ -595,7 +584,7 @@
                       }),
                     )}
                 >
-                  <span class="icon"><i class="fa-solid fa-plus"></i></span>
+                  <span class="icon"><AppIcon name="plus" /></span>
                   <span>新規</span>
                 </button>
               </div>
@@ -612,14 +601,14 @@
                     {/if}
                     {#if entry.HasDetail}
                       <span class="icon has-text-grey-light">
-                        <i class="fa-solid fa-note-sticky"></i>
+                        <AppIcon name="note-sticky" />
                       </span>
                     {/if}
                   </div>
                   {#if resolvedSettings.showTags && entry.Tags.length > 0}
                     <div class="tags are-medium entry-tags entry-tags-badge">
                       {#each entry.Tags as tag}
-                        <span class="tag"><span class="icon"><i class="fa-solid fa-tags"></i></span><span>{tag}</span></span>
+                        <span class="tag"><span class="icon"><AppIcon name="tags" /></span><span>{tag}</span></span>
                       {/each}
                     </div>
                   {/if}
@@ -642,10 +631,10 @@
           aria-label={isCalendarExpanded ? "hide calendar" : "show calendar"}
           onclick={() => (isCalendarExpanded = !isCalendarExpanded)}
         >
-          <span class="icon"><i class="fa-solid fa-calendar-days"></i></span>
+          <span class="icon"><AppIcon name="calendar-days" /></span>
           <span class="mobile-calendar-toggle-label">カレンダー</span>
           <span class="icon mobile-calendar-toggle-chevron">
-            <i class={`fa-solid ${isCalendarExpanded ? "fa-chevron-up" : "fa-chevron-down"}`}></i>
+            <AppIcon name={isCalendarExpanded ? "chevron-up" : "chevron-down"} />
           </span>
         </button>
       {/if}
@@ -655,7 +644,7 @@
         aria-label={`add ${categoryKey}`}
         onclick={() => goto(addPath())}
       >
-        <span class="icon"><i class="fa-solid fa-plus"></i></span>
+        <span class="icon"><AppIcon name="plus" /></span>
         <span>新規</span>
       </button>
     </div>
@@ -684,7 +673,7 @@
                   aria-label="previous month"
                   onclick={() => moveCalendarMonth(previousCalendarMonth)}
                 >
-                  <span class="icon"><i class="fa-solid fa-chevron-left"></i></span>
+                  <span class="icon"><AppIcon name="chevron-left" /></span>
                 </button>
               {/if}
             </div>
@@ -697,7 +686,7 @@
                   aria-label="next month"
                   onclick={() => moveCalendarMonth(nextCalendarMonth)}
                 >
-                  <span class="icon"><i class="fa-solid fa-chevron-right"></i></span>
+                  <span class="icon"><AppIcon name="chevron-right" /></span>
                 </button>
               {/if}
             </div>
@@ -752,11 +741,6 @@
     align-items: center;
     gap: 0.6rem;
     flex-wrap: wrap;
-  }
-
-  .mobile-mode-controls {
-    display: flex;
-    align-items: center;
   }
 
   .view-mode-label {
@@ -823,16 +807,6 @@
     line-height: 1;
   }
 
-  .sort-svg {
-    width: 1.1rem;
-    height: 1.1rem;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
   .entry-list {
     display: flex;
     flex-direction: column;
@@ -885,17 +859,6 @@
     font-size: 0.92rem;
     line-height: 1.45;
     min-width: 0;
-  }
-
-  .outline-mode-icon-wrap {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .outline-mode-icon {
-    display: inline-block;
-    line-height: 1;
   }
 
   .entry-group-count {
@@ -1112,11 +1075,6 @@
     font-weight: 600;
     color: var(--bulma-text);
     line-height: 1.45;
-  }
-
-  .entry-outline-grouped {
-    font-size: 0.98rem;
-    font-weight: 500;
   }
 
   .entry-preview {

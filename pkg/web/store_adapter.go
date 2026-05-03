@@ -14,6 +14,8 @@ type Store interface {
 	UpsertEntry(entry store.Entry) store.Entry
 	DeleteEntry(category string, id string)
 	FindImage(path string) (store.Image, error)
+	DeleteImage(path string) error
+	FindImagesByPrefix(prefix string) ([]store.Image, error)
 	FindTemplates(category string) ([]store.Template, error)
 	SaveTemplate(category string, template store.Template) (store.Template, error)
 	DeleteTemplate(category string, name string) error
@@ -64,6 +66,14 @@ func (sqliteStore) DeleteEntry(category string, id string) {
 
 func (sqliteStore) FindImage(path string) (store.Image, error) {
 	return store.FindImage(path)
+}
+
+func (sqliteStore) DeleteImage(path string) error {
+	return store.DeleteImage(path)
+}
+
+func (sqliteStore) FindImagesByPrefix(prefix string) ([]store.Image, error) {
+	return store.FindImagesByPrefix(prefix)
 }
 
 func (sqliteStore) FindTemplates(category string) ([]store.Template, error) {

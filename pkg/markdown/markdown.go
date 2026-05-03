@@ -21,6 +21,8 @@ var (
 	emphasisPattern       = regexp.MustCompile(`\*([^*]+)\*`)
 )
 
+const carryOverMarker = "----ここまで前回内容で置換"
+
 // 行単位の Markdown を変換する際の読み取り位置を保持する。
 type parser struct {
 	lines []string
@@ -34,12 +36,25 @@ type parser struct {
 func ToHTML(input string) string {
 	input = strings.ReplaceAll(input, "\r\n", "\n")
 	input = strings.ReplaceAll(input, "\r", "\n")
+	input = strings.Join(filterHiddenLines(strings.Split(input, "\n")), "\n")
 
 	p := parser{
 		lines: strings.Split(input, "\n"),
 	}
 
 	return strings.Join(p.parseBlocks(0), "\n")
+}
+
+func filterHiddenLines(lines []string) []string {
+	filtered := make([]string, 0, len(lines))
+	for _, line := range lines {
+		if strings.TrimSpace(line) == carryOverMarker {
+			filtered = append(filtered, "---")
+			continue
+		}
+		filtered = append(filtered, line)
+	}
+	return filtered
 }
 
 // インデントが minIndent 未満になるまでブロック要素を読み取る。

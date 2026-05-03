@@ -1,6 +1,4 @@
-package entryapi
-
-import "github.com/multios12/mmemo/pkg/store"
+package web
 
 type SettingModel struct {
 	Holidays   []HolidayModel  // 祝日一覧
@@ -13,8 +11,9 @@ type HolidayModel struct {
 }
 
 type TemplateModel struct {
-	Name  string // テンプレート名
-	Value string // 本文
+	Name  string   // テンプレート名
+	Value string   // 本文
+	Tags  []string // タグ
 }
 
 // 情報種別
@@ -27,6 +26,3 @@ type CategoryModel struct {
 	Fields                      map[string]string
 	Templates                   []TemplateModel // テンプレート
 }
-
-// 共有エントリ
-type Entry = store.Entry

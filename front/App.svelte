@@ -3,6 +3,7 @@
   import { Router, goto, route } from "@mateothegreat/svelte5-router";
   import EntryList from "./routes/EntryList.svelte";
   import EntryDetail from "./routes/EntryDetail.svelte";
+  import EntryReference from "./routes/EntryReference.svelte";
   import Home from "./routes/Home.svelte";
   import Planner from "./routes/Planner/Planner.svelte";
   import { onMount } from "svelte";
@@ -15,7 +16,8 @@
     { path: "/planner/", component: Planner },
     { path: /^\/(?<category>[^/]+)\/$/, component: EntryList },
     { path: /^\/(?<category>[^/]+)\/add$/, component: EntryDetail },
-    { path: /^\/(?<category>[^/]+)\/(?<id>[^/]+)$/, component: EntryDetail },
+    { path: /^\/(?<category>[^/]+)\/(?<id>[^/]+)\/edit$/, component: EntryDetail },
+    { path: /^\/(?<category>[^/]+)\/(?<id>(?!add$)[^/]+)$/, component: EntryReference },
   ];
   let settings = $state<settingType | undefined>(undefined);
   let currentPath = $state("/");
@@ -29,7 +31,7 @@
   });
   const isDetailRoute = $derived.by(() => {
     const parts = currentPath.split("/").filter(Boolean);
-    return parts.length === 2;
+    return parts.length === 2 || (parts.length === 3 && parts[2] === "edit");
   });
   const mobileNavItems = $derived.by(() => {
     return (

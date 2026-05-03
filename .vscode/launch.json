@@ -1,28 +1,41 @@
 {
-    // IntelliSense を使用して利用可能な属性を学べます。
-    // 既存の属性の説明をホバーして表示します。
-    // 詳細情報は次を確認してください: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "msedge",
-            "request": "launch",
-            "name": "Launch edge against localhost",
-            "url": "http://localhost:3000",
-            "webRoot": "${workspaceFolder}/front",
-            "preLaunchTask": "npm: dev",
-        },
-        {
-            "name": "go API Server",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "program": "./cmd/mmemo",
-            "cwd": "${workspaceFolder}/data",
-            "args": [
-                "-p",
-                ":3001"
-            ],
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API Debug",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/cmd/mmemo",
+      "cwd": "${workspaceFolder}/data",
+      "args": [
+        "-p",
+        ":3001"
+      ]
+    },
+    {
+      "name": "Open Front in Edge",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/front",
+      "preLaunchTask": "front: dev",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "vite://*": "${workspaceFolder}/front/*",
+        "/@fs/*": "*",
+        "src/*": "${workspaceFolder}/front/src/*",
+        "/*": "${workspaceFolder}/front/*"
+      }
+    },
+  ],
+  "compounds": [
+    {
+      "name": "Dev: Front + API",
+      "configurations": [
+        "API Debug",
+        "Open Front in Edge"
+      ]
+    }
+  ]
 }

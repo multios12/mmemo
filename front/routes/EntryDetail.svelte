@@ -1,23 +1,15 @@
 <script lang="ts">
   import { goto, type RouteResult } from "@mateothegreat/svelte5-router";
   import { onMount } from "svelte";
+  import MDInput from "../components/MDInput/index.svelte";
   import TagsInput from "../components/TagsInput.svelte";
+  import TemplateSaveModal from "../components/TemplateSaveModal.svelte";
+  import TemplateSelectorModal from "../components/TemplateSelectorModal.svelte";
   import type { entryType } from "../models/entryModels.js";
   import type { TemplateType } from "../models/settingType.js";
-  import RichInput from "../components/RichInput/index.svelte";
-  import { dom, library } from "@fortawesome/fontawesome-svg-core";
-  import {
-    faArrowLeft,
-    faBook,
-    faCloudArrowUp,
-    faTags,
-    faTrash,
-  } from "@fortawesome/free-solid-svg-icons";
   import { settingsStore } from "../store.js";
   import { apiPath, appPath } from "../basePath.js";
-
-  library.add(faTrash, faTags, faCloudArrowUp, faArrowLeft, faBook);
-  dom.watch();
+  import { createEmptyEntry, loadEntry } from "../lib/entryApi.js";
 
   interface Props {
     route?: RouteResult;
@@ -27,14 +19,9 @@
     id?: string | number | boolean;
     category?: string | number | boolean;
   };
+  type EntryRouteQuery = Record<string, string | number | boolean | undefined>;
 
-  const createEmptyEntry = (): entryType => ({
-    Id: undefined,
-    Outline: "",
-    Date: new Date().toISOString().substring(0, 10),
-    Value: "",
-    Tags: [],
-  });
+  const carryOverMarker = "----ここまで前回内容で置換";
 
   let { route: currentRoute = undefined }: Props = $props();
 
@@ -57,14 +44,14 @@
     };
   });
 
-  let innerHeight: number = $state(0);
-  let innerWidth: number = $state(0);
-
   let entry = $state<entryType>(createEmptyEntry());
   let isErr = $state(false);
   let errMessage = $state("");
   let isLoading = $state(false);
   let editorValue = $state("");
+  let outlineValue = $state("");
+  let dateValue = $state("");
+  let tagsValue = $state<string[]>([]);
   let isNew = $state(false);
   let initialized = $state(false);
   let initialSnapshot = $state("");
@@ -74,26 +61,26 @@
   let isPageLoading = $state(true);
   let selectedTemplateIndex = $state<number | null>(null);
   let isTemplateSelectorOpen = $state(false);
+  let isTemplateSaveModalOpen = $state(false);
+  let templateSaveInitialMode = $state<"new" | "overwrite">("new");
+  let templateSaveInitialDraftName = $state("");
+  let templateSaveInitialOverwriteName = $state("");
+  let templateModalError = $state("");
+  let isTemplateSaving = $state(false);
+  let isTemplateDeleting = $state(false);
+  let previousCardEntryValue = $state("");
+  let lastInitKey = "";
+  let loadSequence = 0;
 
   document.querySelector<HTMLDivElement>(".navbar")?.classList.add("is-hidden");
 
-  $effect(() => {
-    innerHeight;
-    innerWidth;
-    const headRect = document.querySelector("header")?.getBoundingClientRect();
-    const footRect = document.querySelector("footer")?.getBoundingClientRect();
-    const barRect = document.querySelector("#toolbar")?.getBoundingClientRect();
-    if (footRect && headRect && barRect) {
-      const height =
-        innerHeight - headRect.height - footRect.height - barRect.height - 28;
-      document
-        .querySelector<HTMLDivElement>("#detail")
-        ?.style.setProperty("height", height + "px");
-    }
-  });
-
   const entryId = $derived(routeParams.id ? String(routeParams.id) : undefined);
-  const isAddRoute = $derived(entryId === "add");
+  const isAddRoute = $derived(entryId == undefined || entryId === "");
+  const routeQuery = $derived(
+    (currentRoute?.result?.querystring?.params ??
+      currentRoute?.result?.querystring?.original ??
+      {}) as EntryRouteQuery,
+  );
   const imageUploadPath = $derived(
     isAddRoute
       ? apiPath(`${categoryKey}/images/tmp`)
@@ -111,20 +98,26 @@
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         editorValue = value;
-        entry.Value = value;
-        initialSnapshot = snapshotEntry(entry, value);
+        initialSnapshot = snapshotEntry(outlineValue, dateValue, tagsValue, value);
       });
     });
   };
-  const snapshotEntry = (target: entryType, value: string) =>
+  const snapshotEntry = (
+    outline: string,
+    date: string,
+    tags: string[],
+    value: string,
+  ) =>
     JSON.stringify({
-      Outline: target.Outline ?? "",
-      Date: target.Date ?? "",
+      Outline: outline ?? "",
+      Date: date ?? "",
       Value: value ?? "",
-      Tags: target.Tags ?? [],
+      Tags: tags ?? [],
     });
   const isDirty = $derived(
-    canCheckDirty && snapshotEntry(entry, editorValue) !== initialSnapshot,
+    canCheckDirty &&
+      snapshotEntry(outlineValue, dateValue, tagsValue, editorValue) !==
+        initialSnapshot,
   );
   const saveButtonLabel = $derived(isNew ? "作成" : "保存");
   const templateOptions = $derived.by(() => {
@@ -134,13 +127,30 @@
     }
 
     return [
-      { Name: "空白から作成", Value: "" } satisfies TemplateType,
+      { Name: "空白から作成", Value: "", Tags: [] } satisfies TemplateType,
       ...options,
     ];
   });
   const selectableTemplateCount = $derived(resolvedSettings.templates.length);
   const showTemplateSelector = $derived(isNew && isTemplateSelectorOpen);
-
+  const hasTemplates = $derived(resolvedSettings.templates.length > 0);
+  const initKey = $derived.by(() => {
+    const templateSignature = resolvedSettings.templates
+      .map((template) => `${template.Name}:${template.Value}:${(template.Tags ?? []).join("#")}`)
+      .join("|");
+    const querySignature = JSON.stringify(routeQuery);
+    return `${initialized ? "1" : "0"}:${categoryKey}:${entryId ?? ""}:${isAddRoute ? "1" : "0"}:${templateSignature}:${querySignature}`;
+  });
+  const selectedTemplateName = $derived.by(() => {
+    if (selectedTemplateIndex === null) {
+      return "";
+    }
+    const template = templateOptions[selectedTemplateIndex];
+    if (template == undefined || template.Name === "空白から作成") {
+      return "";
+    }
+    return template.Name;
+  });
   const entryUrl = () => {
     if (isNew) {
       return apiPath(categoryKey);
@@ -149,19 +159,83 @@
   };
 
   const listPath = () => appPath(`/${categoryKey}/`);
+  const referencePath = () => appPath(`/${categoryKey}/${entryId}`);
+  const queryValue = (key: string) => {
+    const value = routeQuery[key];
+    if (typeof value !== "string") {
+      return undefined;
+    }
+
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  };
+  const hasQueryValue = (key: string) =>
+    Object.prototype.hasOwnProperty.call(routeQuery, key);
+  const parsePreviousEntryId = () => {
+    const value = queryValue("previousEntryId");
+    if (!value) {
+      return undefined;
+    }
+
+    const parsed = Number(value);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+  };
+  const applyTemplateValue = (templateValue: string) => {
+    const lines = templateValue.split(/\r?\n/);
+    const markerIndex = lines.findIndex((line) => line.trim() === carryOverMarker);
+    if (markerIndex < 0) {
+      return templateValue;
+    }
+
+    const templatePrefix = lines.slice(0, markerIndex + 1).join("\n");
+    const templateSuffix = lines.slice(markerIndex + 1).join("\n");
+
+    let carriedPrefix = templatePrefix;
+    if (previousCardEntryValue.trim() !== "") {
+      const previousLines = previousCardEntryValue.split(/\r?\n/);
+      const previousMarkerIndex = previousLines.findIndex(
+        (line) => line.trim() === carryOverMarker,
+      );
+      if (previousMarkerIndex >= 0) {
+        carriedPrefix = previousLines.slice(0, previousMarkerIndex + 1).join("\n");
+      }
+    }
+
+    if (carriedPrefix !== "" && templateSuffix !== "") {
+      return `${carriedPrefix.replace(/\n+$/, "")}\n${templateSuffix.replace(/^\n+/, "")}`;
+    }
+    return carriedPrefix || templateSuffix;
+  };
 
   const goToList = async () => goto(listPath());
+  const goToReference = async () => {
+    if (isNew || !entryId) {
+      await goToList();
+      return;
+    }
+    await goto(referencePath());
+  };
   const shouldLeave = () =>
     !isDirty || window.confirm("未保存の変更があります。戻りますか？");
 
   const onOk = async () => {
-    entry.Value = editorValue;
-    if (!resolvedSettings.allowMultipleEntriesPerDate && entry.Date) {
-      const month = entry.Date.slice(0, 7);
+    const nextEntry = {
+      ...entry,
+      Outline: outlineValue,
+      Date: dateValue,
+      Tags: [...tagsValue],
+      Value: editorValue,
+    } satisfies entryType;
+
+    if (!resolvedSettings.allowMultipleEntriesPerDate && nextEntry.Date) {
+      const month = nextEntry.Date.slice(0, 7);
       const response = await fetch(`${apiPath(categoryKey)}?month=${month}`);
       const monthlyEntries = (await response.json()) as entryType[];
       const hasDuplicateDate = monthlyEntries.some(
-        (item) => item.Date === entry.Date && item.Id !== entry.Id,
+        (item) => item.Date === nextEntry.Date && item.Id !== nextEntry.Id,
       );
       if (hasDuplicateDate) {
         errMessage = "同じ日付のエントリは登録できません";
@@ -172,7 +246,7 @@
 
     const response = await fetch(entryUrl(), {
       method: saveMethod(),
-      body: JSON.stringify(entry),
+      body: JSON.stringify(nextEntry),
     });
 
     if (response.status !== 200) {
@@ -181,9 +255,10 @@
       return;
     }
 
-    initialSnapshot = snapshotEntry(entry, editorValue);
+    entry = nextEntry;
+    initialSnapshot = snapshotEntry(outlineValue, dateValue, tagsValue, editorValue);
     canCheckDirty = true;
-    await goToList();
+    await goToReference();
   };
 
   const onCancel = async () => {
@@ -205,33 +280,63 @@
 
   const onTextChange = (value: string) => {
     editorValue = value;
-    entry.Value = value;
   };
-  const onSelectTemplate = (template: TemplateType, index: number) => {
+  const onSelectTemplate = (payload: {
+    template: TemplateType;
+    index: number;
+  }) => {
+    const { template, index } = payload;
     selectedTemplateIndex = index;
     isTemplateSelectorOpen = false;
-    applyInitialEditorValue(template.Value ?? "");
+    tagsValue = [...(template.Tags ?? [])];
+    applyInitialEditorValue(applyTemplateValue(template.Value ?? ""));
   };
-  const onSaveTemplate = async () => {
-    const suggestedName = entry.Outline.trim() || "新しいテンプレート";
-    const name = window.prompt("テンプレート名", suggestedName)?.trim() ?? "";
-    if (name === "") {
+  const openTemplateSaveModal = () => {
+    const suggestedName = outlineValue.trim() || "新しいテンプレート";
+    const defaultOverwriteName =
+      selectedTemplateName ||
+      resolvedSettings.templates[0]?.Name ||
+      "";
+    templateSaveInitialMode = hasTemplates ? "overwrite" : "new";
+    templateSaveInitialDraftName = suggestedName;
+    templateSaveInitialOverwriteName = defaultOverwriteName;
+    templateModalError = "";
+    isTemplateSaveModalOpen = true;
+  };
+  const closeTemplateSaveModal = () => {
+    if (isTemplateSaving || isTemplateDeleting) {
       return;
     }
+    isTemplateSaveModalOpen = false;
+    templateModalError = "";
+  };
+  const onSaveTemplate = async (payload: {
+    mode: "new" | "overwrite";
+    name: string;
+  }) => {
+    const name = payload.name.trim();
     if (editorValue.trim() === "") {
-      errMessage = "本文が空のためテンプレート保存できません";
-      isErr = true;
+      templateModalError = "本文が空のためテンプレート保存できません";
+      return;
+    }
+    if (name === "") {
+      templateModalError =
+        payload.mode === "overwrite"
+          ? "上書きするテンプレートを選択してください"
+          : "テンプレート名を入力してください";
       return;
     }
 
+    isTemplateSaving = true;
+    templateModalError = "";
     const response = await fetch(apiPath(`${categoryKey}/templates`), {
       method: "post",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ Name: name, Value: editorValue }),
+      body: JSON.stringify({ Name: name, Value: editorValue, Tags: tagsValue }),
     });
+    isTemplateSaving = false;
     if (response.status !== 200) {
-      errMessage = (await response.json()).error;
-      isErr = true;
+      templateModalError = (await response.json()).error;
       return;
     }
 
@@ -239,72 +344,125 @@
     settingsStore.set(nextSettings);
     isErr = false;
     errMessage = "";
+    isTemplateSaveModalOpen = false;
+    templateModalError = "";
   };
-  const templatePreview = (value: string) =>
-    value
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line !== "")
-      .slice(0, 3);
-
-  onMount(() => {
-    const headerRect = document
-      .querySelector("header")
-      ?.getBoundingClientRect();
-    const barRect = document.querySelector("#toolbar")?.getBoundingClientRect();
-    if (headerRect !== undefined && barRect !== undefined) {
-      const bar = document.querySelector<HTMLDivElement>("#toolbar");
-      bar?.style.setProperty("position", "fixed");
-      bar?.style.setProperty("top", headerRect.height + 5 + "px");
-      bar?.style.setProperty("width", "100%");
-
-      const rich = document.querySelector<HTMLDivElement>("#rich");
-      const top = headerRect.height + barRect.height;
-      rich?.style.setProperty("margin-top", top + "px");
+  const onDeleteTemplate = async (name: string) => {
+    name = name.trim();
+    if (name === "") {
+      templateModalError = "削除するテンプレートを選択してください";
+      return;
     }
-    initialized = true;
-  });
-
-  $effect(() => {
-    initialized;
-    categoryKey;
-    entryId;
-    currentRoute;
-
-    if (!initialized || !categoryKey) {
+    if (!window.confirm(`テンプレート「${name}」を削除しますか？`)) {
       return;
     }
 
+    isTemplateDeleting = true;
+    templateModalError = "";
+    const response = await fetch(
+      apiPath(`${categoryKey}/templates/${encodeURIComponent(name)}`),
+      { method: "delete" },
+    );
+    isTemplateDeleting = false;
+    if (response.status !== 200) {
+      templateModalError = (await response.json()).error;
+      return;
+    }
+
+    const nextSettings = await response.json();
+    settingsStore.set(nextSettings);
+    isTemplateSaveModalOpen = false;
+    templateModalError = "";
+  };
+  onMount(() => {
+    initialized = true;
+  });
+
+  const resetDetailState = (nextIsNew: boolean) => {
     isPageLoading = true;
     isErr = false;
     errMessage = "";
     entry = createEmptyEntry();
-    isNew = isAddRoute;
+    isNew = nextIsNew;
+    outlineValue = "";
+    dateValue = createEmptyEntry().Date;
+    tagsValue = [];
     showTagsOnMobile = false;
     selectedTemplateIndex = null;
     isTemplateSelectorOpen = false;
+    isTemplateSaveModalOpen = false;
+    templateSaveInitialMode = "new";
+    templateSaveInitialDraftName = "";
+    templateSaveInitialOverwriteName = "";
+    templateModalError = "";
+    isTemplateSaving = false;
+    isTemplateDeleting = false;
+    previousCardEntryValue = "";
     canCheckDirty = true;
+  };
 
-    if (isNew) {
+  const initializeDetail = async () => {
+    if (!initialized || !categoryKey) {
+      return;
+    }
+
+    const nextIsNew = isAddRoute;
+    const currentLoadSequence = ++loadSequence;
+    const initialTemplateValue = resolvedSettings.templates[0]?.Value ?? "";
+    const initialTemplateTags = resolvedSettings.templates[0]?.Tags ?? [];
+    const shouldAutoApplyTemplate =
+      resolvedSettings.templates.length <= 1 && initialTemplateValue !== "";
+    const presetOutline = queryValue("presetOutline") ?? "";
+    const presetTag = queryValue("presetTag") ?? "";
+    const hasPresetOutline = hasQueryValue("presetOutline");
+    const hasPresetTag = hasQueryValue("presetTag");
+    const previousEntryId = parsePreviousEntryId();
+
+    resetDetailState(nextIsNew);
+
+    if (nextIsNew) {
+      if (previousEntryId != undefined) {
+        try {
+          const previousEntry = await loadEntry(categoryKey, String(previousEntryId));
+          if (currentLoadSequence === loadSequence) {
+            previousCardEntryValue = previousEntry.Value ?? "";
+          }
+        } catch {
+          if (currentLoadSequence === loadSequence) {
+            previousCardEntryValue = "";
+          }
+        }
+      }
+
       const nextEntry = createEmptyEntry();
-      const initialTemplateValue = resolvedSettings.templates[0]?.Value ?? "";
+      const nextOutline = hasPresetOutline ? presetOutline : nextEntry.Outline;
+      const nextDate = nextEntry.Date;
+      const nextTags = hasPresetTag ? (presetTag ? [presetTag] : []) : [...initialTemplateTags];
       entry = nextEntry;
+      outlineValue = nextOutline;
+      dateValue = nextDate;
       editorValue = "";
-      nextEntry.Value = "";
-      initialSnapshot = snapshotEntry(nextEntry, "");
+      tagsValue = nextTags;
+      initialSnapshot = snapshotEntry(nextOutline, nextDate, nextTags, "");
       isLoading = false;
       finishPageLoading();
-      if (selectableTemplateCount > 1) {
+      if (resolvedSettings.templates.length > 1) {
         isTemplateSelectorOpen = true;
-      } else if (initialTemplateValue !== "") {
-        applyInitialEditorValue(initialTemplateValue);
+      } else if (shouldAutoApplyTemplate) {
+        applyInitialEditorValue(applyTemplateValue(initialTemplateValue));
       }
       return;
     }
 
     if (entryId == undefined || entryId === "") {
+      const nextOutline = entry.Outline ?? "";
+      const nextDate = entry.Date ?? "";
+      const nextTags = [...(entry.Tags ?? [])];
+      outlineValue = nextOutline;
+      dateValue = nextDate;
+      tagsValue = nextTags;
       editorValue = "";
-      initialSnapshot = snapshotEntry(entry, "");
+      initialSnapshot = snapshotEntry(nextOutline, nextDate, nextTags, "");
       canCheckDirty = false;
       isLoading = false;
       finishPageLoading();
@@ -312,20 +470,37 @@
     }
 
     isLoading = true;
-    (async () => {
-      try {
-        const response = await fetch(apiPath(`${categoryKey}/${entryId}`));
-        const nextEntry = (await response.json()) as entryType;
-        nextEntry.Tags = nextEntry.Tags ?? [];
-        entry = nextEntry;
-        editorValue = nextEntry.Value ?? "";
-        initialSnapshot = snapshotEntry(nextEntry, editorValue);
-        canCheckDirty = true;
-      } finally {
+    try {
+      const nextEntry = await loadEntry(categoryKey, entryId);
+      if (currentLoadSequence !== loadSequence) {
+        return;
+      }
+      const nextOutline = nextEntry.Outline ?? "";
+      const nextDate = nextEntry.Date ?? "";
+      const nextTags = [...(nextEntry.Tags ?? [])];
+      const nextEditorValue = nextEntry.Value ?? "";
+      entry = nextEntry;
+      outlineValue = nextOutline;
+      dateValue = nextDate;
+      tagsValue = nextTags;
+      editorValue = nextEditorValue;
+      initialSnapshot = snapshotEntry(nextOutline, nextDate, nextTags, nextEditorValue);
+      canCheckDirty = true;
+    } finally {
+      if (currentLoadSequence === loadSequence) {
         isLoading = false;
         finishPageLoading();
       }
-    })();
+    }
+  };
+
+  $effect(() => {
+    const key = initKey;
+    if (!initialized || !categoryKey || key === lastInitKey) {
+      return;
+    }
+    lastInitKey = key;
+    void initializeDetail();
   });
 
   $effect(() => {
@@ -341,8 +516,6 @@
     });
   });
 </script>
-
-<svelte:window bind:innerHeight bind:innerWidth />
 
 {#if isErr && errMessage != ""}
   <div class="notification is-danger m-3">{errMessage}</div>
@@ -374,17 +547,17 @@
                   type="date"
                   class="input"
                   class:is-fullwidth={isNew}
-                  bind:value={entry.Date}
+                  bind:value={dateValue}
                 />
               </div>
             {:else}
-              <div class="detail-date-label">{entry.Date}</div>
+              <div class="detail-date-label">{dateValue}</div>
             {/if}
           </div>
           {#if !isNew}
             <div class="detail-action-wrap">
               <button
-                class="button has-text-danger is-light detail-action-button"
+                class="button detail-action-button detail-action-button-danger"
                 aria-label={`delete ${categoryKey}`}
                 onclick={onDelete}
               >
@@ -407,13 +580,13 @@
                 placeholder={resolvedSettings.outlineLabel}
                 class="input is-medium"
                 bind:this={outlineInput}
-                bind:value={entry.Outline}
+                bind:value={outlineValue}
               />
             </div>
             {#if resolvedSettings.showTags}
               <div class="control is-hidden-tablet">
                 <button
-                  class="button is-light mobile-tag-button"
+                  class="button mobile-tag-button detail-secondary-button"
                   class:is-link={showTagsOnMobile}
                   type="button"
                   aria-label="toggle tags"
@@ -432,7 +605,7 @@
         <div class:mobile-hidden-tags={!showTagsOnMobile}>
           <div class="label">{resolvedSettings.tagsLabel}</div>
           <div class="control">
-            <TagsInput bind:items={entry.Tags} />
+            <TagsInput bind:items={tagsValue} />
           </div>
         </div>
       </div>
@@ -440,38 +613,30 @@
   </header>
 
   <section class="detail-body p-0">
-    {#if showTemplateSelector}
-      <div class="template-selector-modal">
-        <div class="template-selector">
-          <div class="template-selector-header">
-            <h2 class="title is-6 mb-2">テンプレート選択</h2>
-          </div>
-          <div class="template-grid">
-            {#each templateOptions as template, index}
-              <button
-                class="template-card"
-                class:is-selected={selectedTemplateIndex === index}
-                type="button"
-                onclick={() => onSelectTemplate(template, index)}
-              >
-                <span class="template-card-title">{template.Name}</span>
-                <span class="template-card-preview">
-                  {#if templatePreview(template.Value).length > 0}
-                    {templatePreview(template.Value).join(" / ")}
-                  {:else}
-                    空の本文で開始します
-                  {/if}
-                </span>
-              </button>
-            {/each}
-          </div>
-        </div>
-      </div>
-    {/if}
+    <TemplateSaveModal
+      isOpen={isTemplateSaveModalOpen}
+      initialMode={templateSaveInitialMode}
+      initialDraftName={templateSaveInitialDraftName}
+      initialOverwriteName={templateSaveInitialOverwriteName}
+      templates={resolvedSettings.templates}
+      errorMessage={templateModalError}
+      isSaving={isTemplateSaving}
+      isDeleting={isTemplateDeleting}
+      onClose={closeTemplateSaveModal}
+      onSave={onSaveTemplate}
+      onDelete={onDeleteTemplate}
+    />
+
+    <TemplateSelectorModal
+      isOpen={showTemplateSelector}
+      templates={templateOptions}
+      initialSelectedIndex={selectedTemplateIndex}
+      onSelect={onSelectTemplate}
+    />
 
     <div class="field">
-      <div class="control py-2">
-        <RichInput value={editorValue} {imageUploadPath} {onTextChange} />
+      <div class="control py-2 detail-editor-control">
+        <MDInput value={editorValue} {imageUploadPath} {onTextChange} />
       </div>
     </div>
   </section>
@@ -483,21 +648,21 @@
         {/if}
       </div>
       <div class="footer-buttons">
-        <button class="button is-light footer-button" onclick={onCancel}>
+        <button class="button footer-button detail-secondary-button" onclick={onCancel}>
           <span class="icon"><i class="fa-solid fa-arrow-left"></i></span>
           <span>戻る</span>
         </button>
         <button
-          class="button is-light footer-button footer-template-button"
-          onclick={onSaveTemplate}
+          class="button footer-button footer-template-button detail-secondary-button"
+          onclick={openTemplateSaveModal}
         >
           <span class="icon"><i class="fa-solid fa-book"></i></span>
           <span>テンプレート</span>
         </button>
         <button
           class="button footer-button"
-          class:is-primary={isDirty}
-          class:is-light={!isDirty}
+          class:detail-primary-button={isDirty}
+          class:detail-secondary-button={!isDirty}
           class:is-disabled-look={!isDirty}
           disabled={isLoading || !isDirty}
           class:is-loading={isLoading}
@@ -519,6 +684,7 @@
   .detail-body {
     position: relative;
     min-height: calc(100vh - 15rem);
+    padding-bottom: 5.5rem;
   }
 
   .detail-page.is-page-loading {
@@ -614,6 +780,26 @@
     height: 2.65rem;
   }
 
+  .detail-secondary-button {
+    background: color-mix(in srgb, var(--bulma-border) 74%, var(--bulma-scheme-main));
+    border: 1px solid color-mix(in srgb, var(--bulma-border) 86%, white 14%);
+    color: color-mix(in srgb, var(--bulma-text) 90%, white 10%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .detail-primary-button {
+    background: color-mix(in srgb, #2d8f86 62%, var(--bulma-scheme-main));
+    border: 1px solid color-mix(in srgb, #2d8f86 74%, black 26%);
+    color: #edf8f6;
+    box-shadow: 0 10px 24px rgba(10, 31, 29, 0.18);
+  }
+
+  .detail-action-button-danger {
+    background: color-mix(in srgb, #8a4f55 52%, var(--bulma-scheme-main));
+    border: 1px solid color-mix(in srgb, #8a4f55 70%, black 30%);
+    color: #f8ecee;
+  }
+
   .detail-action-button {
     display: inline-flex;
     align-items: center;
@@ -633,92 +819,6 @@
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-  }
-
-  .template-selector {
-    width: min(100%, 34rem);
-    max-height: min(70vh, 38rem);
-    overflow-y: auto;
-    padding: 1rem;
-    border: 1px solid
-      color-mix(in srgb, var(--bulma-link) 18%, var(--bulma-border));
-    border-radius: 1.1rem;
-    background: var(--bulma-scheme-main);
-    box-shadow:
-      0 1.2rem 3rem rgba(15, 23, 42, 0.18),
-      0 0 0 1px color-mix(in srgb, var(--bulma-link) 12%, transparent);
-  }
-
-  .template-selector-modal {
-    position: absolute;
-    inset: 0;
-    z-index: 1100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    background: color-mix(
-      in srgb,
-      var(--bulma-scheme-main) 55%,
-      rgba(15, 23, 42, 0.45)
-    );
-    backdrop-filter: blur(6px);
-  }
-
-  .template-selector-header {
-    margin-bottom: 0.75rem;
-  }
-
-  .template-grid {
-    display: grid;
-    gap: 0.75rem;
-  }
-
-  .template-card {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.45rem;
-    width: 100%;
-    padding: 1rem;
-    border: 1px solid var(--bulma-border);
-    border-radius: 0.9rem;
-    background: color-mix(
-      in srgb,
-      var(--bulma-link) 10%,
-      var(--bulma-scheme-main)
-    );
-    color: var(--bulma-text);
-    text-align: left;
-    transition:
-      border-color 0.15s ease,
-      transform 0.15s ease,
-      box-shadow 0.15s ease;
-  }
-
-  .template-card:hover {
-    border-color: var(--bulma-link);
-    transform: translateY(-1px);
-  }
-
-  .template-card.is-selected {
-    border-color: var(--bulma-link);
-    background: color-mix(
-      in srgb,
-      var(--bulma-link) 18%,
-      var(--bulma-scheme-main)
-    );
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--bulma-link) 45%, transparent);
-  }
-
-  .template-card-title {
-    font-size: 1rem;
-    font-weight: 700;
-  }
-
-  .template-card-preview {
-    color: var(--bulma-text-weak);
-    line-height: 1.5;
   }
 
   .footer-status {
@@ -748,6 +848,8 @@
 
   .footer-button {
     min-width: 7rem;
+    border-radius: 0.9rem;
+    font-weight: 600;
   }
 
   .footer-template-button {
@@ -761,6 +863,20 @@
   #dateInput {
     width: 150px;
     height: 2.65rem;
+  }
+
+  .detail-body .field {
+    height: 100%;
+    margin-bottom: 0;
+  }
+
+  .detail-editor-control {
+    display: flex;
+    min-height: max(22rem, calc(100vh - 23rem));
+  }
+
+  .detail-editor-control :global(.md-input) {
+    width: 100%;
   }
 
   @media screen and (max-width: 768px) {
@@ -869,10 +985,11 @@
 
     .detail-body {
       min-height: calc(100vh - 13rem);
+      padding-bottom: 6rem;
     }
 
-    .template-selector {
-      padding: 0.75rem;
+    .detail-editor-control {
+      min-height: max(18rem, calc(100vh - 19rem));
     }
 
     .footer-status,

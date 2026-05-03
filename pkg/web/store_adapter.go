@@ -1,6 +1,8 @@
-package entryapi
+package web
 
 import "github.com/multios12/mmemo/pkg/store"
+
+var entryStore Store = sqliteStore{}
 
 type Store interface {
 	Open(dataPath string) error
@@ -14,6 +16,7 @@ type Store interface {
 	FindImage(path string) (store.Image, error)
 	FindTemplates(category string) ([]store.Template, error)
 	SaveTemplate(category string, template store.Template) (store.Template, error)
+	DeleteTemplate(category string, name string) error
 	SeedTemplates(category string, templates []store.Template) error
 }
 
@@ -69,6 +72,10 @@ func (sqliteStore) FindTemplates(category string) ([]store.Template, error) {
 
 func (sqliteStore) SaveTemplate(category string, template store.Template) (store.Template, error) {
 	return store.SaveTemplate(category, template)
+}
+
+func (sqliteStore) DeleteTemplate(category string, name string) error {
+	return store.DeleteTemplate(category, name)
 }
 
 func (sqliteStore) SeedTemplates(category string, templates []store.Template) error {

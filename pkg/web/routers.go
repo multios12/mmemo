@@ -1,4 +1,4 @@
-package entryapi
+package web
 
 import (
 	"encoding/json"
@@ -18,8 +18,8 @@ import (
 )
 
 var setting SettingModel
-var entryStore Store = sqliteStore{}
 
+// Initial は API ルートを登録し、設定とストアを初期化します。
 func Initial(router *http.ServeMux, s SettingModel) error {
 	if err := entryStore.Open("."); err != nil {
 		log.Printf("entry init failed: %v", err)
@@ -30,17 +30,18 @@ func Initial(router *http.ServeMux, s SettingModel) error {
 	log.Printf("info: entry[dataPath=.]")
 	log.Printf("info: entry[count=%d]", len(entries))
 
-	router.HandleFunc("GET /settings", getSetting)
-	router.HandleFunc("GET /api/{category}", getEntries)
-	router.HandleFunc("POST /api/{category}/templates", saveTemplate)
-	router.HandleFunc("POST /api/{category}/images/tmp", postTempImage)
-	router.HandleFunc("GET /api/{category}/images/tmp/{file}", getTempImage)
-	router.HandleFunc("GET /api/{category}/{id}", getEntry)
-	router.HandleFunc("PUT /api/{category}", putEntry)
-	router.HandleFunc("POST /api/{category}/{id}", postEntry)
+	router.HandleFunc("GET    /settings", getSetting)
+	router.HandleFunc("GET    /api/{category}", getEntries)
+	router.HandleFunc("POST   /api/{category}/templates", saveTemplate)
+	router.HandleFunc("DELETE /api/{category}/templates/{name}", deleteTemplate)
+	router.HandleFunc("POST   /api/{category}/images/tmp", postTempImage)
+	router.HandleFunc("GET    /api/{category}/images/tmp/{file}", getTempImage)
+	router.HandleFunc("GET    /api/{category}/{id}", getEntry)
+	router.HandleFunc("PUT    /api/{category}", putEntry)
+	router.HandleFunc("POST   /api/{category}/{id}", postEntry)
 	router.HandleFunc("DELETE /api/{category}/{id}", deleteEntry)
-	router.HandleFunc("POST /api/{category}/{id}/images", postEntryImage)
-	router.HandleFunc("GET /api/{category}/{id}/images/{file}", getImage)
+	router.HandleFunc("POST   /api/{category}/{id}/images", postEntryImage)
+	router.HandleFunc("GET    /api/{category}/{id}/images/{file}", getImage)
 
 	return nil
 }
@@ -105,6 +106,7 @@ func templateModelsToStore(category string, templates []TemplateModel) []store.T
 			Category:     category,
 			Name:         template.Name,
 			Value:        template.Value,
+			Tags:         strings.Join(template.Tags, "#"),
 			DisplayOrder: index + 1,
 		})
 	}
@@ -117,11 +119,13 @@ func storeTemplatesToModels(templates []store.Template) []TemplateModel {
 		items = append(items, TemplateModel{
 			Name:  template.Name,
 			Value: template.Value,
+			Tags:  splitTags(template.Tags),
 		})
 	}
 	return items
 }
 
+// SeedDefaultTemplates は初期テンプレートをストアへ登録します。
 func SeedDefaultTemplates(defaults SettingModel) error {
 	normalizeSetting(&defaults)
 	for _, category := range defaults.Categories {
@@ -134,8 +138,9 @@ func SeedDefaultTemplates(defaults SettingModel) error {
 }
 
 type templatePayload struct {
-	Name  string `json:"Name"`
-	Value string `json:"Value"`
+	Name  string   `json:"Name"`
+	Value string   `json:"Value"`
+	Tags  []string `json:"Tags"`
 }
 
 func saveTemplate(w http.ResponseWriter, r *http.Request) {
@@ -165,8 +170,34 @@ func saveTemplate(w http.ResponseWriter, r *http.Request) {
 	_, err := entryStore.SaveTemplate(category, store.Template{
 		Name:  payload.Name,
 		Value: payload.Value,
+		Tags:  strings.Join(payload.Tags, "#"),
 	})
 	if err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
+	latestSetting, err := loadSettingFromFile()
+	if err == nil {
+		setting = hydrateSetting(latestSetting)
+	}
+	writeJSON(w, http.StatusOK, setting)
+}
+
+func deleteTemplate(w http.ResponseWriter, r *http.Request) {
+	category := r.PathValue("category")
+	if !hasCategory(setting, category) {
+		writeErrorJSON(w, http.StatusBadRequest, errors.New("カテゴリが見つかりません"))
+		return
+	}
+
+	name := strings.TrimSpace(r.PathValue("name"))
+	if name == "" {
+		writeErrorJSON(w, http.StatusBadRequest, errors.New("テンプレート名を入力してください"))
+		return
+	}
+
+	if err := entryStore.DeleteTemplate(category, name); err != nil {
 		writeErrorJSON(w, http.StatusBadRequest, err)
 		return
 	}
@@ -211,7 +242,7 @@ func getEntries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := make([]entryPayload, 0, len(entries))
+	response := make([]entryRequest, 0, len(entries))
 	for _, entry := range entries {
 		response = append(response, entryToPayload(entry))
 	}
@@ -242,13 +273,13 @@ func postEntry(w http.ResponseWriter, r *http.Request) {
 func saveEntry(w http.ResponseWriter, r *http.Request, pathID string) {
 	category := r.PathValue("category")
 
-	var payload entryPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+	var request entryRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		writeErrorJSON(w, http.StatusBadRequest, err)
 		return
 	}
 
-	entry := payloadToEntry(category, payload)
+	entry := payloadToEntry(category, request)
 	if err := validatePathID(&entry, pathID); err != nil {
 		writeErrorJSON(w, http.StatusBadRequest, err)
 		return

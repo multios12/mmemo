@@ -8,9 +8,6 @@ export default defineConfig(() => {
   const base = process.env.BASE_URL || "./"
   return {
     plugins: [svelte(), purgeCssPlugin(), singleFilePlugin(base)],
-    optimizeDeps: {
-      exclude: ["@lexical/code", "prismjs"],
-    },
     build: {
       rollupOptions: {
         input: html,
@@ -19,6 +16,7 @@ export default defineConfig(() => {
     base,
     server: {
       watch: { usePolling: true },
+      host: "0.0.0.0",
       port: 3000,
       proxy: {
         "^/api/.*": "http://localhost:3001",

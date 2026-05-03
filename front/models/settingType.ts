@@ -12,6 +12,7 @@ export type HolidayType = {
 export type TemplateType = {
     Name: string,
     Value: string,
+    Tags?: string[],
 }
 
 export type CategoryType = {

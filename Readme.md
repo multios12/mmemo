@@ -1,36 +1,76 @@
 # mmemo
 
-----------------------------------------------------------------
-## 開発
+プライベートな日記＆メモを記録するWebアプリです。
+ブログのように第三者に公開することは想定していません。
 
-### 必要なソフトウェア
-* Docker Desktop
-* Visual Studio Code
-* VIsual Studio拡張機能：Remote - Containers
-* VIsual Studio拡張機能：Remote Development
+- 日記及び、メモを作成
+- MarkDownによる内容入力が可能
+- 画像のアップロード
+- テンプレートの登録・利用が可能
 
-### 開発環境立ち上げ手順
-1. vscodeでフォルダを開く
-2. CTRL+SHIFT+Pを押下して、コマンドパレット表示し、「Reopen in Container」を実行し、devContainerを開く
-3. 実行とデバッグで「go API Server」を選択、実行
-4. 実行とデバッグで「Launch edge against localhost」を選択、実行
+## 実行方法
 
-## デバッグ実行
-vscode上での実行を前提。chromeを利用
-フロントデバッグサーバ：ポート3000
-バックエンドサーバ：ポート3001
+GitHub Releases から配布される資材を展開し、`mmemo` バイナリを実行してください。
+必要に応じて、環境変数でビルド設定を変更できます。
 
-開発環境では Go サーバを `data` ディレクトリをカレントディレクトリにして起動します。
-そのため、開発用データは `data/settings.json` と `data/memo.db` に保存されます。
-`data` ディレクトリおよび生成されるデータファイルは Git にコミットしません。
-
-## テスト
-
-Go テストはキャッシュ先を `/tmp/go-build` に固定した `./test.sh` を使います。
+Release 資材の展開後、次のように起動できます。
 
 ```sh
-./test.sh
+./mmemo
 ```
+
+Docker で動かす場合は、`docs/Dockerfile.sample` を参考にdockerfileを作成してください。
+サンプルを使用して試す場合、下記のコマンドで実行できます。
+
+```sh
+docker build -f docs/Dockerfile.sample -t micro-front-run .
+docker run --rm -p 3000:3000 -v "$(pwd)/data:/app/data" micro-front-run
+```
+
+| 環境変数   | 既定値       | 説明 |
+| ---------- | -----------  | ---- |
+| `HTML`     | `index.html` | フロントのビルド対象 HTML を指定します。通常は変更不要です。 |
+| `BASE_URL` | `./`         | サブパス配下へ配置する前提でフロントをビルドするときに使います。 |
+
+`mmemo` 本体の通常起動では、追加の環境変数は必要ありません。
+
+ローカルで起動した場合、下記のページからアクセスできます。
+※ 既定ではローカルポート `:3000` で起動します。
+
+```
+http://localhost:3000
+```
+
+----------------------------------------------------------------
+
+## Markdownエディタのショートカット
+
+詳細画面の Markdown エディタでは、`Cmd` または `Ctrl` を使ったショートカットに対応しています。
+
+- `Cmd/Ctrl + B`
+  太字
+- `Cmd/Ctrl + I`
+  斜体
+- `Cmd/Ctrl + Shift + X`
+  取り消し線
+- `Cmd/Ctrl + K`
+  リンク
+- `Cmd/Ctrl + Alt + 1`
+  見出し1
+- `Cmd/Ctrl + Alt + 2`
+  見出し2
+- `Cmd/Ctrl + Alt + 3`
+  見出し3
+- `Cmd/Ctrl + Alt + 0`
+  本文
+- `Cmd/Ctrl + Shift + 7`
+  番号リスト
+- `Cmd/Ctrl + Shift + 8`
+  リスト
+- `Cmd/Ctrl + Shift + 9`
+  引用
+- `Cmd/Ctrl + Shift + |`
+  コード
 
 ## 実行
 `mmemo` は起動したカレントディレクトリに `settings.json` と `memo.db` を作成して利用します。
@@ -78,7 +118,8 @@ mmemo -h
       "Templates": [
         {
           "Name": "通常日記",
-          "Value": "## 今日の出来事\n----\n## 明日の予定\n----"
+          "Value": "## 今日の出来事\n----\n## 明日の予定\n----",
+          "Tags": ["日記"]
         }
       ],
       "Fields": {
@@ -122,6 +163,10 @@ mmemo -h
   `false` の場合、同じカテゴリ・同じ日付のエントリは 1 件だけに制限されます
 - `Templates`
   新規作成時に使うテンプレート一覧です。1 件なら自動反映、複数なら選択UIが表示されます
+  各テンプレートでは `Tags` も指定でき、新規作成時に本文と一緒に初期タグとして反映されます
+  本文中に `----ここまで前回内容で置換` という行を入れると、その行はテンプレート適用時の境界として使われます
+  タグカード・見出しカードの新規ボタンから開いた場合は、そのカード内で直前に更新されたエントリ本文で、この行より上の部分を置き換えます
+  直前エントリが見つからない場合は、その行より上のテンプレート本文をそのまま使います
 - `Fields`
   UI 上のラベル文言です
   `Outline` を指定すると、詳細画面の見出しラベルを変更できます
@@ -131,12 +176,36 @@ mmemo -h
 
 `OutlineIcon` の指定例:
 
-- `folder-tree`
-- `book-open`
-- `file-lines`
+- `note`
+  汎用メモ向け。`fa-note-sticky`
+- `tree`
+  階層的な分類向け。`fa-folder-tree`
+- `book`
+  日記や記録向け。`fa-book`
+- `group`
+  グループやまとまり向け。`fa-layer-group`
+- `tag`
+  タグ中心のカテゴリ向け。`fa-tags`
+- `calendar`
+  日付ベースのカテゴリ向け。`fa-calendar-days`
+- `document`
+  文書メモ向け。`fa-file-lines`
+- `list`
+  箇条書き中心のカテゴリ向け。`fa-list-ul`
+- `person`
+  人物メモ向け。`fa-user`
+- `user`
+  `person` と同じ。`fa-user`
+- `address-card`
+  連絡先やプロフィール向け。`fa-address-card`
+
+互換キーとして、次の値も受け付けます。
+
 - `note-sticky`
+- `folder-tree`
 - `layer-group`
-- `tags`
+- `calendar-days`
+- `file-lines`
 
 ### よくある設定パターン
 
@@ -164,63 +233,7 @@ mmemo -h
 - `Holidays` は `Calendar.svelte` に `HolidayDates` として渡されます
 - `settings.json` に項目を追加・変更した場合は、この README の `settings.json` セクションも必ず更新してください
 - 設定項目を追加したら次も更新すること:
-  `pkg/entryapi/models.go`
+  `pkg/web/models.go`
   `front/models/settingType.ts`
   必要なら `cmd/mmemo/static/.default.settings.json`
 
-## ビルド for Linux
-> ./.devcontainer/build.sh
-
-`BASE_URL` を指定すると、サブパス配下へ配置する前提でフロントをビルドできます。
-
-例:
-
-```sh
-./build.sh
-BASE_URL=/mmemo/ ./build.sh
-```
-
-- `./build.sh`
-  ルート配下で使う通常ビルドです
-- `BASE_URL=/mmemo/ ./build.sh`
-  `https://example.com/mmemo/` のようなサブパス配下へ配置するときに使います
-
--------------------------------------------------------------
-## create new go project
-> mkdir srv
-> cd srv
-> go mod init main
-
-wget https://golang.org/dl/go1.22.2.linux-amd64.tar.gz
-tar -C /usr/local -xzf go1.22.2.linux-amd64.tar.gz
-export PATH=$PATH:/usr/local/go/bin
-
-### git comment
-add   :新規機能追加
-update:機能修正（バグ修正以外）
-fix   :バグ修正
-remove:削除
-update: dependencies
-  外部モジュール更新
-
-## 正規表現メモ
-
-* markdown画像の取得
-```
-(?:!\[([^[]+)\])(?:\((?:([^()\s]+)(?:\s"((?:[^"]*\\")*[^"]*)"\s*)?)\))$
-```
-
-* markdown画像の取得(URLが、"/api/images/tmp_"から始まるもののみ)
-```
-(?:!\[([^[]+)\])(?:\((?:(\/api\/images\/tmp_[^()\s]+)(?:\s"((?:[^"]*\\")*[^"]*)"\s*)?)\))$
-```
-
-```
-![イメージ](/api/diary/2024/06/06/images/00000004.png)
-![イメージ](/api/diary/2024/06/06/images/00000004.png "テスト")
-
-![イメージ](/api/images/tmp_00000004.png)
-![イメージ](/api/images/tmp_00000004.png "テスト")
-```
-
-git tag -a v1.2.6 -m ''; git push origin --tags

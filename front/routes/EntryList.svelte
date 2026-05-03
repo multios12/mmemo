@@ -14,8 +14,6 @@
     route?: RouteResult;
   }
 
-  const sortOrderStorageKey = "entry-list-sort-order";
-  const viewModeStorageKey = "entry-list-view-mode";
   const emptyListModel = (): listType => ({ WritedMonths: [], Lines: [] });
   const noOutlineLabel = "(no outline)";
   const noTagLabel = "タグなし";
@@ -38,6 +36,12 @@
   let viewMode = $state<viewModeType>("default");
 
   const categoryKey = $derived(String(currentRoute?.result?.path?.params?.category ?? ""));
+  const sortOrderStorageKey = $derived(
+    `entry-list-sort-order:${categoryKey || "default"}`,
+  );
+  const viewModeStorageKey = $derived(
+    `entry-list-view-mode:${categoryKey || "default"}`,
+  );
   const resolvedSettings = $derived.by(() => {
     const categorySetting = $settingsStore?.Categories?.find(
       (category) => category.Key === categoryKey,
@@ -60,11 +64,31 @@
   let isCalendarExpanded = $state(false);
 
   const addPath = () => appPath(`/${categoryKey}/add`);
+  const addPathWithPreset = (preset: {
+    outline?: string;
+    tag?: string;
+    previousEntryId?: number;
+  } = {}) => {
+    const searchParams = new URLSearchParams();
+    if (preset.outline !== undefined) {
+      searchParams.set("presetOutline", preset.outline);
+    }
+    if (preset.tag !== undefined) {
+      searchParams.set("presetTag", preset.tag);
+    }
+    if (preset.previousEntryId !== undefined) {
+      searchParams.set("previousEntryId", String(preset.previousEntryId));
+    }
+
+    const query = searchParams.toString();
+    return query ? `${addPath()}?${query}` : addPath();
+  };
   const detailPath = (entry: entryType) => appPath(`/${categoryKey}/${entry.Id}`);
   const isPreviewLine = (line: string) =>
     line !== "" &&
     !/^[-*_]{3,}$/.test(line) &&
     !/^([-*+]\s+|\d+\.\s+)/.test(line);
+  const carryOverMarker = "----ここまで前回内容で置換";
   const extractPreviewLine = (value: string) => {
     const lines = value
       .split(/\r?\n/)
@@ -80,6 +104,29 @@
 
     return "";
   };
+  const splitPreviewSections = (value: string) => {
+    const markerPattern = new RegExp(`^${carryOverMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m");
+    const match = value.match(markerPattern);
+    if (!match || match.index === undefined) {
+      return {
+        hasMarker: false,
+        before: value,
+        after: "",
+      };
+    }
+
+    const before = value.slice(0, match.index).trimEnd();
+    const after = value.slice(match.index + match[0].length).trimStart();
+    return { hasMarker: true, before, after };
+  };
+  const extractGroupedPreviews = (value: string) => {
+    const { hasMarker, before, after } = splitPreviewSections(value);
+    return {
+      hasMarker,
+      upper: extractPreviewLine(before),
+      lower: hasMarker ? extractPreviewLine(after) : extractPreviewLine(before),
+    };
+  };
   const compareEntries = (left: entryType, right: entryType) => {
     const dateCompare = left.Date.localeCompare(right.Date);
     if (dateCompare !== 0) {
@@ -90,6 +137,20 @@
     const rightId = right.Id ?? 0;
     return leftId - rightId;
   };
+  const compareEntriesByRecentUpdate = (left: entryType, right: entryType) => {
+    const leftUpdatedAt = left.UpdatedAt ?? left.CreatedAt ?? "";
+    const rightUpdatedAt = right.UpdatedAt ?? right.CreatedAt ?? "";
+    const updatedAtCompare = rightUpdatedAt.localeCompare(leftUpdatedAt);
+    if (updatedAtCompare !== 0) {
+      return updatedAtCompare;
+    }
+
+    return compareEntries(right, left);
+  };
+  const latestUpdatedEntry = (targetEntries: entryType[]) =>
+    [...targetEntries].sort(compareEntriesByRecentUpdate)[0];
+  const groupUpperPreview = (targetEntries: entryType[]) =>
+    extractGroupedPreviews(latestUpdatedEntry(targetEntries)?.Value ?? "").upper;
   const displayEntries = $derived.by(() => {
     const source = resolvedSettings.useMonthFilter ? model.Lines : entries;
     const sorted = [...source].sort(compareEntries);
@@ -196,6 +257,8 @@
           Value: entry.Value,
           Tags: entry.Tags ?? [],
           HasDetail: entry.HasDetail ?? false,
+          CreatedAt: entry.CreatedAt,
+          UpdatedAt: entry.UpdatedAt,
         }));
 
         model = {
@@ -232,17 +295,27 @@
   const toggleSortOrder = () =>
     (sortOrder = sortOrder === "asc" ? "desc" : "asc");
   const setViewMode = (nextMode: viewModeType) => (viewMode = nextMode);
+  const outlineIconMap: Record<string, string> = {
+    note: "fa-solid fa-note-sticky",
+    tree: "fa-solid fa-folder-tree",
+    book: "fa-solid fa-book",
+    group: "fa-solid fa-layer-group",
+    tag: "fa-solid fa-tags",
+    calendar: "fa-solid fa-calendar-days",
+    document: "fa-solid fa-file-lines",
+    list: "fa-solid fa-list-ul",
+    person: "fa-solid fa-user",
+    user: "fa-solid fa-user",
+    "address-card": "fa-solid fa-address-card",
+    "note-sticky": "fa-solid fa-note-sticky",
+    "folder-tree": "fa-solid fa-folder-tree",
+    "layer-group": "fa-solid fa-layer-group",
+    "calendar-days": "fa-solid fa-calendar-days",
+    "file-lines": "fa-solid fa-file-lines",
+  };
   const outlineIconClass = $derived.by(() => {
-    const rawIcon = (resolvedSettings.outlineIcon || "folder-tree").trim();
-    if (rawIcon === "") {
-      return "fa-solid fa-folder-tree";
-    }
-    if (rawIcon.includes("fa-")) {
-      return rawIcon.includes("fa-solid") || rawIcon.includes("fa-regular") || rawIcon.includes("fa-brands")
-        ? rawIcon
-        : `fa-solid ${rawIcon}`;
-    }
-    return `fa-solid fa-${rawIcon}`;
+    const rawIcon = (resolvedSettings.outlineIcon || "tree").trim().toLowerCase();
+    return outlineIconMap[rawIcon] ?? outlineIconMap.note;
   });
 
   $effect(() => {
@@ -368,7 +441,7 @@
         </div>
       </div>
       <button
-        class="button is-primary add-button is-hidden-mobile"
+        class="button add-button add-button-primary is-hidden-mobile"
         aria-label={`add ${categoryKey}`}
         onclick={() => goto(addPath())}
       >
@@ -430,11 +503,34 @@
         {#each groupedEntriesByTag as group}
           <section class="entry-group-card">
             <div class="entry-group-header">
-              <div class="entry-group-title">
-                <span class="icon"><i class="fa-solid fa-tags"></i></span>
-                <span>{group.label}</span>
+              <div class="entry-group-heading">
+                <div class="entry-group-title">
+                  <span class="icon"><i class="fa-solid fa-tags"></i></span>
+                  <span>{group.label}</span>
+                </div>
+                {#if extractGroupedPreviews(latestUpdatedEntry(group.entries)?.Value ?? "").hasMarker &&
+                  groupUpperPreview(group.entries)}
+                  <div class="entry-group-preview">{groupUpperPreview(group.entries)}</div>
+                {/if}
               </div>
-              <span class="entry-group-count">{group.entries.length}件</span>
+              <div class="entry-group-meta">
+                <span class="entry-group-count">{group.entries.length}件</span>
+                <button
+                  class="button is-small entry-group-add-button"
+                  type="button"
+                  aria-label={`${group.label} で新規作成`}
+                  onclick={() =>
+                    goto(
+                      addPathWithPreset({
+                        tag: group.label === noTagLabel ? "" : group.label,
+                        previousEntryId: latestUpdatedEntry(group.entries)?.Id,
+                      }),
+                    )}
+                >
+                  <span class="icon"><i class="fa-solid fa-plus"></i></span>
+                  <span>新規</span>
+                </button>
+              </div>
             </div>
             <div class="entry-list entry-list-nested">
               {#each group.entries as entry}
@@ -442,16 +538,20 @@
                   <div class="entry-row-main">
                     <div class="entry-row-head">
                       <span class="entry-date">{entry.Date}</span>
+                      <span class="entry-date-outline">
+                        {entry.Outline || noOutlineLabel}
+                      </span>
+                      {#if extractGroupedPreviews(entry.Value).lower}
+                        <span class="entry-date-preview">
+                          {extractGroupedPreviews(entry.Value).lower}
+                        </span>
+                      {/if}
                       {#if entry.HasDetail}
                         <span class="icon has-text-grey-light">
                           <i class="fa-solid fa-note-sticky"></i>
                         </span>
                       {/if}
                     </div>
-                    <div class="entry-outline">{entry.Outline || noOutlineLabel}</div>
-                    {#if extractPreviewLine(entry.Value)}
-                      <div class="entry-preview">{extractPreviewLine(entry.Value)}</div>
-                    {/if}
                   </div>
                   {#if false}
                     <div class="tags are-medium entry-tags">
@@ -471,26 +571,51 @@
         {#each groupedEntriesByOutline as group}
           <section class="entry-group-card">
             <div class="entry-group-header">
-              <div class="entry-group-title">
-                <span class="icon"><i class={outlineIconClass} aria-hidden="true"></i></span>
-                <span>{group.outline}</span>
+              <div class="entry-group-heading">
+                <div class="entry-group-title">
+                  <span class="icon"><i class={outlineIconClass} aria-hidden="true"></i></span>
+                  <span>{group.outline}</span>
+                </div>
+                {#if extractGroupedPreviews(latestUpdatedEntry(group.entries)?.Value ?? "").hasMarker &&
+                  groupUpperPreview(group.entries)}
+                  <div class="entry-group-preview">{groupUpperPreview(group.entries)}</div>
+                {/if}
               </div>
-              <span class="entry-group-count">{group.entries.length}件</span>
+              <div class="entry-group-meta">
+                <span class="entry-group-count">{group.entries.length}件</span>
+                <button
+                  class="button is-small entry-group-add-button"
+                  type="button"
+                  aria-label={`${group.outline} で新規作成`}
+                  onclick={() =>
+                    goto(
+                      addPathWithPreset({
+                        outline: group.outline === noOutlineLabel ? "" : group.outline,
+                        previousEntryId: latestUpdatedEntry(group.entries)?.Id,
+                      }),
+                    )}
+                >
+                  <span class="icon"><i class="fa-solid fa-plus"></i></span>
+                  <span>新規</span>
+                </button>
+              </div>
             </div>
             <div class="outline-entry-list">
               {#each group.entries as entry}
                 <button class="outline-entry-row" onclick={() => listClick(entry)}>
                   <div class="entry-row-head">
                     <span class="entry-date">{entry.Date}</span>
+                    {#if extractGroupedPreviews(entry.Value).lower}
+                      <span class="entry-date-preview">
+                        {extractGroupedPreviews(entry.Value).lower}
+                      </span>
+                    {/if}
                     {#if entry.HasDetail}
                       <span class="icon has-text-grey-light">
                         <i class="fa-solid fa-note-sticky"></i>
                       </span>
                     {/if}
                   </div>
-                  {#if extractPreviewLine(entry.Value)}
-                    <div class="entry-preview">{extractPreviewLine(entry.Value)}</div>
-                  {/if}
                   {#if resolvedSettings.showTags && entry.Tags.length > 0}
                     <div class="tags are-medium entry-tags entry-tags-badge">
                       {#each entry.Tags as tag}
@@ -526,7 +651,7 @@
       {/if}
 
       <button
-        class="button is-primary mobile-add-button"
+        class="button mobile-add-button add-button-primary"
         aria-label={`add ${categoryKey}`}
         onclick={() => goto(addPath())}
       >
@@ -666,17 +791,27 @@
   }
 
   .view-mode-option.is-active {
-    background: color-mix(in srgb, var(--bulma-link) 20%, var(--bulma-scheme-main));
-    color: var(--bulma-text);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bulma-link) 24%, transparent);
+    background: color-mix(in srgb, #2d8f86 22%, var(--bulma-scheme-main));
+    color: color-mix(in srgb, var(--bulma-text) 92%, white 8%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #2d8f86 26%, transparent);
   }
 
   .add-button {
     min-width: 7rem;
   }
 
+  .add-button-primary {
+    background: color-mix(in srgb, #2d8f86 62%, var(--bulma-scheme-main));
+    border: 1px solid color-mix(in srgb, #2d8f86 74%, black 26%);
+    color: #edf8f6;
+    box-shadow: 0 10px 24px rgba(10, 31, 29, 0.16);
+  }
+
   .sort-button {
     min-width: 2.75rem;
+    background: color-mix(in srgb, var(--bulma-border) 74%, var(--bulma-scheme-main));
+    border: 1px solid color-mix(in srgb, var(--bulma-border) 86%, white 14%);
+    color: color-mix(in srgb, var(--bulma-text) 88%, white 12%);
   }
 
   .sort-icon {
@@ -738,6 +873,20 @@
     color: var(--bulma-text);
   }
 
+  .entry-group-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  .entry-group-preview {
+    color: var(--bulma-text-weak);
+    font-size: 0.92rem;
+    line-height: 1.45;
+    min-width: 0;
+  }
+
   .outline-mode-icon-wrap {
     display: inline-flex;
     align-items: center;
@@ -753,6 +902,22 @@
     color: var(--bulma-text-weak);
     font-size: 0.88rem;
     font-variant-numeric: tabular-nums;
+  }
+
+  .entry-group-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .entry-group-add-button {
+    border-radius: 999px;
+    border-color: color-mix(in srgb, #2d8f86 38%, var(--bulma-border));
+    background: color-mix(in srgb, #2d8f86 16%, var(--bulma-scheme-main));
+    color: color-mix(in srgb, var(--bulma-text) 92%, white 8%);
+    font-weight: 600;
   }
 
   .outline-entry-list {
@@ -918,10 +1083,28 @@
     gap: 0.5rem;
     color: var(--bulma-text-weak);
     font-size: 0.95rem;
+    flex-wrap: wrap;
   }
 
   .entry-date {
     font-variant-numeric: tabular-nums;
+  }
+
+  .entry-date-outline {
+    color: var(--bulma-text);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .entry-date-preview {
+    color: var(--bulma-text-weak);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1 1 10rem;
   }
 
   .entry-outline {
@@ -929,6 +1112,11 @@
     font-weight: 600;
     color: var(--bulma-text);
     line-height: 1.45;
+  }
+
+  .entry-outline-grouped {
+    font-size: 0.98rem;
+    font-weight: 500;
   }
 
   .entry-preview {
@@ -973,7 +1161,7 @@
   .mobile-add-button {
     flex: 1 1 auto;
     min-height: 3rem;
-    box-shadow: 0 12px 28px rgba(10, 10, 10, 0.16);
+    box-shadow: 0 12px 28px rgba(10, 31, 29, 0.16);
   }
 
   @keyframes calendar-popup-slide-in {
@@ -1057,6 +1245,11 @@
       align-items: flex-start;
       flex-direction: column;
       margin-bottom: 0.75rem;
+    }
+
+    .entry-group-meta {
+      width: 100%;
+      justify-content: space-between;
     }
   }
 </style>

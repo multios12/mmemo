@@ -21,6 +21,7 @@ func SaveTemplate(category string, template Template) (Template, error) {
 	if result.Error == nil {
 		current.Value = template.Value
 		current.Name = template.Name
+		current.Tags = template.Tags
 		return current, db.Save(&current).Error
 	}
 	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -58,4 +59,11 @@ func SeedTemplates(category string, templates []Template) error {
 		}
 	}
 	return nil
+}
+
+func DeleteTemplate(category string, name string) error {
+	result := db.
+		Where("category = ? and name = ?", category, name).
+		Delete(&Template{})
+	return result.Error
 }

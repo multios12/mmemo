@@ -2,7 +2,12 @@
   "name": "mmemo",
   "type": "module",
   "license": "MIT",
-  "version": "1.2.4",
+  "version": "2.0.0",
+  "packageManager": "yarn@1.22.22",
+  "engines": {
+    "node": "24.15.0",
+    "yarn": "1.22.22"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -14,16 +19,8 @@
     "@formkit/tempo": "0.1.2",
     "@fortawesome/fontawesome-svg-core": "6.7.2",
     "@fortawesome/free-solid-svg-icons": "6.7.2",
-    "@lexical/code": "0.24.0",
-    "@lexical/history": "0.24.0",
-    "@lexical/link": "0.24.0",
-    "@lexical/list": "0.24.0",
-    "@lexical/markdown": "0.24.0",
-    "@lexical/rich-text": "0.24.0",
-    "@lexical/utils": "0.24.0",
     "@mateothegreat/svelte5-router": "^2.16.19",
     "bulma": "1.0.3",
-    "lexical": "0.24.0",
     "svelte": "^5.55.1"
   },
   "devDependencies": {
@@ -35,6 +32,5 @@
     "tslib": "^2.8.1",
     "typescript": "^6.0.2",
     "vite": "^8.0.3"
-  },
-  "packageManager": "yarn@4.13.0"
+  }
 }

@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/multios12/mmemo/pkg/entryapi"
+	"github.com/multios12/mmemo/pkg/web"
 )
 
 //go:embed static/*
@@ -22,7 +22,7 @@ var static embed.FS
 var staticFiles fs.FS
 
 var port string
-var setting entryapi.SettingModel
+var setting web.SettingModel
 
 func init() {
 	flag.StringVar(&port, "p", ":3000", "Webサーバが使用するポートを指定します")
@@ -49,10 +49,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	dbExists := fileExists(filepath.Join(dataPath, "memo.db"))
+	settingsPath := filepath.Join(dataPath, "settings.json")
+	dbPath := filepath.Join(dataPath, "memo.db")
+	dbExists := fileExists(dbPath)
 
 	// 設定ファイルの読み込み
-	loadSettingJson()
+	loadSettingJson(dataPath)
+	log.Printf("info: mmemo[startup port=%s dataPath=%s settings=%s db=%s]", port, dataPath, settingsPath, dbPath)
 
 	// ルーティング
 	router := http.NewServeMux()
@@ -63,11 +66,11 @@ func main() {
 	router.HandleFunc("GET /manifest.json", getStatic)
 
 	// モジュールの初期化
-	if err := entryapi.Initial(router, setting); err != nil {
+	if err := web.Initial(router, setting); err != nil {
 		log.Fatal(err)
 	}
 	if !dbExists {
-		if err := entryapi.SeedDefaultTemplates(defaultTemplateSetting()); err != nil {
+		if err := web.SeedDefaultTemplates(defaultTemplateSetting()); err != nil {
 			log.Printf("default template seed failed: %v", err)
 		}
 	}
@@ -120,19 +123,19 @@ func fileExists(path string) bool {
 	return err == nil
 }
 
-func defaultTemplateSetting() entryapi.SettingModel {
-	return entryapi.SettingModel{
-		Categories: []entryapi.CategoryModel{
+func defaultTemplateSetting() web.SettingModel {
+	return web.SettingModel{
+		Categories: []web.CategoryModel{
 			{
 				Key: "diary",
-				Templates: []entryapi.TemplateModel{
+				Templates: []web.TemplateModel{
 					{Name: "通常日記", Value: "## 今日の出来事\n----\n## 明日の予定\n----"},
 					{Name: "ふりかえり", Value: "## 良かったこと\n----\n## 改善したいこと\n----\n## 次にやること\n----"},
 				},
 			},
 			{
 				Key: "sample",
-				Templates: []entryapi.TemplateModel{
+				Templates: []web.TemplateModel{
 					{Name: "基本", Value: "## データ1\n----\n## データ2\n----"},
 					{Name: "打ち合わせ", Value: "## 議題\n----\n## 決定事項\n----\n## 宿題\n----"},
 				},
@@ -142,12 +145,7 @@ func defaultTemplateSetting() entryapi.SettingModel {
 }
 
 // 設定ファイルの読み込み
-func loadSettingJson() {
-	dataPath, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-
+func loadSettingJson(dataPath string) {
 	// データファイルパスの確認と、存在しない場合は作成
 	if _, err := os.Stat(dataPath); err != nil {
 		if err := os.MkdirAll(dataPath, 0755); err != nil {

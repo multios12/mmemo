@@ -3,6 +3,7 @@ export type entryType = {
   Outline: string;
   Date: string;
   Value: string;
+  HTML?: string;
   Tags: string[];
   HasDetail?: boolean;
   CreatedAt?: string;

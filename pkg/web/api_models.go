@@ -1,4 +1,4 @@
-package entryapi
+package web
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/multios12/mmemo/pkg/markdown"
 	"github.com/multios12/mmemo/pkg/store"
 )
 
@@ -15,34 +16,36 @@ var (
 	oldEntryImagePattern = regexp.MustCompile(`/api/memos/([^/]+)/(\d{5})/([^)"]+)`)
 )
 
-type entryPayload struct {
+type entryRequest struct {
 	Id        int      `json:"Id,omitempty"`
 	Outline   string   `json:"Outline"`
 	Date      string   `json:"Date"`
 	Category  string   `json:"Category,omitempty"`
 	Tags      []string `json:"Tags"`
 	Value     string   `json:"Value"`
+	HTML      string   `json:"HTML,omitempty"`
 	HasDetail bool     `json:"HasDetail"`
 	CreatedAt string   `json:"CreatedAt,omitempty"`
 	UpdatedAt string   `json:"UpdatedAt,omitempty"`
 }
 
-func entryToPayload(entry store.Entry) entryPayload {
+func entryToPayload(entry store.Entry) entryRequest {
 	value := normalizeEntryValue(entry)
-	return entryPayload{
+	return entryRequest{
 		Id:        entry.Id,
 		Outline:   entry.Outline,
 		Date:      entry.Date,
 		Category:  entry.Category,
 		Tags:      splitTags(entry.Tags),
 		Value:     value,
+		HTML:      markdown.ToHTML(value),
 		HasDetail: strings.TrimSpace(value) != "",
 		CreatedAt: entry.CreatedAt.Format(time.RFC3339),
 		UpdatedAt: entry.UpdatedAt.Format(time.RFC3339),
 	}
 }
 
-func payloadToEntry(category string, payload entryPayload) store.Entry {
+func payloadToEntry(category string, payload entryRequest) store.Entry {
 	return store.Entry{
 		Id:       payload.Id,
 		Outline:  strings.TrimSpace(payload.Outline),

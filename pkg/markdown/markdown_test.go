@@ -107,3 +107,27 @@ func TestToHTML_SupportsTablesNestedListsAndDecorations(t *testing.T) {
 		t.Fatalf("unexpected html\nexpected:\n%s\n\ngot:\n%s", expected, got)
 	}
 }
+
+func TestToHTML_HidesCarryOverMarkerLine(t *testing.T) {
+	input := strings.Join([]string{
+		"## お店",
+		"テストデータ",
+		"",
+		"----ここまで前回内容で置換",
+		"## お話",
+		"----",
+	}, "\n")
+
+	got := ToHTML(input)
+	expected := strings.Join([]string{
+		"<h2>お店</h2>",
+		"<p>テストデータ</p>",
+		"<hr>",
+		"<h2>お話</h2>",
+		"<hr>",
+	}, "\n")
+
+	if got != expected {
+		t.Fatalf("unexpected html\nexpected:\n%s\n\ngot:\n%s", expected, got)
+	}
+}

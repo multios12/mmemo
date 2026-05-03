@@ -1,4 +1,4 @@
-package entryapi
+package web
 
 import (
 	"fmt"

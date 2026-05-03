@@ -134,6 +134,7 @@
     table-layout: fixed;
     border-collapse: collapse;
     background: color-mix(in srgb, var(--bulma-scheme-main) 94%, black 6%);
+    border: 1px solid color-mix(in srgb, var(--bulma-border) 82%, white 10%);
   }
 
   .calendar th,
@@ -146,17 +147,18 @@
 
   .calendar th {
     padding: 0.5rem 0.25rem;
-    font-weight: 500;
-    color: color-mix(in srgb, var(--bulma-text-weak) 82%, white 18%);
-    background: color-mix(in srgb, var(--bulma-scheme-main) 88%, black 12%);
+    font-weight: 600;
+    color: color-mix(in srgb, var(--bulma-text-weak) 84%, white 16%);
+    background: color-mix(in srgb, var(--bulma-border) 82%, black 18%);
+    border-color: color-mix(in srgb, var(--bulma-border) 82%, white 8%);
   }
 
   .holiday-head {
-    color: #c98f8f;
+    color: #c79aa0;
   }
 
   .saturday-head {
-    color: #8ea0df;
+    color: #98a8d1;
   }
 
   .calendar-day {
@@ -165,6 +167,7 @@
     font-variant-numeric: tabular-nums;
     color: var(--bulma-text);
     background: color-mix(in srgb, var(--bulma-scheme-main) 93%, black 7%);
+    border-color: color-mix(in srgb, var(--bulma-border) 82%, white 8%);
   }
 
   .day-number {
@@ -191,22 +194,22 @@
   }
 
   .day-button:focus-visible {
-    outline: 2px solid rgba(255, 236, 186, 0.5);
+    outline: 2px solid rgba(110, 193, 183, 0.55);
     outline-offset: 2px;
   }
 
   .active-day .day-number {
     font-weight: 700;
-    color: #f5efe2;
-    background: linear-gradient(180deg, #9d7a2a 0%, #775915 100%);
+    color: #edf8f6;
+    background: color-mix(in srgb, #2d8f86 62%, var(--bulma-scheme-main));
     box-shadow:
-      inset 0 0 0 1px rgba(255, 236, 186, 0.18),
-      0 0 0 1px rgba(125, 93, 24, 0.3);
+      inset 0 0 0 1px rgba(170, 230, 223, 0.14),
+      0 0 0 1px rgba(24, 79, 74, 0.24);
   }
 
   .holiday {
-    color: #f3dede;
-    background: linear-gradient(180deg, #5f1818 0%, #471111 100%);
+    color: #f1e3e5;
+    background: color-mix(in srgb, #6d3d45 42%, var(--bulma-scheme-main));
   }
 
   .disable {
@@ -215,8 +218,8 @@
   }
 
   .saturday {
-    color: #dde5ff;
-    background: linear-gradient(180deg, #22306f 0%, #18234d 100%);
+    color: #e4e9f8;
+    background: color-mix(in srgb, #40527f 40%, var(--bulma-scheme-main));
   }
 
 </style>

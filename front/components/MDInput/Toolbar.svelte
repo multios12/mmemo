@@ -178,8 +178,9 @@
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
-    gap: 0.5rem;
+    gap: 0.25rem;
     overflow: visible;
+    margin: 0 0.35rem 0;
   }
 
   .md-paragraph-select {
@@ -196,23 +197,26 @@
   }
 
   .md-paragraph-trigger {
-    min-width: 3.8rem;
+    min-width: 3.3rem;
+    min-height: 2rem;
+    padding: 0 0.45rem;
     justify-content: space-between;
-    gap: 0.35rem;
+    gap: 0.2rem;
     color: #f6f7fb;
     border-color: color-mix(in srgb, white 14%, transparent);
     background: #1b2030;
+    font-size: 0.84rem;
   }
 
   .md-paragraph-menu {
     position: absolute;
-    top: calc(100% + 0.35rem);
+    top: calc(100% + 0.25rem);
     left: 0;
     z-index: 10;
     display: flex;
     flex-direction: column;
     min-width: 13rem;
-    padding: 0.35rem;
+    padding: 0.25rem;
     border: 1px solid color-mix(in srgb, white 12%, transparent);
     border-radius: var(--bulma-radius-large);
     background: #161b28;
@@ -223,26 +227,28 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 1.25rem;
-    height: 1.25rem;
+    min-width: 1.1rem;
+    height: 1.1rem;
     color: #f6f7fb;
-    font-size: 0.72rem;
+    font-size: 0.66rem;
     font-weight: 800;
     letter-spacing: 0.04em;
     line-height: 1;
   }
 
   .md-paragraph-icon-slot {
-    flex: 0 0 1.5rem;
-    width: 1.5rem;
+    flex: 0 0 1.25rem;
+    width: 1.25rem;
     justify-content: center;
-    margin-right: 0.1rem;
+    margin-right: 0;
   }
 
   .md-paragraph-option {
     justify-content: flex-start;
-    gap: 0.45rem;
+    gap: 0.35rem;
     color: #eef2ff;
+    padding: 0.4rem 0.55rem;
+    font-size: 0.88rem;
   }
 
   .md-paragraph-option.is-active {
@@ -252,9 +258,9 @@
 
   .md-toolbar-button {
     flex: 0 0 auto;
-    min-width: 2.4rem;
-    min-height: 2.35rem;
-    padding: 0;
+    min-width: 2rem;
+    min-height: 2rem;
+    padding: 0 0.2rem;
   }
 
   .md-toolbar-button.is-active {
@@ -266,11 +272,11 @@
 
   @media screen and (max-width: 768px) {
     .md-toolbar {
-      gap: 0.35rem;
+      gap: 0.2rem;
     }
 
     .md-paragraph-trigger {
-      min-width: 3.5rem;
+      min-width: 3rem;
     }
   }
 </style>

@@ -23,8 +23,8 @@ Docker で動かす場合は、`docs/Dockerfile.sample` を参考にdockerfile�
 サンプルを使用して試す場合、下記のコマンドで実行できます。
 
 ```sh
-docker build -f docs/Dockerfile.sample -t micro-front-run .
-docker run --rm -p 3000:3000 -v "$(pwd)/data:/app/data" micro-front-run
+docker build -f docs/Dockerfile.sample -t mmemo-run .
+docker run --rm -v "$(pwd)/data:/app/data" mmemo-run
 ```
 
 | 環境変数   | 既定値       | 説明 |

@@ -1,33 +1,11 @@
 <script lang="ts">
   import ArrowLeft from "lucide-svelte/icons/arrow-left";
-  import Bold from "lucide-svelte/icons/bold";
-  import ChevronDown from "lucide-svelte/icons/chevron-down";
-  import Code from "lucide-svelte/icons/code";
-  import Grip from "lucide-svelte/icons/grip";
   import Image from "lucide-svelte/icons/image";
-  import Italic from "lucide-svelte/icons/italic";
   import Link from "lucide-svelte/icons/link";
-  import List from "lucide-svelte/icons/list";
-  import ListOrdered from "lucide-svelte/icons/list-ordered";
-  import Quote from "lucide-svelte/icons/quote";
-  import RotateCw from "lucide-svelte/icons/rotate-cw";
-  import Strikethrough from "lucide-svelte/icons/strikethrough";
   import Trash from "lucide-svelte/icons/trash";
+  import Toolbar from "./Toolbar.svelte";
 
   const carryOverMarker = "----ここまで前回内容で置換";
-
-  const paragraphs = [
-    { key: "normal", value: "本文", icon: Grip },
-    { key: "h1", value: "見出し1", badge: "H1" },
-    { key: "h2", value: "見出し2", badge: "H2" },
-    { key: "h3", value: "見出し3", badge: "H3" },
-    { key: "ol", value: "番号リスト", icon: ListOrdered },
-    { key: "ul", value: "段落リスト", icon: List },
-    { key: "code", value: "コード", icon: Code },
-    { key: "quote", value: "引用", icon: Quote },
-  ];
-
-  type IconComponent = typeof Grip;
 
   interface Props {
     value?: string;
@@ -51,17 +29,11 @@
   let imageError = $state("");
   let isImageUploading = $state(false);
   let pendingImageCursor = $state(0);
-  let isParagraphMenuOpen = $state(false);
-
-  const currentParagraph = $derived(
-    paragraphs.find((item) => item.key === paragraph) ?? paragraphs[0],
-  );
 
   const handleInput = (event: Event) => {
     const target = event.currentTarget as HTMLTextAreaElement;
     onTextChange?.(target.value);
     syncToolbarState(target);
-    requestAnimationFrame(() => resizeTextarea(target));
   };
 
   const handleKeydown = (event: KeyboardEvent) => {
@@ -750,34 +722,6 @@
     syncInlineState(target);
   };
 
-  const resizeTextarea = (target: HTMLTextAreaElement) => {
-    target.style.height = "auto";
-    const computed = getComputedStyle(target);
-    const lineHeight = Number.parseFloat(computed.lineHeight || "0");
-    const paddingTop = Number.parseFloat(computed.paddingTop || "0");
-    const paddingBottom = Number.parseFloat(computed.paddingBottom || "0");
-    const rows = Math.max(1, target.value.split("\n").length);
-    const minHeightFromRows =
-      (Number.isFinite(lineHeight) && lineHeight > 0 ? lineHeight : 24) * rows +
-      paddingTop +
-      paddingBottom;
-    target.style.height = `${Math.ceil(Math.max(target.scrollHeight, minHeightFromRows) + 2)}px`;
-  };
-
-  const autoResize = (node: HTMLTextAreaElement) => {
-    const sync = () => resizeTextarea(node);
-    requestAnimationFrame(sync);
-
-    return {
-      update() {
-        requestAnimationFrame(() => {
-          sync();
-          requestAnimationFrame(sync);
-        });
-      },
-    };
-  };
-
   const getNextCursorOffset = (
     previousLine: string,
     nextBlock: string,
@@ -797,151 +741,26 @@
     return Math.min(nextBlock.length, addedPrefix + baseOffset);
   };
 
-  $effect(() => {
-    value;
-
-    if (textarea === null) {
-      return;
-    }
-
-    requestAnimationFrame(() => {
-      if (textarea === null) {
-        return;
-      }
-
-      resizeTextarea(textarea);
-      requestAnimationFrame(() => {
-        if (textarea !== null) {
-          resizeTextarea(textarea);
-        }
-      });
-    });
-  });
-
 </script>
 
 <div class="md-input">
-  <div id="toolbar" class="md-toolbar">
-    <div class="md-paragraph-select">
-      {#if isParagraphMenuOpen}
-        <button
-          class="md-paragraph-backdrop"
-          type="button"
-          aria-label="close paragraph menu"
-          onclick={() => (isParagraphMenuOpen = false)}
-        ></button>
-      {/if}
-
-      <button
-        class="button md-paragraph-trigger"
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={isParagraphMenuOpen}
-        onclick={() => (isParagraphMenuOpen = !isParagraphMenuOpen)}
-      >
-        {#if currentParagraph.badge}
-          <span class="icon md-paragraph-icon-slot">
-            <span class="md-paragraph-badge">{currentParagraph.badge}</span>
-          </span>
-        {:else}
-          <span class="icon md-paragraph-icon-slot">
-            <currentParagraph.icon />
-          </span>
-        {/if}
-        <span class="icon is-small">
-          <ChevronDown size={16} />
-        </span>
-      </button>
-
-      {#if isParagraphMenuOpen}
-        <div class="md-paragraph-menu" role="menu">
-          {#each paragraphs as item}
-            <button
-              class="button is-ghost md-paragraph-option"
-              class:is-active={item.key === paragraph}
-              type="button"
-              role="menuitemradio"
-              aria-checked={item.key === paragraph}
-              onclick={() => {
-                paragraph = item.key;
-                isParagraphMenuOpen = false;
-                applyParagraph(item.key);
-              }}
-            >
-              {#if item.badge}
-                <span class="icon md-paragraph-icon-slot">
-                  <span class="md-paragraph-badge">{item.badge}</span>
-                </span>
-              {:else}
-                <span class="icon md-paragraph-icon-slot">
-                  <item.icon />
-                </span>
-              {/if}
-              <span>{item.value}</span>
-            </button>
-          {/each}
-        </div>
-      {/if}
-    </div>
-    <button
-      class="button is-ghost md-toolbar-button"
-      class:is-active={isBold}
-      type="button"
-      aria-label="bold"
-      onclick={() => applyInline("bold")}
-    >
-      <Bold />
-    </button>
-    <button
-      class="button is-ghost md-toolbar-button"
-      class:is-active={isItalic}
-      type="button"
-      aria-label="italic"
-      onclick={() => applyInline("italic")}
-    >
-      <Italic />
-    </button>
-    <button
-      class="button is-ghost md-toolbar-button"
-      class:is-active={isStrike}
-      type="button"
-      aria-label="strike"
-      onclick={() => applyInline("strike")}
-    >
-      <Strikethrough />
-    </button>
-    <button
-      class="button is-ghost md-toolbar-button"
-      type="button"
-      aria-label="carry over marker"
-      title="次回グループ追加へ引き継ぐ位置を挿入"
-      onclick={insertCarryOverMarker}
-    >
-      <RotateCw />
-    </button>
-    <button
-      class="button is-ghost md-toolbar-button"
-      type="button"
-      aria-label="image"
-      onclick={openImageModal}
-    >
-      <Image />
-    </button>
-    <button
-      class="button is-ghost md-toolbar-button"
-      class:is-active={isLink}
-      type="button"
-      aria-label="link"
-      onclick={openLinkModal}
-    >
-      <Link />
-    </button>
-  </div>
+  <Toolbar
+    bind:value={paragraph}
+    bold={isBold}
+    italic={isItalic}
+    link={isLink}
+    strike={isStrike}
+    onBold={() => applyInline("bold")}
+    onCarryOver={insertCarryOverMarker}
+    onImage={openImageModal}
+    onItalic={() => applyInline("italic")}
+    onLink={openLinkModal}
+    onStrike={() => applyInline("strike")}
+  />
 
   <textarea
     class="textarea md-input-area"
     bind:this={textarea}
-    use:autoResize
     bind:value
     oninput={handleInput}
     onkeydown={handleKeydown}
@@ -1083,17 +902,18 @@
   .md-input {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.25rem;
     min-height: 100%;
   }
 
   .md-input-area {
-    flex: 0 0 auto;
+    flex: 1 1 auto;
     width: 100%;
-    min-height: 22rem;
-    height: auto;
+    min-height: 0;
+    height: 100%;
+    max-height: none;
     resize: none;
-    overflow-y: hidden;
+    overflow-y: auto;
     box-sizing: border-box;
     align-self: stretch;
     padding: 0.9rem 1rem;
@@ -1142,7 +962,9 @@
 
   @media screen and (max-width: 768px) {
     .md-input-area {
-      min-height: 18rem;
+      min-height: 0;
+      height: 100%;
+      max-height: none;
       padding: 0.8rem 0.9rem;
       font-size: 0.92rem;
     }

@@ -6,18 +6,38 @@
   import EntryReference from "./routes/EntryReference.svelte";
   import Home from "./routes/Home.svelte";
   import Planner from "./routes/Planner/Planner.svelte";
+  import SettingsPage from "./routes/Settings.svelte";
+  import SettingsTemplatePage from "./routes/TemplateDetail.svelte";
   import { onMount } from "svelte";
+  import Settings from "lucide-svelte/icons/settings";
   import type { settingType } from "./models/settingType.js";
   import { settingsStore } from "./store.js";
-  import { appPath, routerBasePath, settingsPath, stripBasePath } from "./basePath.js";
+  import {
+    appPath,
+    apiSettingsPath,
+    routerBasePath,
+    settingsPath,
+    stripBasePath,
+  } from "./basePath.js";
 
   const routes = [
     { path: "/", component: Home },
     { path: "/planner/", component: Planner },
+    { path: "/settings", component: SettingsPage },
+    {
+      path: /^\/settings\/templates\/(?<name>[^/]+)$/,
+      component: SettingsTemplatePage,
+    },
     { path: /^\/(?<category>[^/]+)\/$/, component: EntryList },
     { path: /^\/(?<category>[^/]+)\/add$/, component: EntryDetail },
-    { path: /^\/(?<category>[^/]+)\/(?<id>[^/]+)\/edit$/, component: EntryDetail },
-    { path: /^\/(?<category>[^/]+)\/(?<id>(?!add$)[^/]+)$/, component: EntryReference },
+    {
+      path: /^\/(?<category>[^/]+)\/(?<id>[^/]+)\/edit$/,
+      component: EntryDetail,
+    },
+    {
+      path: /^\/(?<category>[^/]+)\/(?<id>(?!add$)[^/]+)$/,
+      component: EntryReference,
+    },
   ];
   let settings = $state<settingType | undefined>(undefined);
   let currentPath = $state("/");
@@ -27,12 +47,18 @@
     }
 
     const categoryKey = currentPath.split("/").filter(Boolean)[0] ?? "";
-    return settings.Categories.find((category) => category.Key === categoryKey)?.Name ?? "";
+    return (
+      settings.Categories.find((category) => category.Key === categoryKey)
+        ?.Name ?? ""
+    );
   });
   const isDetailRoute = $derived.by(() => {
     const parts = currentPath.split("/").filter(Boolean);
     return parts.length === 2 || (parts.length === 3 && parts[2] === "edit");
   });
+  const isSettingsDetailRoute = $derived.by(() =>
+    /^\/settings\/templates\/[^/]+$/.test(currentPath),
+  );
   const mobileNavItems = $derived.by(() => {
     return (
       settings?.Categories?.map((category) => ({
@@ -49,6 +75,9 @@
     if (value) {
       await goto(appPath(`/${value}/`));
     }
+  };
+  const openSettings = async () => {
+    await goto(settingsPath());
   };
 
   onMount(() => {
@@ -87,7 +116,7 @@
     });
 
     (async () => {
-      const r = await fetch(settingsPath());
+      const r = await fetch(apiSettingsPath());
       settings = (await r.json()) as settingType;
       settingsStore.set(settings);
     })();
@@ -106,11 +135,22 @@
   });
 </script>
 
-<nav class="navbar is-transparent is-dark" class:is-hidden={isDetailRoute}>
+<nav
+  class="navbar is-transparent is-dark"
+  class:is-hidden={isDetailRoute || isSettingsDetailRoute}
+>
   <div class="navbar-brand">
-    <div class="navbar-item is-unselectable has-text-weight-bold is-hidden-mobile">memo</div>
+    <div
+      class="navbar-item is-unselectable has-text-weight-bold is-hidden-mobile"
+    >
+      memo
+    </div>
     <div class="navbar-item navbar-mobile-context is-hidden-tablet">
-      <div class="mobile-nav-segments" role="tablist" aria-label="category navigation">
+      <div
+        class="mobile-nav-segments"
+        role="tablist"
+        aria-label="category navigation"
+      >
         {#each mobileNavItems as item}
           <button
             class="mobile-nav-segment"
@@ -125,7 +165,10 @@
         {/each}
       </div>
     </div>
-    <div class="navbar-burger js-burger is-hidden-mobile" data-target="navbarMMemo">
+    <div
+      class="navbar-burger js-burger is-hidden-mobile"
+      data-target="navbarMMemo"
+    >
       <span></span>
       <span></span>
       <span></span>
@@ -148,6 +191,20 @@
         {/each}
       {/if}
     </div>
+    <div class="navbar-end">
+      <div class="navbar-item">
+        <button
+          class="button is-ghost navbar-settings-button"
+          class:is-active={currentPath === "/settings"}
+          type="button"
+          aria-label="settings"
+          aria-pressed={currentPath === "/settings"}
+          onclick={openSettings}
+        >
+          <Settings size={18} strokeWidth={2.25} aria-hidden="true" />
+        </button>
+      </div>
+    </div>
   </div>
 </nav>
 <main class="app-main">
@@ -157,6 +214,21 @@
 <style>
   .app-main {
     overflow-x: hidden;
+  }
+
+  .navbar-settings-button {
+    color: var(--bulma-text-weak-invert);
+    border-color: transparent;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+  }
+
+  .navbar-settings-button:hover,
+  .navbar-settings-button:focus-visible,
+  .navbar-settings-button.is-active {
+    color: var(--bulma-text-invert);
+    background-color: color-mix(in srgb, var(--bulma-text) 16%, transparent);
   }
 
   .navbar-mobile-context {

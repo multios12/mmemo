@@ -5,7 +5,6 @@
   import ImageSelectionCard from "../components/ImageSelectionCard.svelte";
   import MDInput from "../components/MDInput/index.svelte";
   import TagsInput from "../components/TagsInput.svelte";
-  import TemplateSaveModal from "../components/TemplateSaveModal.svelte";
   import TemplateSelectorModal from "../components/TemplateSelectorModal.svelte";
   import type { entryType } from "../models/entryModels.js";
   import type { TemplateType } from "../models/settingType.js";
@@ -63,13 +62,7 @@
   let isPageLoading = $state(true);
   let selectedTemplateIndex = $state<number | null>(null);
   let isTemplateSelectorOpen = $state(false);
-  let isTemplateSaveModalOpen = $state(false);
-  let templateSaveInitialMode = $state<"new" | "overwrite">("new");
-  let templateSaveInitialDraftName = $state("");
-  let templateSaveInitialOverwriteName = $state("");
-  let templateModalError = $state("");
-  let isTemplateSaving = $state(false);
-  let isTemplateDeleting = $state(false);
+  let isImagePickerOpen = $state(false);
   let previousCardEntryValue = $state("");
   let lastInitKey = "";
   let loadSequence = 0;
@@ -146,9 +139,7 @@
       ...options,
     ];
   });
-  const selectableTemplateCount = $derived(resolvedSettings.templates.length);
   const showTemplateSelector = $derived(isNew && isTemplateSelectorOpen);
-  const hasTemplates = $derived(resolvedSettings.templates.length > 0);
   const initKey = $derived.by(() => {
     const templateSignature = resolvedSettings.templates
       .map(
@@ -158,16 +149,6 @@
       .join("|");
     const querySignature = JSON.stringify(routeQuery);
     return `${initialized ? "1" : "0"}:${categoryKey}:${entryId ?? ""}:${isAddRoute ? "1" : "0"}:${templateSignature}:${querySignature}`;
-  });
-  const selectedTemplateName = $derived.by(() => {
-    if (selectedTemplateIndex === null) {
-      return "";
-    }
-    const template = templateOptions[selectedTemplateIndex];
-    if (template == undefined || template.Name === "空白から作成") {
-      return "";
-    }
-    return template.Name;
   });
   const entryUrl = () => {
     if (isNew) {
@@ -317,6 +298,12 @@
     const separator = editorValue.trim() === "" ? "" : "\n";
     editorValue = `${editorValue}${separator}${nextMarkdown}`;
   };
+  const openImagePicker = () => {
+    isImagePickerOpen = true;
+  };
+  const closeImagePicker = () => {
+    isImagePickerOpen = false;
+  };
   const onSelectTemplate = (payload: {
     template: TemplateType;
     index: number;
@@ -326,87 +313,6 @@
     isTemplateSelectorOpen = false;
     tagsValue = [...(template.Tags ?? [])];
     applyInitialEditorValue(applyTemplateValue(template.Value ?? ""));
-  };
-  const openTemplateSaveModal = () => {
-    const suggestedName = outlineValue.trim() || "新しいテンプレート";
-    const defaultOverwriteName =
-      selectedTemplateName || resolvedSettings.templates[0]?.Name || "";
-    templateSaveInitialMode = hasTemplates ? "overwrite" : "new";
-    templateSaveInitialDraftName = suggestedName;
-    templateSaveInitialOverwriteName = defaultOverwriteName;
-    templateModalError = "";
-    isTemplateSaveModalOpen = true;
-  };
-  const closeTemplateSaveModal = () => {
-    if (isTemplateSaving || isTemplateDeleting) {
-      return;
-    }
-    isTemplateSaveModalOpen = false;
-    templateModalError = "";
-  };
-  const onSaveTemplate = async (payload: {
-    mode: "new" | "overwrite";
-    name: string;
-  }) => {
-    const name = payload.name.trim();
-    if (editorValue.trim() === "") {
-      templateModalError = "本文が空のためテンプレート保存できません";
-      return;
-    }
-    if (name === "") {
-      templateModalError =
-        payload.mode === "overwrite"
-          ? "上書きするテンプレートを選択してください"
-          : "テンプレート名を入力してください";
-      return;
-    }
-
-    isTemplateSaving = true;
-    templateModalError = "";
-    const response = await fetch(apiPath(`${categoryKey}/templates`), {
-      method: "post",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ Name: name, Value: editorValue, Tags: tagsValue }),
-    });
-    isTemplateSaving = false;
-    if (response.status !== 200) {
-      templateModalError = (await response.json()).error;
-      return;
-    }
-
-    const nextSettings = await response.json();
-    settingsStore.set(nextSettings);
-    isErr = false;
-    errMessage = "";
-    isTemplateSaveModalOpen = false;
-    templateModalError = "";
-  };
-  const onDeleteTemplate = async (name: string) => {
-    name = name.trim();
-    if (name === "") {
-      templateModalError = "削除するテンプレートを選択してください";
-      return;
-    }
-    if (!window.confirm(`テンプレート「${name}」を削除しますか？`)) {
-      return;
-    }
-
-    isTemplateDeleting = true;
-    templateModalError = "";
-    const response = await fetch(
-      apiPath(`${categoryKey}/templates/${encodeURIComponent(name)}`),
-      { method: "delete" },
-    );
-    isTemplateDeleting = false;
-    if (response.status !== 200) {
-      templateModalError = (await response.json()).error;
-      return;
-    }
-
-    const nextSettings = await response.json();
-    settingsStore.set(nextSettings);
-    isTemplateSaveModalOpen = false;
-    templateModalError = "";
   };
   onMount(() => {
     initialized = true;
@@ -424,13 +330,6 @@
     showTagsOnMobile = false;
     selectedTemplateIndex = null;
     isTemplateSelectorOpen = false;
-    isTemplateSaveModalOpen = false;
-    templateSaveInitialMode = "new";
-    templateSaveInitialDraftName = "";
-    templateSaveInitialOverwriteName = "";
-    templateModalError = "";
-    isTemplateSaving = false;
-    isTemplateDeleting = false;
     previousCardEntryValue = "";
     canCheckDirty = true;
   };
@@ -580,13 +479,6 @@
         <div class="detail-header-top">
           <div class="field detail-date-field">
             {#if isNew}
-              <label class="label" for="dateInput"
-                >{resolvedSettings.dateLabel}</label
-              >
-            {:else}
-              <div class="label">{resolvedSettings.dateLabel}</div>
-            {/if}
-            {#if isNew}
               <div class="control">
                 <input
                   id="dateInput"
@@ -599,6 +491,33 @@
             {:else}
               <div class="detail-date-label">{dateValue}</div>
             {/if}
+          </div>
+          <div class="field detail-outline-field">
+            <div class="field has-addons mobile-outline-row">
+              <div class="control is-expanded">
+                <input
+                  id="outlineInput"
+                  type="text"
+                  placeholder={resolvedSettings.outlineLabel}
+                  class="input is-medium"
+                  bind:this={outlineInput}
+                  bind:value={outlineValue}
+                />
+              </div>
+              {#if resolvedSettings.showTags}
+                <div class="control is-hidden-tablet">
+                  <button
+                    class="button mobile-tag-button detail-secondary-button"
+                    class:is-link={showTagsOnMobile}
+                    type="button"
+                    aria-label="toggle tags"
+                    onclick={() => (showTagsOnMobile = !showTagsOnMobile)}
+                  >
+                    <span class="icon"><AppIcon name="tags" /></span>
+                  </button>
+                </div>
+              {/if}
+            </div>
           </div>
           {#if !isNew}
             <div class="detail-action-wrap">
@@ -613,43 +532,11 @@
             </div>
           {/if}
         </div>
-
-        <div class="field">
-          <label class="label" for="outlineInput"
-            >{resolvedSettings.outlineLabel}</label
-          >
-          <div class="field has-addons mobile-outline-row">
-            <div class="control is-expanded">
-              <input
-                id="outlineInput"
-                type="text"
-                placeholder={resolvedSettings.outlineLabel}
-                class="input is-medium"
-                bind:this={outlineInput}
-                bind:value={outlineValue}
-              />
-            </div>
-            {#if resolvedSettings.showTags}
-              <div class="control is-hidden-tablet">
-                <button
-                  class="button mobile-tag-button detail-secondary-button"
-                  class:is-link={showTagsOnMobile}
-                  type="button"
-                  aria-label="toggle tags"
-                  onclick={() => (showTagsOnMobile = !showTagsOnMobile)}
-                >
-                  <span class="icon"><AppIcon name="tags" /></span>
-                </button>
-              </div>
-            {/if}
-          </div>
-        </div>
       </div>
     </div>
     {#if resolvedSettings.showTags}
       <div class="detail-tags">
         <div class:mobile-hidden-tags={!showTagsOnMobile}>
-          <div class="label">{resolvedSettings.tagsLabel}</div>
           <div class="control">
             <TagsInput bind:items={tagsValue} />
           </div>
@@ -659,20 +546,6 @@
   </header>
 
   <section class="detail-body p-0">
-    <TemplateSaveModal
-      isOpen={isTemplateSaveModalOpen}
-      initialMode={templateSaveInitialMode}
-      initialDraftName={templateSaveInitialDraftName}
-      initialOverwriteName={templateSaveInitialOverwriteName}
-      templates={resolvedSettings.templates}
-      errorMessage={templateModalError}
-      isSaving={isTemplateSaving}
-      isDeleting={isTemplateDeleting}
-      onClose={closeTemplateSaveModal}
-      onSave={onSaveTemplate}
-      onDelete={onDeleteTemplate}
-    />
-
     <TemplateSelectorModal
       isOpen={showTemplateSelector}
       templates={templateOptions}
@@ -680,22 +553,56 @@
       onSelect={onSelectTemplate}
     />
 
-    <div class="field">
-      <div class="control py-2 detail-editor-control">
+    <div class="field detail-editor-field">
+      <div class="control detail-editor-control">
         <MDInput value={editorValue} {imageUploadPath} {onTextChange} />
       </div>
     </div>
 
-    <div class="field detail-image-selection-field">
-      <div class="control">
+  </section>
+
+  {#if isImagePickerOpen}
+    <div
+      class="image-picker-modal-backdrop"
+      role="button"
+      tabindex="0"
+      onclick={(event) => {
+        if (event.target === event.currentTarget) {
+          closeImagePicker();
+        }
+      }}
+      onkeydown={(event) => {
+        if (event.target !== event.currentTarget) {
+          return;
+        }
+        if (event.key === "Escape" || event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          closeImagePicker();
+        }
+      }}
+    >
+      <div class="image-picker-modal">
+        <div class="image-picker-modal-header">
+          <div>
+            <div class="image-picker-modal-title">画像選択</div>
+            <div class="image-picker-modal-subtitle">画像をクリックして本文に挿入できます</div>
+          </div>
+          <button class="button is-light image-picker-modal-close" type="button" onclick={closeImagePicker}>
+            <span class="icon"><AppIcon name="xmark" /></span>
+          </button>
+        </div>
         <ImageSelectionCard
-          {onEmbedImage}
+          onEmbedImage={(markdown) => {
+            onEmbedImage(markdown);
+            closeImagePicker();
+          }}
           {imageUploadPath}
           images={previewImages}
         />
       </div>
     </div>
-  </section>
+  {/if}
+
   <footer class="is-dark m-0">
     <div class="footer-actions">
       <div class="footer-status" class:is-visible={isDirty}>
@@ -712,11 +619,11 @@
           <span>戻る</span>
         </button>
         <button
-          class="button footer-button footer-template-button detail-secondary-button"
-          onclick={openTemplateSaveModal}
+          class="button footer-button detail-secondary-button"
+          onclick={openImagePicker}
         >
-          <span class="icon"><AppIcon name="book" /></span>
-          <span>テンプレート</span>
+          <span class="icon"><AppIcon name="image" /></span>
+          <span>画像</span>
         </button>
         <button
           class="button footer-button"
@@ -738,12 +645,22 @@
 <style>
   .detail-page {
     position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 
   .detail-body {
     position: relative;
-    min-height: calc(100vh - 15rem);
+    flex: 1 1 auto;
+    min-height: 0;
     margin-bottom: 4.25rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .detail-editor-field {
+    margin-bottom: 0;
   }
 
   .detail-page.is-page-loading {
@@ -768,7 +685,7 @@
     left: 0;
     margin: 0;
     z-index: 999;
-    padding: 1rem;
+    padding: 0.7rem 0.8rem;
   }
 
   footer {
@@ -782,7 +699,7 @@
   .detail-header {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.25rem;
     align-items: flex-start;
   }
 
@@ -792,14 +709,21 @@
 
   .detail-header-top {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.75rem;
-    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 0.15rem;
+    flex-wrap: nowrap;
   }
 
   .detail-date-field {
+    margin-bottom: 0;
+    flex: 0 0 auto;
+  }
+
+  .detail-outline-field {
+    flex: 1 1 auto;
+    min-width: 0;
     margin-bottom: 0;
   }
 
@@ -807,7 +731,7 @@
   .detail-action-wrap {
     display: flex;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0;
   }
 
   .detail-date-field .control {
@@ -817,26 +741,27 @@
   .detail-date-label {
     display: inline-flex;
     align-items: center;
-    min-height: 2.65rem;
+    min-height: 2.2rem;
     color: var(--bulma-text);
     font-variant-numeric: tabular-nums;
-    font-size: 1.45rem;
+    font-size: 1.2rem;
     font-weight: 700;
     letter-spacing: 0.02em;
     line-height: 1;
   }
 
   .detail-tags {
-    margin-top: 0.75rem;
+    margin-top: 0.15rem;
   }
 
   .mobile-outline-row {
     margin-bottom: 0;
+    width: 100%;
   }
 
   .mobile-tag-button,
   .detail-action-button {
-    height: 2.65rem;
+    height: 2.2rem;
   }
 
   .detail-secondary-button {
@@ -867,21 +792,19 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.65rem;
+    min-height: 2.2rem;
   }
 
-  .detail-tags .label,
-  .detail-date-field .label,
   .detail-header .label {
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.05rem;
   }
 
   .footer-actions {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
+    gap: 0.35rem;
+    padding: 0.45rem 0.7rem;
   }
 
   .footer-status {
@@ -905,18 +828,14 @@
 
   .footer-buttons {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.35rem;
     margin-left: auto;
   }
 
   .footer-button {
-    min-width: 7rem;
-    border-radius: 0.9rem;
+    min-width: 5.75rem;
+    border-radius: 0.7rem;
     font-weight: 600;
-  }
-
-  .footer-template-button {
-    font-size: 0.8rem;
   }
 
   .footer-button.is-disabled-look .icon {
@@ -925,7 +844,7 @@
 
   #dateInput {
     width: 150px;
-    height: 2.65rem;
+    height: 2.2rem;
   }
 
   .detail-body .field {
@@ -935,51 +854,102 @@
 
   .detail-editor-control {
     display: flex;
-    min-height: max(22rem, calc(100vh - 23rem));
-  }
-
-  .detail-image-selection-field {
-    margin-top: 0.9rem;
-  }
-
-  .detail-image-selection-field .control {
-    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    align-items: flex-start;
   }
 
   .detail-editor-control :global(.md-input) {
     width: 100%;
+    height: 100%;
+  }
+
+  .image-picker-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    background: rgba(6, 10, 18, 0.82);
+    backdrop-filter: blur(8px);
+  }
+
+  .image-picker-modal {
+    width: min(72rem, 100%);
+    max-height: min(90vh, 56rem);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: var(--bulma-scheme-main);
+    box-shadow: 0 1.5rem 3.5rem rgba(0, 0, 0, 0.28);
+  }
+
+  .image-picker-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .image-picker-modal-title {
+    color: var(--bulma-text);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .image-picker-modal-subtitle {
+    margin-top: 0.15rem;
+    color: var(--bulma-text-weak);
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+  .image-picker-modal-close {
+    flex: 0 0 auto;
+    min-width: 2.4rem;
+    min-height: 2.4rem;
+    padding: 0;
+  }
+
+  .image-picker-modal :global(.image-card) {
+    margin-top: 0;
+    border-radius: 0.9rem;
   }
 
   @media screen and (max-width: 768px) {
     header {
-      padding: 0.65rem 0.75rem;
+      padding: 0.4rem 0.55rem;
     }
 
-    .detail-tags .label,
-    .detail-date-field .label,
     .detail-header .label {
       display: none;
     }
 
     .detail-header-top {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      display: flex;
       align-items: stretch;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
+      gap: 0.2rem;
+      margin-bottom: 0.15rem;
+      flex-wrap: wrap;
     }
 
     .detail-header .field {
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.05rem;
     }
 
     .detail-date-field .control,
     .detail-action-wrap {
-      margin-bottom: 0.5rem;
+      margin-bottom: 0;
     }
 
     .detail-tags {
-      margin-top: 0.35rem;
+      margin-top: 0.1rem;
     }
 
     .mobile-hidden-tags {
@@ -988,14 +958,14 @@
 
     .detail-header .input.is-medium {
       font-size: 1rem;
-      padding-top: 0.55rem;
-      padding-bottom: 0.55rem;
+      padding-top: 0.35rem;
+      padding-bottom: 0.35rem;
     }
 
     .mobile-outline-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 0.5rem;
+      gap: 0.2rem;
       align-items: stretch;
     }
 
@@ -1006,9 +976,9 @@
     }
 
     .mobile-tag-button {
-      min-width: 2.75rem;
-      padding-left: 0.65rem;
-      padding-right: 0.65rem;
+      min-width: 2.5rem;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
       height: 100%;
     }
 
@@ -1019,7 +989,7 @@
 
     .detail-header-top :global(.button) {
       white-space: nowrap;
-      height: 2.65rem;
+      height: 2.35rem;
     }
 
     .detail-date-field,
@@ -1027,7 +997,11 @@
     .mobile-outline-row .control {
       display: flex;
       align-items: stretch;
-      height: 2.65rem;
+      height: 2.35rem;
+    }
+
+    .detail-outline-field {
+      width: 100%;
     }
 
     .detail-date-label {
@@ -1055,16 +1029,60 @@
     }
 
     .detail-body {
-      min-height: calc(100vh - 13rem);
+      flex: 1 1 auto;
+      min-height: 0;
       margin-bottom: 4.25rem;
     }
 
     .detail-editor-control {
-      min-height: max(18rem, calc(100vh - 19rem));
+      flex: 1 1 auto;
+      min-height: 0;
     }
 
-    .detail-image-selection-field {
-      margin-top: 0.7rem;
+    .image-picker-modal {
+      width: calc(100vw - 1rem);
+      max-height: calc(100vh - 1rem);
+      padding: 0.75rem;
+      border-radius: 0.85rem;
+    }
+
+    .image-picker-modal-header {
+      gap: 0.5rem;
+    }
+
+    .image-picker-modal :global(.image-card-strip) {
+      display: flex;
+      flex-direction: column;
+      grid-auto-flow: initial;
+      grid-auto-columns: unset;
+      overflow-x: hidden;
+      overflow-y: auto;
+      max-height: calc(100vh - 9rem);
+      padding-right: 0.15rem;
+    }
+
+    .image-picker-modal :global(.image-card-item),
+    .image-picker-modal :global(.image-card-add) {
+      min-height: 7rem;
+    }
+
+    .image-picker-modal :global(.image-card-item) {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .image-picker-modal :global(.image-card-preview) {
+      border-radius: 0;
+    }
+
+    .image-picker-modal :global(.image-card-preview img) {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 4 / 3;
+    }
+
+    .image-picker-modal :global(.image-card-item-footer) {
+      padding: 0.65rem 0.75rem 0.75rem;
     }
 
     .footer-status,

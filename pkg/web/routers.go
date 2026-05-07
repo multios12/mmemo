@@ -30,7 +30,7 @@ func Initial(router *http.ServeMux, s SettingModel) error {
 	log.Printf("info: entry[dataPath=.]")
 	log.Printf("info: entry[count=%d]", len(entries))
 
-	router.HandleFunc("GET    /settings", getSetting)
+	router.HandleFunc("GET    /api/settings", getSetting)
 	router.HandleFunc("GET    /api/{category}", getEntries)
 	router.HandleFunc("POST   /api/{category}/templates", saveTemplate)
 	router.HandleFunc("DELETE /api/{category}/templates/{name}", deleteTemplate)

@@ -25,6 +25,7 @@ export const appPath = (path: string) => {
 export const apiPath = (path: string) => appPath(`/api/${path.replace(/^\/+/, "")}`);
 
 export const settingsPath = () => appPath("/settings");
+export const apiSettingsPath = () => appPath("/api/settings");
 
 export const stripBasePath = (path: string) => {
   if (!routerBasePath) {

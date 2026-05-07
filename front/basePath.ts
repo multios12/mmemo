@@ -18,14 +18,14 @@ const normalizeBasePath = (value: string) => {
 export const routerBasePath = normalizeBasePath(rawBaseUrl);
 
 export const appPath = (path: string) => {
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const normalizedPath = path.startsWith("./") ? path : `./${path}`;
   return routerBasePath ? `${routerBasePath}${normalizedPath}` : normalizedPath;
 };
 
 export const apiPath = (path: string) => appPath(`/api/${path.replace(/^\/+/, "")}`);
 
-export const settingsPath = () => appPath("/settings");
-export const apiSettingsPath = () => appPath("/api/settings");
+export const settingsPath = () => appPath("./settings");
+export const apiSettingsPath = () => appPath("./api/settings");
 
 export const stripBasePath = (path: string) => {
   if (!routerBasePath) {

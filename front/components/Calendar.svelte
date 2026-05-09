@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { monthStart, monthEnd, weekStart } from "@formkit/tempo";
-  import { addDay, diffDays, format } from "@formkit/tempo";
+  import { monthStart, monthEnd, weekStart } from "../lib/date.js";
+  import { addDay, diffDays, format } from "../lib/date.js";
 
   interface Props {
     Value: Date;
@@ -24,26 +24,20 @@
     isActive?: boolean;
   };
 
-  const normalizeDate = (value: Date) => format(value, "YYYY-MM-DD", "ja");
+  const normalizeDate = (value: Date) => format(value, "YYYY-MM-DD");
   const activeDateSet = $derived(new Set(ActiveDates));
   const holidayDateSet = $derived(new Set(HolidayDates));
 
   const buildTable = (value: Date) => {
     const calendarTable: dayType[][] = [];
-    let targetDate = weekStart(value, -1);
-    let dayIndex = 6;
-    let weekIndex = -1;
+    let targetDate = weekStart(value);
+    let dayIndex = 0;
+    let weekIndex = 0;
+    const lastDate = monthEnd(value);
     while (
-      diffDays(targetDate, monthEnd(value)) < 0 ||
-      (diffDays(targetDate, monthEnd(value)) >= 0 && dayIndex < 6)
+      diffDays(targetDate, lastDate) <= 0 ||
+      dayIndex !== 0
     ) {
-      if (dayIndex == 6) {
-        dayIndex = 0;
-        weekIndex += 1;
-      } else {
-        dayIndex += 1;
-      }
-      targetDate = addDay(targetDate);
       if (calendarTable[weekIndex] == undefined) {
         calendarTable[weekIndex] = [];
       }
@@ -61,7 +55,10 @@
           isDisable: true,
           isActive: activeDateSet.has(normalizeDate(targetDate)),
         };
-      } else if (dayIndex == 0 || holidayDateSet.has(normalizeDate(targetDate))) {
+      } else if (
+        dayIndex == 0 ||
+        holidayDateSet.has(normalizeDate(targetDate))
+      ) {
         calendarTable[weekIndex][dayIndex] = {
           date: targetDate,
           isHoliday: true,
@@ -73,6 +70,13 @@
           isSaturday: true,
           isActive: activeDateSet.has(normalizeDate(targetDate)),
         };
+      }
+
+      targetDate = addDay(targetDate);
+      dayIndex += 1;
+      if (dayIndex === 7) {
+        dayIndex = 0;
+        weekIndex += 1;
       }
     }
 
@@ -92,7 +96,7 @@
             class:holiday-head={index === 0}
             class:saturday-head={index === 6}
           >
-            {format(date.date, "ddd", "ja")}
+            {format(date.date, "ddd")}
           </th>
         {/each}
       </tr>
@@ -116,10 +120,10 @@
                 aria-label={`${normalizeDate(date.date)} を開く`}
                 onclick={() => OnSelectDate?.(normalizeDate(date.date))}
               >
-                {format(date.date, "D", "ja")}
+                {format(date.date, "D")}
               </button>
             {:else}
-              <span class="day-number">{format(date.date, "D", "ja")}</span>
+              <span class="day-number">{format(date.date, "D")}</span>
             {/if}
           </td>
         {/each}
@@ -174,7 +178,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.8rem;
+    width: 2.2rem;
     height: 1.8rem;
     border-radius: 999px;
     transition:
@@ -221,5 +225,4 @@
     color: #e4e9f8;
     background: color-mix(in srgb, #40527f 40%, var(--bulma-scheme-main));
   }
-
 </style>

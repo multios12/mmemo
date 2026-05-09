@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { diffDays, format, monthEnd } from "@formkit/tempo";
+  import { diffDays, format, monthEnd } from "../../lib/date.js";
   import type { dayType } from "./dayType.js";
   import Dropdown from "../../components/Dropdown.svelte";
   let year = 2024;

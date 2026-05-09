@@ -1,7 +1,7 @@
 <script lang="ts">
   import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
   import type { entryType, listType } from "../models/entryModels.js";
-  import { format } from "@formkit/tempo";
+  import { format } from "../lib/date.js";
   import { settingsStore } from "../store.js";
   import AppIcon from "../components/AppIcon.svelte";
   import Calendar from "../components/Calendar.svelte";
@@ -58,11 +58,13 @@
   let isCalendarExpanded = $state(false);
 
   const addPath = () => `/${categoryKey}/add`;
-  const addPathWithPreset = (preset: {
-    outline?: string;
-    tag?: string;
-    previousEntryId?: number;
-  } = {}) => {
+  const addPathWithPreset = (
+    preset: {
+      outline?: string;
+      tag?: string;
+      previousEntryId?: number;
+    } = {},
+  ) => {
     const searchParams = new URLSearchParams();
     if (preset.outline !== undefined) {
       searchParams.set("presetOutline", preset.outline);
@@ -99,7 +101,10 @@
     return "";
   };
   const splitPreviewSections = (value: string) => {
-    const markerPattern = new RegExp(`^${carryOverMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m");
+    const markerPattern = new RegExp(
+      `^${carryOverMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+      "m",
+    );
     const match = value.match(markerPattern);
     if (!match || match.index === undefined) {
       return {
@@ -144,7 +149,8 @@
   const latestUpdatedEntry = (targetEntries: entryType[]) =>
     [...targetEntries].sort(compareEntriesByRecentUpdate)[0];
   const groupUpperPreview = (targetEntries: entryType[]) =>
-    extractGroupedPreviews(latestUpdatedEntry(targetEntries)?.Value ?? "").upper;
+    extractGroupedPreviews(latestUpdatedEntry(targetEntries)?.Value ?? "")
+      .upper;
   const displayEntries = $derived.by(() => {
     const source = resolvedSettings.useMonthFilter ? model.Lines : entries;
     const sorted = [...source].sort(compareEntries);
@@ -164,7 +170,10 @@
     }
 
     const grouped = [...groups.entries()]
-      .map(([label, entries]) => ({ label, entries }) satisfies groupedEntriesByTagType)
+      .map(
+        ([label, entries]) =>
+          ({ label, entries }) satisfies groupedEntriesByTagType,
+      )
       .sort((left, right) => left.label.localeCompare(right.label, "ja"));
 
     return sortOrder === "asc" ? grouped : grouped.reverse();
@@ -181,10 +190,13 @@
     }
 
     const grouped = [...groups.entries()].map(
-      ([outline, entries]) => ({ outline, entries }) satisfies groupedEntriesByOutlineType,
+      ([outline, entries]) =>
+        ({ outline, entries }) satisfies groupedEntriesByOutlineType,
     );
 
-    grouped.sort((left, right) => left.outline.localeCompare(right.outline, "ja"));
+    grouped.sort((left, right) =>
+      left.outline.localeCompare(right.outline, "ja"),
+    );
 
     return sortOrder === "asc" ? grouped : grouped.reverse();
   });
@@ -308,7 +320,9 @@
     "file-lines": "file-lines",
   };
   const outlineIconName = $derived.by(() => {
-    const rawIcon = (resolvedSettings.outlineIcon || "tree").trim().toLowerCase();
+    const rawIcon = (resolvedSettings.outlineIcon || "tree")
+      .trim()
+      .toLowerCase();
     return outlineIconMap[rawIcon] ?? outlineIconMap.note;
   });
 
@@ -323,7 +337,11 @@
     }
 
     const storedViewMode = window.localStorage.getItem(viewModeStorageKey);
-    if (storedViewMode === "default" || storedViewMode === "tag" || storedViewMode === "outline") {
+    if (
+      storedViewMode === "default" ||
+      storedViewMode === "tag" ||
+      storedViewMode === "outline"
+    ) {
       viewMode = storedViewMode;
     }
   });
@@ -373,15 +391,23 @@
             <div class="toolbar-mode-row">
               <button
                 class="button is-light sort-button"
-                aria-label={sortOrder === "asc" ? "sort ascending" : "sort descending"}
+                aria-label={sortOrder === "asc"
+                  ? "sort ascending"
+                  : "sort descending"}
                 title={sortOrder === "asc" ? "昇順" : "降順"}
                 onclick={toggleSortOrder}
               >
                 <span class="sort-icon" aria-hidden="true">
-                  <AppIcon name={sortOrder === "asc" ? "sort-asc" : "sort-desc"} />
+                  <AppIcon
+                    name={sortOrder === "asc" ? "sort-asc" : "sort-desc"}
+                  />
                 </span>
               </button>
-              <div class="view-mode-picker" role="group" aria-label="表示モード">
+              <div
+                class="view-mode-picker"
+                role="group"
+                aria-label="表示モード"
+              >
                 <span class="view-mode-label">表示モード</span>
                 <div class="view-mode-options">
                   <button
@@ -406,16 +432,16 @@
                       <span>{resolvedSettings.tagsLabel}</span>
                     </button>
                   {/if}
-                <button
-                  class="view-mode-option"
-                  class:is-active={viewMode === "outline"}
-                  type="button"
-                  aria-pressed={viewMode === "outline"}
-                  onclick={() => setViewMode("outline")}
-                >
-                  <span class="icon"><AppIcon name={outlineIconName} /></span>
-                  <span>{resolvedSettings.outlineLabel}</span>
-                </button>
+                  <button
+                    class="view-mode-option"
+                    class:is-active={viewMode === "outline"}
+                    type="button"
+                    aria-pressed={viewMode === "outline"}
+                    onclick={() => setViewMode("outline")}
+                  >
+                    <span class="icon"><AppIcon name={outlineIconName} /></span>
+                    <span>{resolvedSettings.outlineLabel}</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -449,144 +475,86 @@
   {:else if !hasEntries}
     <div class="entry-empty">
       <p class="title is-6 mb-2">まだ記録がありません</p>
-      <p class="has-text-grey mb-4">最初のエントリを作成すると、ここに一覧が表示されます。</p>
+      <p class="has-text-grey mb-4">
+        最初のエントリを作成すると、ここに一覧が表示されます。
+      </p>
     </div>
-  {:else}
-    {#if viewMode === "default"}
-      <div class="entry-list">
-        {#each displayEntries as entry}
-          <button class="entry-row" onclick={() => listClick(entry)}>
-            <div class="entry-row-main">
-              <div class="entry-row-head">
-                <span class="entry-date">{entry.Date}</span>
-                {#if entry.HasDetail}
-                  <span class="icon has-text-grey-light">
-                    <AppIcon name="note-sticky" />
-                  </span>
-                {/if}
-              </div>
-              <div class="entry-outline">{entry.Outline || noOutlineLabel}</div>
-              {#if extractPreviewLine(entry.Value)}
-                <div class="entry-preview">{extractPreviewLine(entry.Value)}</div>
+  {:else if viewMode === "default"}
+    <div class="entry-list">
+      {#each displayEntries as entry}
+        <button class="entry-row" onclick={() => listClick(entry)}>
+          <div class="entry-row-main">
+            <div class="entry-row-head">
+              <span class="entry-date">{entry.Date}</span>
+              {#if entry.HasDetail}
+                <span class="icon has-text-grey-light">
+                  <AppIcon name="note-sticky" />
+                </span>
               {/if}
             </div>
-            {#if resolvedSettings.showTags && entry.Tags.length > 0}
-              <div class="tags are-medium entry-tags entry-tags-badge">
-                {#each entry.Tags as tag}
-                  <span class="tag"><span class="icon"><AppIcon name="tags" /></span><span>{tag}</span></span>
-                {/each}
-              </div>
+            <div class="entry-outline">{entry.Outline || noOutlineLabel}</div>
+            {#if extractPreviewLine(entry.Value)}
+              <div class="entry-preview">{extractPreviewLine(entry.Value)}</div>
             {/if}
-          </button>
-        {/each}
-      </div>
-    {:else if viewMode === "tag"}
-      <div class="entry-group-list">
-        {#each groupedEntriesByTag as group}
-          <section class="entry-group-card">
-            <div class="entry-group-header">
-              <div class="entry-group-heading">
-                <div class="entry-group-title">
-                  <span class="icon"><AppIcon name="tags" /></span>
-                  <span>{group.label}</span>
-                </div>
-                {#if extractGroupedPreviews(latestUpdatedEntry(group.entries)?.Value ?? "").hasMarker &&
-                  groupUpperPreview(group.entries)}
-                  <div class="entry-group-preview">{groupUpperPreview(group.entries)}</div>
-                {/if}
-              </div>
-              <div class="entry-group-meta">
-                <span class="entry-group-count">{group.entries.length}件</span>
-                <button
-                  class="button is-small entry-group-add-button"
-                  type="button"
-                  aria-label={`${group.label} で新規作成`}
-                  onclick={() =>
-                    push({
-                      path: addPathWithPreset({
-                        tag: group.label === noTagLabel ? "" : group.label,
-                        previousEntryId: latestUpdatedEntry(group.entries)?.Id,
-                      }),
-                    })}
+          </div>
+          {#if resolvedSettings.showTags && entry.Tags.length > 0}
+            <div class="tags are-medium entry-tags entry-tags-badge">
+              {#each entry.Tags as tag}
+                <span class="tag"
+                  ><span class="icon"><AppIcon name="tags" /></span><span
+                    >{tag}</span
+                  ></span
                 >
-                  <span class="icon"><AppIcon name="plus" /></span>
-                  <span>新規</span>
-                </button>
-              </div>
-            </div>
-            <div class="entry-list entry-list-nested">
-              {#each group.entries as entry}
-                <button class="entry-row" onclick={() => listClick(entry)}>
-                  <div class="entry-row-main">
-                    <div class="entry-row-head">
-                      <span class="entry-date">{entry.Date}</span>
-                      <span class="entry-date-outline">
-                        {entry.Outline || noOutlineLabel}
-                      </span>
-                      {#if extractGroupedPreviews(entry.Value).lower}
-                        <span class="entry-date-preview">
-                          {extractGroupedPreviews(entry.Value).lower}
-                        </span>
-                      {/if}
-                      {#if entry.HasDetail}
-                        <span class="icon has-text-grey-light">
-                          <AppIcon name="note-sticky" />
-                        </span>
-                      {/if}
-                    </div>
-                  </div>
-                  {#if false}
-                    <div class="tags are-medium entry-tags">
-                      {#each entry.Tags as tag}
-                        <span class="tag">{tag}</span>
-                      {/each}
-                    </div>
-                  {/if}
-                </button>
               {/each}
             </div>
-          </section>
-        {/each}
-      </div>
-    {:else}
-      <div class="entry-group-list">
-        {#each groupedEntriesByOutline as group}
-          <section class="entry-group-card">
-            <div class="entry-group-header">
-              <div class="entry-group-heading">
-                <div class="entry-group-title">
-                  <span class="icon"><AppIcon name={outlineIconName} /></span>
-                  <span>{group.outline}</span>
+          {/if}
+        </button>
+      {/each}
+    </div>
+  {:else if viewMode === "tag"}
+    <div class="entry-group-list">
+      {#each groupedEntriesByTag as group}
+        <section class="entry-group-card">
+          <div class="entry-group-header">
+            <div class="entry-group-heading">
+              <div class="entry-group-title">
+                <span class="icon"><AppIcon name="tags" /></span>
+                <span>{group.label}</span>
+              </div>
+              {#if extractGroupedPreviews(latestUpdatedEntry(group.entries)?.Value ?? "").hasMarker && groupUpperPreview(group.entries)}
+                <div class="entry-group-preview">
+                  {groupUpperPreview(group.entries)}
                 </div>
-                {#if extractGroupedPreviews(latestUpdatedEntry(group.entries)?.Value ?? "").hasMarker &&
-                  groupUpperPreview(group.entries)}
-                  <div class="entry-group-preview">{groupUpperPreview(group.entries)}</div>
-                {/if}
-              </div>
-              <div class="entry-group-meta">
-                <span class="entry-group-count">{group.entries.length}件</span>
-                <button
-                  class="button is-small entry-group-add-button"
-                  type="button"
-                  aria-label={`${group.outline} で新規作成`}
-                  onclick={() =>
-                    push({
-                      path: addPathWithPreset({
-                        outline: group.outline === noOutlineLabel ? "" : group.outline,
-                        previousEntryId: latestUpdatedEntry(group.entries)?.Id,
-                      }),
-                    })}
-                >
-                  <span class="icon"><AppIcon name="plus" /></span>
-                  <span>新規</span>
-                </button>
-              </div>
+              {/if}
             </div>
-            <div class="outline-entry-list">
-              {#each group.entries as entry}
-                <button class="outline-entry-row" onclick={() => listClick(entry)}>
+            <div class="entry-group-meta">
+              <span class="entry-group-count">{group.entries.length}件</span>
+              <button
+                class="button is-small entry-group-add-button"
+                type="button"
+                aria-label={`${group.label} で新規作成`}
+                onclick={() =>
+                  push({
+                    path: addPathWithPreset({
+                      tag: group.label === noTagLabel ? "" : group.label,
+                      previousEntryId: latestUpdatedEntry(group.entries)?.Id,
+                    }),
+                  })}
+              >
+                <span class="icon"><AppIcon name="plus" /></span>
+                <span>新規</span>
+              </button>
+            </div>
+          </div>
+          <div class="entry-list entry-list-nested">
+            {#each group.entries as entry}
+              <button class="entry-row" onclick={() => listClick(entry)}>
+                <div class="entry-row-main">
                   <div class="entry-row-head">
                     <span class="entry-date">{entry.Date}</span>
+                    <span class="entry-date-outline">
+                      {entry.Outline || noOutlineLabel}
+                    </span>
                     {#if extractGroupedPreviews(entry.Value).lower}
                       <span class="entry-date-preview">
                         {extractGroupedPreviews(entry.Value).lower}
@@ -598,20 +566,92 @@
                       </span>
                     {/if}
                   </div>
-                  {#if resolvedSettings.showTags && entry.Tags.length > 0}
-                    <div class="tags are-medium entry-tags entry-tags-badge">
-                      {#each entry.Tags as tag}
-                        <span class="tag"><span class="icon"><AppIcon name="tags" /></span><span>{tag}</span></span>
-                      {/each}
-                    </div>
-                  {/if}
-                </button>
-              {/each}
+                </div>
+                {#if false}
+                  <div class="tags are-medium entry-tags">
+                    {#each entry.Tags as tag}
+                      <span class="tag">{tag}</span>
+                    {/each}
+                  </div>
+                {/if}
+              </button>
+            {/each}
+          </div>
+        </section>
+      {/each}
+    </div>
+  {:else}
+    <div class="entry-group-list">
+      {#each groupedEntriesByOutline as group}
+        <section class="entry-group-card">
+          <div class="entry-group-header">
+            <div class="entry-group-heading">
+              <div class="entry-group-title">
+                <span class="icon"><AppIcon name={outlineIconName} /></span>
+                <span>{group.outline}</span>
+              </div>
+              {#if extractGroupedPreviews(latestUpdatedEntry(group.entries)?.Value ?? "").hasMarker && groupUpperPreview(group.entries)}
+                <div class="entry-group-preview">
+                  {groupUpperPreview(group.entries)}
+                </div>
+              {/if}
             </div>
-          </section>
-        {/each}
-      </div>
-    {/if}
+            <div class="entry-group-meta">
+              <span class="entry-group-count">{group.entries.length}件</span>
+              <button
+                class="button is-small entry-group-add-button"
+                type="button"
+                aria-label={`${group.outline} で新規作成`}
+                onclick={() =>
+                  push({
+                    path: addPathWithPreset({
+                      outline:
+                        group.outline === noOutlineLabel ? "" : group.outline,
+                      previousEntryId: latestUpdatedEntry(group.entries)?.Id,
+                    }),
+                  })}
+              >
+                <span class="icon"><AppIcon name="plus" /></span>
+                <span>新規</span>
+              </button>
+            </div>
+          </div>
+          <div class="outline-entry-list">
+            {#each group.entries as entry}
+              <button
+                class="outline-entry-row"
+                onclick={() => listClick(entry)}
+              >
+                <div class="entry-row-head">
+                  <span class="entry-date">{entry.Date}</span>
+                  {#if extractGroupedPreviews(entry.Value).lower}
+                    <span class="entry-date-preview">
+                      {extractGroupedPreviews(entry.Value).lower}
+                    </span>
+                  {/if}
+                  {#if entry.HasDetail}
+                    <span class="icon has-text-grey-light">
+                      <AppIcon name="note-sticky" />
+                    </span>
+                  {/if}
+                </div>
+                {#if resolvedSettings.showTags && entry.Tags.length > 0}
+                  <div class="tags are-medium entry-tags entry-tags-badge">
+                    {#each entry.Tags as tag}
+                      <span class="tag"
+                        ><span class="icon"><AppIcon name="tags" /></span><span
+                          >{tag}</span
+                        ></span
+                      >
+                    {/each}
+                  </div>
+                {/if}
+              </button>
+            {/each}
+          </div>
+        </section>
+      {/each}
+    </div>
   {/if}
 
   {#if hasLoadedInitialList && !isLoading}
@@ -627,7 +667,9 @@
           <span class="icon"><AppIcon name="calendar-days" /></span>
           <span class="mobile-calendar-toggle-label">カレンダー</span>
           <span class="icon mobile-calendar-toggle-chevron">
-            <AppIcon name={isCalendarExpanded ? "chevron-up" : "chevron-down"} />
+            <AppIcon
+              name={isCalendarExpanded ? "chevron-up" : "chevron-down"}
+            />
           </span>
         </button>
       {/if}
@@ -670,7 +712,9 @@
                 </button>
               {/if}
             </div>
-            <div class="calendar-popup-heading-label">{format(calendarDate, "YYYY/MM", "ja")}</div>
+            <div class="calendar-popup-heading-label">
+              {format(calendarDate, "YYYY/MM")}
+            </div>
             <div class="calendar-popup-heading-side">
               {#if nextCalendarMonth}
                 <button
@@ -786,7 +830,11 @@
 
   .sort-button {
     min-width: 2.75rem;
-    background: color-mix(in srgb, var(--bulma-border) 74%, var(--bulma-scheme-main));
+    background: color-mix(
+      in srgb,
+      var(--bulma-border) 74%,
+      var(--bulma-scheme-main)
+    );
     border: 1px solid color-mix(in srgb, var(--bulma-border) 86%, white 14%);
     color: color-mix(in srgb, var(--bulma-text) 88%, white 12%);
   }
@@ -887,7 +935,8 @@
     padding: 0.8rem 0;
     background: transparent;
     border: none;
-    border-top: 1px solid color-mix(in srgb, var(--bulma-border) 78%, transparent);
+    border-top: 1px solid
+      color-mix(in srgb, var(--bulma-border) 78%, transparent);
   }
 
   .outline-entry-list .outline-entry-row:first-child {

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { goto } from "@mateothegreat/svelte5-router";
+  import { useNavigate } from "@dvcol/svelte-simple-router/router";
   import { onMount } from "svelte";
   import AppIcon from "../components/AppIcon.svelte";
-  import { apiSettingsPath, appPath } from "../basePath.js";
+  import { apiSettingsPath } from "../basePath.js";
   import type { settingType } from "../models/settingType.js";
   import { settingsStore } from "../store.js";
 
@@ -47,12 +47,13 @@
     })();
   });
 
+  const { push } = useNavigate();
   const openTemplateDetail = async (name: string) => {
-    await goto(appPath(`/settings/templates/${encodeURIComponent(name)}`));
+    await push({ path: `/settings/templates/${encodeURIComponent(name)}` });
   };
 
   const createNewTemplate = async () => {
-    await goto(appPath("/settings/templates/new"));
+    await push({ path: "/settings/templates/new" });
   };
 
 </script>

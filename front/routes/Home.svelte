@@ -1,13 +1,22 @@
 <script lang="ts">
-  import { goto } from "@mateothegreat/svelte5-router";
+  import { useNavigate } from "@dvcol/svelte-simple-router/router";
+  import { onMount } from "svelte";
   import { settingsStore } from "../store.js";
-  import { appPath } from "../basePath.js";
 
-  $: {
+  const { push } = useNavigate();
+
+  let redirected = false;
+
+  $effect(() => {
     const firstCategory = $settingsStore?.Categories?.[0];
 
-    if (firstCategory?.Key) {
-      goto(appPath(`/${firstCategory.Key}/`));
+    if (!redirected && firstCategory?.Key) {
+      redirected = true;
+      void push({ path: `/${firstCategory.Key}/` });
     }
-  }
+  });
+
+  onMount(() => {
+    redirected = false;
+  });
 </script>

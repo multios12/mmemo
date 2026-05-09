@@ -1,28 +1,22 @@
 <script lang="ts">
-  import { goto, type RouteResult } from "@mateothegreat/svelte5-router";
+  import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
   import { onMount } from "svelte";
   import AppIcon from "../components/AppIcon.svelte";
   import ImageSelectionCard from "../components/ImageSelectionCard.svelte";
   import ImagePreviewModal from "../components/ImagePreviewModal.svelte";
   import type { entryType } from "../models/entryModels.js";
   import { settingsStore } from "../store.js";
-  import { appPath } from "../basePath.js";
   import { createEmptyEntry, loadEntry } from "../lib/entryApi.js";
-
-  interface Props {
-    route?: RouteResult;
-  }
 
   type EntryRouteParams = {
     id?: string | number | boolean;
     category?: string | number | boolean;
   };
 
-  let { route: currentRoute = undefined }: Props = $props();
+  const { location } = $derived(useRoute());
+  const { push } = useNavigate();
 
-  const routeParams = $derived(
-    (currentRoute?.result?.path?.params ?? {}) as EntryRouteParams,
-  );
+  const routeParams = $derived((location?.params ?? {}) as EntryRouteParams);
   const categoryKey = $derived(String(routeParams.category ?? ""));
   const entryId = $derived(routeParams.id ? String(routeParams.id) : "");
   const resolvedSettings = $derived.by(() => {
@@ -42,16 +36,14 @@
   let errMessage = $state("");
   let previewImageIndex = $state<number | null>(null);
 
-  document.querySelector<HTMLDivElement>(".navbar")?.classList.add("is-hidden");
-
-  const listPath = () => appPath(`/${categoryKey}/`);
-  const editPath = () => appPath(`/${categoryKey}/${entryId}/edit`);
-  const goToList = async () => goto(listPath());
+  const listPath = () => `/${categoryKey}/`;
+  const editPath = () => `/${categoryKey}/${entryId}/edit`;
+  const goToList = async () => push({ path: listPath() });
   const goToEdit = async () => {
     if (!entryId) {
       return;
     }
-    await goto(editPath());
+    await push({ path: editPath() });
   };
   const finishPageLoading = () => {
     requestAnimationFrame(() => {
@@ -98,7 +90,6 @@
     initialized;
     categoryKey;
     entryId;
-    currentRoute;
 
     if (!initialized || !categoryKey || !entryId) {
       return;

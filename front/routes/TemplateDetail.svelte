@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto, type RouteResult } from "@mateothegreat/svelte5-router";
+  import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
   import AppIcon from "../components/AppIcon.svelte";
   import MDInput from "../components/MDInput/index.svelte";
   import TagsInput from "../components/TagsInput.svelte";
@@ -7,11 +7,8 @@
   import type { settingType } from "../models/settingType.js";
   import { settingsStore } from "../store.js";
 
-  interface Props {
-    route?: RouteResult;
-  }
-
-  let { route: currentRoute = undefined }: Props = $props();
+  const { location } = $derived(useRoute());
+  const { push } = useNavigate();
   let outlineValue = $state("");
   let tagsValue = $state<string[]>([]);
   let bodyValue = $state("");
@@ -20,11 +17,9 @@
   let originalTemplateName = $state("");
   let loading = $state(true);
 
-  const routeParams = $derived(
-    (currentRoute?.result?.path?.params ?? {}) as {
-      name?: string | number | boolean;
-    },
-  );
+  const routeParams = $derived((location?.params ?? {}) as {
+    name?: string | number | boolean;
+  });
   const templateName = $derived(
     decodeURIComponent(String(routeParams.name ?? "")).trim(),
   );
@@ -53,13 +48,19 @@
 
   $effect(() => {
     const currentTemplate = template?.template;
-    templateCategoryKey =
+    const nextTemplateCategoryKey =
       template?.categoryKey ?? (templateName === "new" ? blankCategoryKey : "");
-    originalTemplateName = currentTemplate?.Name ?? "";
-    outlineValue = currentTemplate?.Name ?? "";
-    tagsValue = [...(currentTemplate?.Tags ?? [])];
-    bodyValue = currentTemplate?.Value ?? "";
-    initialSnapshot = snapshotTemplate(outlineValue, tagsValue, bodyValue);
+    const nextOriginalTemplateName = currentTemplate?.Name ?? "";
+    const nextOutlineValue = currentTemplate?.Name ?? "";
+    const nextTagsValue = [...(currentTemplate?.Tags ?? [])];
+    const nextBodyValue = currentTemplate?.Value ?? "";
+
+    templateCategoryKey = nextTemplateCategoryKey;
+    originalTemplateName = nextOriginalTemplateName;
+    outlineValue = nextOutlineValue;
+    tagsValue = nextTagsValue;
+    bodyValue = nextBodyValue;
+    initialSnapshot = snapshotTemplate(nextOutlineValue, nextTagsValue, nextBodyValue);
     loading = false;
   });
 
@@ -75,7 +76,7 @@
   );
 
   const backToSettings = async () => {
-    await goto(appPath("/settings"));
+    await push({ path: "/settings" });
   };
 
   const refreshSettings = async () => {

@@ -1,11 +1,25 @@
-import { defineConfig, Plugin } from 'vite'
+import { defineConfig, loadEnv, Plugin } from 'vite'
 import { OutputChunk, OutputAsset } from "rollup"
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { PurgeCSS, UserDefinedOptions } from "purgecss";
 
-export default defineConfig(() => {
-  const html = process.env.HTML || "index.html"
-  const base = process.env.BASE_URL || "./"
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "")
+  const html = env.HTML || process.env.HTML || "index.html"
+  const base = env.BASE_URL || process.env.BASE_URL || "./"
+  const normalizedBase = normalizeBasePath(base)
+  const proxy = normalizedBase
+    ? {
+        [`^${normalizedBase}/api/.*`]: {
+          target: "http://localhost:3001",
+          changeOrigin: true,
+          rewrite: (pathname: string) =>
+            pathname.replace(new RegExp(`^${escapeRegExp(normalizedBase)}`), ""),
+        },
+      }
+    : {
+        "^/api/.*": "http://localhost:3001",
+      }
   return {
     plugins: [svelte(), purgeCssPlugin(), singleFilePlugin(base)],
     build: {
@@ -18,12 +32,25 @@ export default defineConfig(() => {
       watch: { usePolling: true },
       host: "0.0.0.0",
       port: 3000,
-      proxy: {
-        "^/api/.*": "http://localhost:3001",
-      },
+      proxy,
     },
   }
 })
+
+function normalizeBasePath(value: string) {
+  if (!value || value === "/" || value === "./" || value === ".") {
+    return ""
+  }
+
+  let normalized = value.trim()
+  if (!normalized.startsWith("/")) {
+    normalized = `/${normalized}`
+  }
+  if (normalized.length > 1 && normalized.endsWith("/")) {
+    normalized = normalized.slice(0, -1)
+  }
+  return normalized
+}
 
 function purgeCssPlugin(): Plugin {
   return {

@@ -1,19 +1,11 @@
 <script lang="ts">
-  import { goto, type RouteResult } from "@mateothegreat/svelte5-router";
+  import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
   import type { entryType, listType } from "../models/entryModels.js";
   import { format } from "@formkit/tempo";
   import { settingsStore } from "../store.js";
   import AppIcon from "../components/AppIcon.svelte";
   import Calendar from "../components/Calendar.svelte";
-  import { apiPath, appPath } from "../basePath.js";
-
-  document
-    .querySelector<HTMLDivElement>(".navbar")
-    ?.classList.remove("is-hidden");
-
-  interface Props {
-    route?: RouteResult;
-  }
+  import { apiPath } from "../basePath.js";
 
   const emptyListModel = (): listType => ({ WritedMonths: [], Lines: [] });
   const noOutlineLabel = "(no outline)";
@@ -29,14 +21,15 @@
     entries: entryType[];
   };
 
-  let { route: currentRoute = undefined }: Props = $props();
+  const { location } = $derived(useRoute());
+  const { push } = useNavigate();
   let selectMonth = $state(
     `${new Date().getFullYear()}-${("00" + (new Date().getMonth() + 1)).slice(-2)}`,
   );
   let sortOrder = $state<"desc" | "asc">("desc");
   let viewMode = $state<viewModeType>("default");
 
-  const categoryKey = $derived(String(currentRoute?.result?.path?.params?.category ?? ""));
+  const categoryKey = $derived(String(location?.params?.category ?? ""));
   const sortOrderStorageKey = $derived(
     `entry-list-sort-order:${categoryKey || "default"}`,
   );
@@ -64,7 +57,7 @@
   let hasLoadedInitialList = $state(false);
   let isCalendarExpanded = $state(false);
 
-  const addPath = () => appPath(`/${categoryKey}/add`);
+  const addPath = () => `/${categoryKey}/add`;
   const addPathWithPreset = (preset: {
     outline?: string;
     tag?: string;
@@ -84,7 +77,7 @@
     const query = searchParams.toString();
     return query ? `${addPath()}?${query}` : addPath();
   };
-  const detailPath = (entry: entryType) => appPath(`/${categoryKey}/${entry.Id}`);
+  const detailPath = (entry: entryType) => `/${categoryKey}/${entry.Id}`;
   const isPreviewLine = (line: string) =>
     line !== "" &&
     !/^[-*_]{3,}$/.test(line) &&
@@ -281,11 +274,11 @@
     }
   };
 
-  const listClick = (entry: entryType) => goto(detailPath(entry));
+  const listClick = (entry: entryType) => push({ path: detailPath(entry) });
   const calendarDateClick = (date: string) => {
     const targetEntry = model.Lines.find((entry) => entry.Date === date);
     if (targetEntry) {
-      goto(detailPath(targetEntry));
+      push({ path: detailPath(targetEntry) });
     }
   };
   const moveCalendarMonth = (month: string | undefined) => {
@@ -432,7 +425,7 @@
       <button
         class="button add-button add-button-primary is-hidden-mobile"
         aria-label={`add ${categoryKey}`}
-        onclick={() => goto(addPath())}
+        onclick={() => push({ path: addPath() })}
       >
         <span class="icon"><AppIcon name="plus" /></span>
         <span>新規</span>
@@ -509,12 +502,12 @@
                   type="button"
                   aria-label={`${group.label} で新規作成`}
                   onclick={() =>
-                    goto(
-                      addPathWithPreset({
+                    push({
+                      path: addPathWithPreset({
                         tag: group.label === noTagLabel ? "" : group.label,
                         previousEntryId: latestUpdatedEntry(group.entries)?.Id,
                       }),
-                    )}
+                    })}
                 >
                   <span class="icon"><AppIcon name="plus" /></span>
                   <span>新規</span>
@@ -577,12 +570,12 @@
                   type="button"
                   aria-label={`${group.outline} で新規作成`}
                   onclick={() =>
-                    goto(
-                      addPathWithPreset({
+                    push({
+                      path: addPathWithPreset({
                         outline: group.outline === noOutlineLabel ? "" : group.outline,
                         previousEntryId: latestUpdatedEntry(group.entries)?.Id,
                       }),
-                    )}
+                    })}
                 >
                   <span class="icon"><AppIcon name="plus" /></span>
                   <span>新規</span>
@@ -642,7 +635,7 @@
       <button
         class="button mobile-add-button add-button-primary"
         aria-label={`add ${categoryKey}`}
-        onclick={() => goto(addPath())}
+        onclick={() => push({ path: addPath() })}
       >
         <span class="icon"><AppIcon name="plus" /></span>
         <span>新規</span>

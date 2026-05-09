@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto, type RouteResult } from "@mateothegreat/svelte5-router";
+  import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
   import { onMount } from "svelte";
   import AppIcon from "../components/AppIcon.svelte";
   import ImageSelectionCard from "../components/ImageSelectionCard.svelte";
@@ -9,12 +9,8 @@
   import type { entryType } from "../models/entryModels.js";
   import type { TemplateType } from "../models/settingType.js";
   import { settingsStore } from "../store.js";
-  import { apiPath, appPath } from "../basePath.js";
+  import { apiPath } from "../basePath.js";
   import { createEmptyEntry, loadEntry } from "../lib/entryApi.js";
-
-  interface Props {
-    route?: RouteResult;
-  }
 
   type EntryRouteParams = {
     id?: string | number | boolean;
@@ -24,11 +20,10 @@
 
   const carryOverMarker = "----ここまで前回内容で置換";
 
-  let { route: currentRoute = undefined }: Props = $props();
+  const { location } = $derived(useRoute());
+  const { push } = useNavigate();
 
-  const routeParams = $derived(
-    (currentRoute?.result?.path?.params ?? {}) as EntryRouteParams,
-  );
+  const routeParams = $derived((location?.params ?? {}) as EntryRouteParams);
   const categoryKey = $derived(String(routeParams.category ?? ""));
   const resolvedSettings = $derived.by(() => {
     const categorySetting = $settingsStore?.Categories?.find(
@@ -72,9 +67,7 @@
   const entryId = $derived(routeParams.id ? String(routeParams.id) : undefined);
   const isAddRoute = $derived(entryId == undefined || entryId === "");
   const routeQuery = $derived(
-    (currentRoute?.result?.querystring?.params ??
-      currentRoute?.result?.querystring?.original ??
-      {}) as EntryRouteQuery,
+    (location?.query ?? {}) as EntryRouteQuery,
   );
   const imageUploadPath = $derived(
     isAddRoute
@@ -157,8 +150,8 @@
     return apiPath(`${categoryKey}/${entryId}`);
   };
 
-  const listPath = () => appPath(`/${categoryKey}/`);
-  const referencePath = () => appPath(`/${categoryKey}/${entryId}`);
+  const listPath = () => `/${categoryKey}/`;
+  const referencePath = () => `/${categoryKey}/${entryId}`;
   const queryValue = (key: string) => {
     const value = routeQuery[key];
     if (typeof value !== "string") {
@@ -213,13 +206,13 @@
     return carriedPrefix || templateSuffix;
   };
 
-  const goToList = async () => goto(listPath());
+  const goToList = async () => push({ path: listPath() });
   const goToReference = async () => {
     if (isNew || !entryId) {
       await goToList();
       return;
     }
-    await goto(referencePath());
+    await push({ path: referencePath() });
   };
   const shouldLeave = () =>
     !isDirty || window.confirm("未保存の変更があります。戻りますか？");

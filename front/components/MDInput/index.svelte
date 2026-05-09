@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from "svelte";
   import ArrowLeft from "lucide-svelte/icons/arrow-left";
   import Image from "lucide-svelte/icons/image";
   import Link from "lucide-svelte/icons/link";
@@ -30,10 +31,20 @@
   let isImageUploading = $state(false);
   let pendingImageCursor = $state(0);
 
+  const resizeTextarea = () => {
+    if (textarea === null) {
+      return;
+    }
+
+    textarea.style.height = "0px";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  };
+
   const handleInput = (event: Event) => {
     const target = event.currentTarget as HTMLTextAreaElement;
     onTextChange?.(target.value);
     syncToolbarState(target);
+    resizeTextarea();
   };
 
   const handleKeydown = (event: KeyboardEvent) => {
@@ -741,6 +752,11 @@
     return Math.min(nextBlock.length, addedPrefix + baseOffset);
   };
 
+  $effect(() => {
+    value;
+    tick().then(resizeTextarea);
+  });
+
 </script>
 
 <div class="md-input">
@@ -907,13 +923,12 @@
   }
 
   .md-input-area {
-    flex: 1 1 auto;
     width: 100%;
     min-height: 0;
-    height: 100%;
+    height: auto;
     max-height: none;
     resize: none;
-    overflow-y: auto;
+    overflow-y: hidden;
     box-sizing: border-box;
     align-self: stretch;
     padding: 0.9rem 1rem;
@@ -963,7 +978,7 @@
   @media screen and (max-width: 768px) {
     .md-input-area {
       min-height: 0;
-      height: 100%;
+      height: auto;
       max-height: none;
       padding: 0.8rem 0.9rem;
       font-size: 0.92rem;

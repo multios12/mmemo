@@ -788,10 +788,6 @@
     min-height: 2.2rem;
   }
 
-  .detail-header .label {
-    margin-bottom: 0.05rem;
-  }
-
   .footer-actions {
     display: flex;
     align-items: center;
@@ -918,10 +914,6 @@
   @media screen and (max-width: 768px) {
     header {
       padding: 0.4rem 0.55rem;
-    }
-
-    .detail-header .label {
-      display: none;
     }
 
     .detail-header-top {

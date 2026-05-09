@@ -166,9 +166,9 @@
           </div>
 
           <div class="field">
-            <label class="label">タグ</label>
+            <label class="label" for="templateTagsInput">タグ</label>
             <div class="control">
-              <TagsInput bind:items={tagsValue} />
+              <TagsInput inputId="templateTagsInput" bind:items={tagsValue} />
             </div>
           </div>
         </div>
@@ -251,26 +251,6 @@
     margin-bottom: 0.35rem;
   }
 
-  .template-detail-eyebrow,
-  .template-detail-section-eyebrow {
-    margin-bottom: 0.35rem;
-    color: var(--bulma-text-weak);
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  .template-detail-title,
-  .template-detail-name {
-    margin-bottom: 0.35rem;
-  }
-
-  .template-detail-description,
-  .template-detail-summary {
-    color: var(--bulma-text-weak);
-  }
-
   .template-detail-header-fields {
     display: grid;
     gap: 0.45rem;
@@ -288,21 +268,26 @@
   .template-detail-body {
     position: relative;
     min-height: calc(100vh - 13.5rem);
+    display: flex;
+    flex: 1 1 auto;
     margin-bottom: 4.25rem;
   }
 
   .template-detail-inner {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
     max-width: 56rem;
     padding-left: 0.25rem;
     padding-right: 0.25rem;
   }
 
   .template-detail-card {
-    padding-top: 0.45rem;
-  }
-
-  .template-detail-top {
-    margin-bottom: 0.5rem;
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
     padding-top: 0.45rem;
   }
 
@@ -311,14 +296,22 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 0.75rem;
     align-items: start;
-  }
-
-  .template-detail-side {
-    display: none;
+    width: 100%;
+    min-height: 0;
   }
 
   .template-detail-body-field {
+    display: flex;
+    min-height: 0;
+    width: 100%;
     grid-column: 1 / 2;
+  }
+
+  .template-detail-body-field :global(.control) {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
   }
 
   .template-detail-header-fields :global(.field) {
@@ -332,7 +325,14 @@
   }
 
   .template-detail-body-field :global(.md-input) {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
     width: 100%;
+  }
+
+  .template-detail-body-field :global(.md-input-area) {
+    min-height: calc(100vh - 20rem);
   }
 
   .template-detail-delete-button {
@@ -392,10 +392,6 @@
     font-weight: 600;
   }
 
-  .footer-template-button {
-    font-size: 0.8rem;
-  }
-
   .footer-button.is-disabled-look .icon {
     color: color-mix(in srgb, var(--bulma-text-weak) 68%, black 32%);
   }
@@ -440,18 +436,22 @@
       grid-column: auto;
     }
 
-    .template-detail-footer-actions {
+    .template-detail-body-field :global(.md-input-area) {
+      min-height: calc(100vh - 19rem);
+    }
+
+    .footer-actions {
       flex-wrap: wrap;
       gap: 0.4rem;
       padding: 0.45rem 0.75rem 0.6rem;
     }
 
-    .template-detail-footer-status,
-    .template-detail-footer-buttons {
+    .footer-status,
+    .footer-buttons {
       width: 100%;
     }
 
-    .template-detail-footer-buttons {
+    .footer-buttons {
       justify-content: space-between;
     }
   }

@@ -1,9 +1,10 @@
 <script lang="ts">
   interface Props {
     items?: string[];
+    inputId?: string;
   }
 
-  let { items = $bindable([]) }: Props = $props();
+  let { items = $bindable([]), inputId = "tagsInput" }: Props = $props();
   let value = $state("");
 
   const onKeydown = (e: KeyboardEvent) => {
@@ -46,6 +47,7 @@
   </div>
   <div class="control is-expanded">
     <input
+      id={inputId}
       class="input"
       type="text"
       placeholder="タグ（複数指定可）"

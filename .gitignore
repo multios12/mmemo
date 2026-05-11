@@ -9,7 +9,7 @@
 /front/node_modules
 /front/package-lock.json
 /sail
-/cmd/mmemo/__debug_bin*
+/api/cmd/mmemo/__debug_bin*
 /__debug_bin
 /__debug_bin.exe
 /static/static

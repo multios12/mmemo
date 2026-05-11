@@ -1,16 +1,17 @@
 {
   "name": "mmemo",
+  "version": "1.0.0",
   "type": "module",
   "license": "MIT",
   "packageManager": "yarn@1.22.22",
   "engines": {
-    "node": "24.15.0",
+    "node": ">=24.13.1 <25",
     "yarn": "1.22.22"
   },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "postbuild": "cp ./dist/* ../cmd/mmemo/static/ -R",
+    "postbuild": "cp ./dist/* ../api/cmd/mmemo/static/ -R",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },

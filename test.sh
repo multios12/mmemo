@@ -7,4 +7,7 @@ cd "$SCRIPT_DIR"
 
 export GOCACHE="${GOCACHE:-/tmp/go-build}"
 
-go test ./...
+(
+  cd api
+  go test ./...
+)

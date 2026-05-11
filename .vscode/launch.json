@@ -6,7 +6,7 @@
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/cmd/mmemo",
+      "program": "${workspaceFolder}/api/cmd/mmemo",
       "cwd": "${workspaceFolder}/data",
       "args": [
         "-p",

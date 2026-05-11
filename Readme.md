@@ -91,7 +91,7 @@ mmemo -h
 `settings.json` は mmemo の表示や入力ルールを決める設定ファイルです。
 
 - 開発中は `data/settings.json` を編集します
-- 初回起動時の雛形は `cmd/mmemo/static/.default.settings.json` です
+- 初回起動時の雛形は `api/cmd/mmemo/static/.default.settings.json` です
 - 本番実行時は、起動ディレクトリ直下の `settings.json` が使われます
 
 ### 役割
@@ -224,7 +224,7 @@ mmemo -h
 - JSON のキー名は Go / frontend で参照しているため変更しない
 - カテゴリを追加するときは `Key` の重複を避ける
 - 実運用データを変えたいときは `data/settings.json` を編集する
-- 新規ユーザー向けデフォルトを変えたいときは `cmd/mmemo/static/.default.settings.json` も合わせて更新する
+- 新規ユーザー向けデフォルトを変えたいときは `api/cmd/mmemo/static/.default.settings.json` も合わせて更新する
 
 ### エージェント向けメモ
 
@@ -233,7 +233,7 @@ mmemo -h
 - `Holidays` は `Calendar.svelte` に `HolidayDates` として渡されます
 - `settings.json` に項目を追加・変更した場合は、この README の `settings.json` セクションも必ず更新してください
 - 設定項目を追加したら次も更新すること:
-  `pkg/web/models.go`
+  `api/pkg/web/models.go`
   `front/models/settingType.ts`
-  必要なら `cmd/mmemo/static/.default.settings.json`
+  必要なら `api/cmd/mmemo/static/.default.settings.json`
 

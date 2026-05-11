@@ -20,4 +20,7 @@ fi
   yarn build
 )
 
-go build ./...
+(
+  cd api
+  go build ./...
+)

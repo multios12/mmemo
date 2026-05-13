@@ -19,6 +19,7 @@
     "@dvcol/svelte-simple-router": "2.7.2",
     "bulma": "1.0.4",
     "lucide-svelte": "1.0.1",
+    "mu-ui-lib": "file:../../mu-ui-lib",
     "svelte": "5.55.5"
   },
   "devDependencies": {

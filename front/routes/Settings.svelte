@@ -1,8 +1,8 @@
 <script lang="ts">
   import { useNavigate } from "@dvcol/svelte-simple-router/router";
   import { onMount } from "svelte";
-  import AppIcon from "../components/AppIcon.svelte";
-  import { apiSettingsPath } from "../basePath.js";
+  import { MuPrimaryButton } from "mu-ui-lib";
+  import { apiSettingsPath, appPath } from "../basePath.js";
   import type { settingType } from "../models/settingType.js";
   import { settingsStore } from "../store.js";
 
@@ -52,10 +52,6 @@
     await push({ path: `/settings/templates/${encodeURIComponent(name)}` });
   };
 
-  const createNewTemplate = async () => {
-    await push({ path: "/settings/templates/new" });
-  };
-
 </script>
 
 <section class="settings-page">
@@ -82,10 +78,7 @@
             </p>
           </div>
           <div class="template-admin-actions">
-            <button class="button add-button add-button-primary" type="button" onclick={createNewTemplate}>
-              <span class="icon"><AppIcon name="plus" /></span>
-              <span>新規</span>
-            </button>
+            <MuPrimaryButton href={appPath("/settings/templates/new")} name="新規" />
           </div>
         </div>
 
@@ -217,17 +210,6 @@
     gap: 0.5rem;
     flex-wrap: wrap;
     justify-content: flex-end;
-  }
-
-  .add-button {
-    min-width: 7rem;
-  }
-
-  .add-button-primary {
-    background: color-mix(in srgb, #2d8f86 62%, var(--bulma-scheme-main));
-    border: 1px solid color-mix(in srgb, #2d8f86 74%, black 26%);
-    color: #edf8f6;
-    box-shadow: 0 10px 24px rgba(10, 31, 29, 0.16);
   }
 
   .template-category-tabs {

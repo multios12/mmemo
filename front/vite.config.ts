@@ -22,6 +22,9 @@ export default defineConfig(({ mode }) => {
       }
   return {
     plugins: [svelte(), purgeCssPlugin(), singleFilePlugin(base)],
+    optimizeDeps: {
+      exclude: ["mu-ui-lib"],
+    },
     build: {
       rollupOptions: {
         input: html,

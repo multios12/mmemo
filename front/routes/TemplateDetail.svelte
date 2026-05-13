@@ -1,8 +1,14 @@
 <script lang="ts">
   import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
+  import {
+    MuDangerButton,
+    MuActionsFooter,
+    MuPrimaryButton,
+    MuSecondaryButton,
+    MuTagsInput,
+  } from "mu-ui-lib";
   import AppIcon from "../components/AppIcon.svelte";
   import MDInput from "../components/MDInput/index.svelte";
-  import TagsInput from "../components/TagsInput.svelte";
   import { apiPath, apiSettingsPath, appPath } from "../basePath.js";
   import type { settingType } from "../models/settingType.js";
   import { settingsStore } from "../store.js";
@@ -142,15 +148,13 @@
             {categories.find((category) => category.key === templateCategoryKey)
               ?.name ?? "不明"}
           </div>
-          <button
-            class="button detail-action-button detail-action-button-danger template-detail-delete-button"
-            type="button"
-            aria-label={`delete ${templateCategoryKey}`}
+          <MuDangerButton
+            ariaLabel={`delete ${templateCategoryKey}`}
             onclick={onDelete}
           >
             <span class="icon"><AppIcon name="trash" /></span>
             <span>削除</span>
-          </button>
+          </MuDangerButton>
         </div>
         <div class="template-detail-header-fields">
           <div class="field">
@@ -168,7 +172,7 @@
           <div class="field">
             <label class="label" for="templateTagsInput">タグ</label>
             <div class="control">
-              <TagsInput inputId="templateTagsInput" bind:items={tagsValue} />
+              <MuTagsInput inputId="templateTagsInput" bind:items={tagsValue} />
             </div>
           </div>
         </div>
@@ -189,36 +193,23 @@
       </div>
     </div>
 
-    <footer class="template-detail-footer">
-      <div class="footer-actions">
-        <div class="footer-status" class:is-visible={isDirty}>
-          {#if isDirty}
-            <span class="tag unsaved-tag">未保存の変更あり</span>
-          {/if}
-        </div>
-        <div class="footer-buttons">
-          <a
-            class="button footer-button detail-secondary-button"
-            href={appPath("/settings")}
-          >
-            <span class="icon"><AppIcon name="arrow-left" /></span>
-            <span>戻る</span>
-          </a>
-          <button
-            class="button footer-button"
-            class:detail-primary-button={isDirty}
-            class:detail-secondary-button={!isDirty}
-            class:is-disabled-look={!isDirty}
-            disabled={!isDirty}
-            type="button"
-            onclick={onSave}
-          >
-            <span class="icon"><AppIcon name="cloud-arrow-up" /></span>
-            <span>保存</span>
-          </button>
-        </div>
-      </div>
-    </footer>
+    <MuActionsFooter hasUnsavedChanges={isDirty}>
+      <MuSecondaryButton href={appPath("/settings")}>
+        <span class="icon"><AppIcon name="arrow-left" /></span>
+        <span>戻る</span>
+      </MuSecondaryButton>
+      {#if isDirty}
+        <MuPrimaryButton onclick={onSave}>
+          <span class="icon"><AppIcon name="cloud-arrow-up" /></span>
+          <span>保存</span>
+        </MuPrimaryButton>
+      {:else}
+        <MuSecondaryButton disabled={true} onclick={onSave}>
+          <span class="icon"><AppIcon name="cloud-arrow-up" /></span>
+          <span>保存</span>
+        </MuSecondaryButton>
+      {/if}
+    </MuActionsFooter>
   {/if}
 </section>
 
@@ -335,85 +326,6 @@
     min-height: calc(100vh - 20rem);
   }
 
-  .template-detail-delete-button {
-    min-height: 2.65rem;
-  }
-
-  .template-detail-delete-button.detail-action-button-danger {
-    background: color-mix(in srgb, #8a4f55 52%, var(--bulma-scheme-main));
-    border: 1px solid color-mix(in srgb, #8a4f55 70%, black 30%);
-    color: #f8ecee;
-  }
-
-  .template-detail-footer {
-    background-color: var(--bulma-border);
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    position: fixed;
-  }
-
-  .footer-actions {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-  }
-
-  .footer-status {
-    display: flex;
-    align-items: center;
-  }
-
-  .footer-status.is-visible {
-    min-height: 2rem;
-  }
-
-  .unsaved-tag {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    color: #b15b12;
-    padding-left: 0;
-    padding-right: 0;
-    user-select: none;
-  }
-
-  .footer-buttons {
-    display: flex;
-    gap: 0.75rem;
-    margin-left: auto;
-  }
-
-  .footer-button {
-    min-width: 7rem;
-    border-radius: 0.9rem;
-    font-weight: 600;
-  }
-
-  .footer-button.is-disabled-look .icon {
-    color: color-mix(in srgb, var(--bulma-text-weak) 68%, black 32%);
-  }
-
-  .detail-secondary-button {
-    background: color-mix(
-      in srgb,
-      var(--bulma-border) 74%,
-      var(--bulma-scheme-main)
-    );
-    border: 1px solid color-mix(in srgb, var(--bulma-border) 86%, white 14%);
-    color: color-mix(in srgb, var(--bulma-text) 90%, white 10%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  }
-
-  .detail-primary-button {
-    background: color-mix(in srgb, #2d8f86 62%, var(--bulma-scheme-main));
-    border: 1px solid color-mix(in srgb, #2d8f86 74%, black 26%);
-    color: #edf8f6;
-    box-shadow: 0 10px 24px rgba(10, 31, 29, 0.18);
-  }
-
   @media screen and (max-width: 768px) {
     .template-detail-header {
       padding: 0.65rem 0.75rem;
@@ -440,19 +352,5 @@
       min-height: calc(100vh - 19rem);
     }
 
-    .footer-actions {
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      padding: 0.45rem 0.75rem 0.6rem;
-    }
-
-    .footer-status,
-    .footer-buttons {
-      width: 100%;
-    }
-
-    .footer-buttons {
-      justify-content: space-between;
-    }
   }
 </style>

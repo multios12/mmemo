@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { MuDangerButton, MuPrimaryButton, MuSecondaryButton } from "mu-ui-lib";
   import AppIcon from "./AppIcon.svelte";
   import type { TemplateType } from "../models/settingType.js";
 
@@ -137,37 +138,20 @@
       {/if}
 
       <div class="template-save-actions">
-        <button
-          class="button modal-secondary-button"
-          type="button"
-          disabled={isSaving || isDeleting}
-          onclick={onClose}
-        >
+        <MuSecondaryButton disabled={isSaving || isDeleting} onclick={onClose}>
           <span class="icon"><AppIcon name="xmark" /></span>
           <span>キャンセル</span>
-        </button>
+        </MuSecondaryButton>
         {#if mode === "overwrite" && hasTemplates}
-          <button
-            class="button modal-danger-button"
-            type="button"
-            class:is-loading={isDeleting}
-            disabled={isSaving || isDeleting}
-            onclick={onDeleteClick}
-          >
+          <MuDangerButton disabled={isSaving || isDeleting} onclick={onDeleteClick}>
             <span class="icon"><AppIcon name="trash" /></span>
             <span>削除</span>
-          </button>
+          </MuDangerButton>
         {/if}
-        <button
-          class="button modal-primary-button"
-          type="button"
-          class:is-loading={isSaving}
-          disabled={isSaving || isDeleting}
-          onclick={onSubmit}
-        >
+        <MuPrimaryButton disabled={isSaving || isDeleting} onclick={onSubmit}>
           <span class="icon"><AppIcon name="floppy-disk" /></span>
           <span>保存</span>
-        </button>
+        </MuPrimaryButton>
       </div>
     </div>
   </div>
@@ -257,31 +241,6 @@
     background: color-mix(in srgb, var(--bulma-link) 10%, var(--bulma-scheme-main));
   }
 
-  .modal-secondary-button,
-  .modal-primary-button,
-  .modal-danger-button {
-    border-radius: 0.85rem;
-    font-weight: 600;
-  }
-
-  .modal-secondary-button {
-    background: color-mix(in srgb, var(--bulma-border) 74%, var(--bulma-scheme-main));
-    border: 1px solid color-mix(in srgb, var(--bulma-border) 86%, white 14%);
-    color: color-mix(in srgb, var(--bulma-text) 90%, white 10%);
-  }
-
-  .modal-primary-button {
-    background: color-mix(in srgb, #2d8f86 62%, var(--bulma-scheme-main));
-    border: 1px solid color-mix(in srgb, #2d8f86 74%, black 26%);
-    color: #edf8f6;
-  }
-
-  .modal-danger-button {
-    background: color-mix(in srgb, #8a4f55 52%, var(--bulma-scheme-main));
-    border: 1px solid color-mix(in srgb, #8a4f55 70%, black 30%);
-    color: #f8ecee;
-  }
-
   .template-save-select,
   .template-save-select select {
     width: 100%;
@@ -303,7 +262,7 @@
       flex-wrap: wrap;
     }
 
-    .template-save-actions .button {
+    .template-save-actions :global(.button) {
       flex: 1 1 0;
     }
   }

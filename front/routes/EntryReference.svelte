@@ -1,5 +1,6 @@
 <script lang="ts">
   import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
+  import { MuPrimaryButton, MuSecondaryButton } from "mu-ui-lib";
   import { onMount } from "svelte";
   import AppIcon from "../components/AppIcon.svelte";
   import ImageSelectionCard from "../components/ImageSelectionCard.svelte";
@@ -184,20 +185,14 @@
 
   <footer class="reference-footer">
     <div class="reference-footer-actions">
-      <button
-        class="button reference-footer-button reference-footer-button-secondary"
-        onclick={goToList}
-      >
+      <MuSecondaryButton onclick={goToList}>
         <span class="icon"><AppIcon name="arrow-left" /></span>
         <span>戻る</span>
-      </button>
-      <button
-        class="button reference-footer-button reference-footer-button-primary"
-        onclick={goToEdit}
-      >
+      </MuSecondaryButton>
+      <MuPrimaryButton onclick={goToEdit}>
         <span class="icon"><AppIcon name="pen" /></span>
         <span>編集</span>
-      </button>
+      </MuPrimaryButton>
     </div>
   </footer>
 </div>
@@ -443,29 +438,6 @@
     padding: 0.75rem 1rem;
   }
 
-  .reference-footer-button {
-    min-width: 7rem;
-    border-radius: 0.9rem;
-    border: 1px solid transparent;
-    font-weight: 600;
-  }
-
-  .reference-footer-button-secondary {
-    background: color-mix(
-      in srgb,
-      var(--bulma-border) 74%,
-      var(--bulma-scheme-main)
-    );
-    border-color: color-mix(in srgb, var(--bulma-border) 88%, white 12%);
-    color: color-mix(in srgb, var(--bulma-text) 90%, white 10%);
-  }
-
-  .reference-footer-button-primary {
-    background: color-mix(in srgb, #2d8f86 62%, var(--bulma-scheme-main));
-    border-color: color-mix(in srgb, #2d8f86 74%, black 26%);
-    color: #edf8f6;
-  }
-
   @media screen and (max-width: 768px) {
     .reference-header {
       padding: 0.7rem 0.75rem 0.65rem;
@@ -490,9 +462,5 @@
       padding: 0.65rem 0.75rem;
     }
 
-    .reference-footer-button {
-      flex: 1;
-      min-width: 0;
-    }
   }
 </style>

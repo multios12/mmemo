@@ -27,7 +27,7 @@
         "src/*": "${workspaceFolder}/front/src/*",
         "/*": "${workspaceFolder}/front/*"
       }
-    },
+    }
   ],
   "compounds": [
     {
@@ -35,7 +35,8 @@
       "configurations": [
         "API Debug",
         "Open Front in Edge"
-      ]
+      ],
+      "stopAll": true
     }
   ]
 }

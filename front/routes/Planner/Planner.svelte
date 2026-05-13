@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { MuDropdown } from "mu-ui-lib";
   import { diffDays, format, monthEnd } from "../../lib/date.js";
   import type { dayType } from "./dayType.js";
-  import Dropdown from "../../components/Dropdown.svelte";
   let year = 2024;
 
   /** 表示情報テーブル */
@@ -70,14 +70,14 @@
   };
 </script>
 
-年間計画<Dropdown items={viewList} bind:key={viewMode} tabindex={undefined} />
+年間計画<MuDropdown items={viewList} bind:key={viewMode} tabindex={undefined} />
 <table class="planner table is-bordered">
   <thead class="p-0">
     <tr>
       <td></td>
       {#if table !== null && table.length > 0}
         {#each table[0] as day}
-          <td class="is-small p-0"> {format(day.date, "D", "ja")} </td>
+          <td class="is-small p-0"> {format(day.date, "D")} </td>
         {/each}
       {/if}
     </tr>
@@ -85,7 +85,7 @@
   <tbody>
     {#each table as d}
       <tr>
-        <td class="p-0"> {format(d[0].date, "M月", "ja")} </td>
+        <td class="p-0"> {format(d[0].date, "M月")} </td>
         {#each d as day}
           <td
             class="day p-0"

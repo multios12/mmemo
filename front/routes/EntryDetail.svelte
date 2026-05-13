@@ -1,10 +1,17 @@
 <script lang="ts">
   import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
+  import {
+    MuDangerButton,
+    MuDateField,
+    MuActionsFooter,
+    MuPrimaryButton,
+    MuSecondaryButton,
+    MuTagsInput,
+  } from "mu-ui-lib";
   import { onMount } from "svelte";
   import AppIcon from "../components/AppIcon.svelte";
   import ImageSelectionCard from "../components/ImageSelectionCard.svelte";
   import MDInput from "../components/MDInput/index.svelte";
-  import TagsInput from "../components/TagsInput.svelte";
   import TemplateSelectorModal from "../components/TemplateSelectorModal.svelte";
   import type { entryType } from "../models/entryModels.js";
   import type { TemplateType } from "../models/settingType.js";
@@ -471,19 +478,7 @@
       <div class="detail-header-main">
         <div class="detail-header-top">
           <div class="field detail-date-field">
-            {#if isNew}
-              <div class="control">
-                <input
-                  id="dateInput"
-                  type="date"
-                  class="input"
-                  class:is-fullwidth={isNew}
-                  bind:value={dateValue}
-                />
-              </div>
-            {:else}
-              <div class="detail-date-label">{dateValue}</div>
-            {/if}
+            <MuDateField bind:value={dateValue} editable={isNew} />
           </div>
           <div class="field detail-outline-field">
             <div class="field has-addons mobile-outline-row">
@@ -514,14 +509,13 @@
           </div>
           {#if !isNew}
             <div class="detail-action-wrap">
-              <button
-                class="button detail-action-button detail-action-button-danger"
-                aria-label={`delete ${categoryKey}`}
+              <MuDangerButton
+                ariaLabel={`delete ${categoryKey}`}
                 onclick={onDelete}
               >
                 <span class="icon"><AppIcon name="trash" /></span>
                 <span>削除</span>
-              </button>
+              </MuDangerButton>
             </div>
           {/if}
         </div>
@@ -531,7 +525,7 @@
       <div class="detail-tags">
         <div class:mobile-hidden-tags={!showTagsOnMobile}>
           <div class="control">
-            <TagsInput bind:items={tagsValue} />
+            <MuTagsInput bind:items={tagsValue} />
           </div>
         </div>
       </div>
@@ -580,9 +574,12 @@
             <div class="image-picker-modal-title">画像選択</div>
             <div class="image-picker-modal-subtitle">画像をクリックして本文に挿入できます</div>
           </div>
-          <button class="button is-light image-picker-modal-close" type="button" onclick={closeImagePicker}>
+          <MuSecondaryButton
+            ariaLabel="close image picker"
+            onclick={closeImagePicker}
+          >
             <span class="icon"><AppIcon name="xmark" /></span>
-          </button>
+          </MuSecondaryButton>
         </div>
         <ImageSelectionCard
           onEmbedImage={(markdown) => {
@@ -596,43 +593,27 @@
     </div>
   {/if}
 
-  <footer class="is-dark m-0">
-    <div class="footer-actions">
-      <div class="footer-status" class:is-visible={isDirty}>
-        {#if isDirty}
-          <span class="tag unsaved-tag">未保存の変更あり</span>
-        {/if}
-      </div>
-      <div class="footer-buttons">
-        <button
-          class="button footer-button detail-secondary-button"
-          onclick={onCancel}
-        >
-          <span class="icon"><AppIcon name="arrow-left" /></span>
-          <span>戻る</span>
-        </button>
-        <button
-          class="button footer-button detail-secondary-button"
-          onclick={openImagePicker}
-        >
-          <span class="icon"><AppIcon name="image" /></span>
-          <span>画像</span>
-        </button>
-        <button
-          class="button footer-button"
-          class:detail-primary-button={isDirty}
-          class:detail-secondary-button={!isDirty}
-          class:is-disabled-look={!isDirty}
-          disabled={isLoading || !isDirty}
-          class:is-loading={isLoading}
-          onclick={onOk}
-        >
-          <span class="icon"><AppIcon name="cloud-arrow-up" /></span>
-          <span>{saveButtonLabel}</span>
-        </button>
-      </div>
-    </div>
-  </footer>
+  <MuActionsFooter hasUnsavedChanges={isDirty}>
+    <MuSecondaryButton onclick={onCancel}>
+      <span class="icon"><AppIcon name="arrow-left" /></span>
+      <span>戻る</span>
+    </MuSecondaryButton>
+    <MuSecondaryButton onclick={openImagePicker}>
+      <span class="icon"><AppIcon name="image" /></span>
+      <span>画像</span>
+    </MuSecondaryButton>
+    {#if isDirty}
+      <MuPrimaryButton disabled={isLoading} onclick={onOk}>
+        <span class="icon"><AppIcon name="cloud-arrow-up" /></span>
+        <span>{saveButtonLabel}</span>
+      </MuPrimaryButton>
+    {:else}
+      <MuSecondaryButton disabled={true} onclick={onOk}>
+        <span class="icon"><AppIcon name="cloud-arrow-up" /></span>
+        <span>{saveButtonLabel}</span>
+      </MuSecondaryButton>
+    {/if}
+  </MuActionsFooter>
 </div>
 
 <style>
@@ -681,14 +662,6 @@
     padding: 0.7rem 0.8rem;
   }
 
-  footer {
-    background-color: var(--bulma-border);
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    position: fixed;
-  }
-
   .detail-header {
     display: flex;
     justify-content: space-between;
@@ -720,27 +693,10 @@
     margin-bottom: 0;
   }
 
-  .detail-date-field .control,
   .detail-action-wrap {
     display: flex;
     align-items: center;
     margin-bottom: 0;
-  }
-
-  .detail-date-field .control {
-    width: 100%;
-  }
-
-  .detail-date-label {
-    display: inline-flex;
-    align-items: center;
-    min-height: 2.2rem;
-    color: var(--bulma-text);
-    font-variant-numeric: tabular-nums;
-    font-size: 1.2rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    line-height: 1;
   }
 
   .detail-tags {
@@ -752,8 +708,7 @@
     width: 100%;
   }
 
-  .mobile-tag-button,
-  .detail-action-button {
+  .mobile-tag-button {
     height: 2.2rem;
   }
 
@@ -766,74 +721,6 @@
     border: 1px solid color-mix(in srgb, var(--bulma-border) 86%, white 14%);
     color: color-mix(in srgb, var(--bulma-text) 90%, white 10%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  }
-
-  .detail-primary-button {
-    background: color-mix(in srgb, #2d8f86 62%, var(--bulma-scheme-main));
-    border: 1px solid color-mix(in srgb, #2d8f86 74%, black 26%);
-    color: #edf8f6;
-    box-shadow: 0 10px 24px rgba(10, 31, 29, 0.18);
-  }
-
-  .detail-action-button-danger {
-    background: color-mix(in srgb, #8a4f55 52%, var(--bulma-scheme-main));
-    border: 1px solid color-mix(in srgb, #8a4f55 70%, black 30%);
-    color: #f8ecee;
-  }
-
-  .detail-action-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2.2rem;
-  }
-
-  .footer-actions {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.35rem;
-    padding: 0.45rem 0.7rem;
-  }
-
-  .footer-status {
-    display: flex;
-    align-items: center;
-  }
-
-  .footer-status.is-visible {
-    min-height: 2rem;
-  }
-
-  .unsaved-tag {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    color: #b15b12;
-    padding-left: 0;
-    padding-right: 0;
-    user-select: none;
-  }
-
-  .footer-buttons {
-    display: flex;
-    gap: 0.35rem;
-    margin-left: auto;
-  }
-
-  .footer-button {
-    min-width: 5.75rem;
-    border-radius: 0.7rem;
-    font-weight: 600;
-  }
-
-  .footer-button.is-disabled-look .icon {
-    color: color-mix(in srgb, var(--bulma-text-weak) 68%, black 32%);
-  }
-
-  #dateInput {
-    width: 150px;
-    height: 2.2rem;
   }
 
   .detail-body .field {
@@ -899,13 +786,6 @@
     line-height: 1.4;
   }
 
-  .image-picker-modal-close {
-    flex: 0 0 auto;
-    min-width: 2.4rem;
-    min-height: 2.4rem;
-    padding: 0;
-  }
-
   .image-picker-modal :global(.image-card) {
     margin-top: 0;
     border-radius: 0.9rem;
@@ -928,7 +808,6 @@
       margin-bottom: 0.05rem;
     }
 
-    .detail-date-field .control,
     .detail-action-wrap {
       margin-bottom: 0;
     }
@@ -967,11 +846,6 @@
       height: 100%;
     }
 
-    #dateInput {
-      width: 100%;
-      min-width: 9.5rem;
-    }
-
     .detail-header-top :global(.button) {
       white-space: nowrap;
       height: 2.35rem;
@@ -989,28 +863,13 @@
       width: 100%;
     }
 
-    .detail-date-label {
-      width: 100%;
-      min-width: 9.5rem;
-      font-size: 1.2rem;
-    }
-
-    .detail-date-field .control,
     .detail-action-wrap {
       margin-bottom: 0;
     }
 
-    #dateInput,
-    .detail-action-button,
     .mobile-outline-row :global(.input),
     .mobile-tag-button {
       height: 100%;
-    }
-
-    .footer-actions {
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      padding: 0.45rem 0.75rem 0.6rem;
     }
 
     .detail-body {
@@ -1070,32 +929,5 @@
       padding: 0.65rem 0.75rem 0.75rem;
     }
 
-    .footer-status,
-    .footer-buttons {
-      width: 100%;
-    }
-
-    .footer-status {
-      min-height: 0;
-    }
-
-    .footer-buttons {
-      justify-content: space-between;
-      gap: 0.5rem;
-    }
-
-    .footer-button {
-      flex: 1 1 0;
-      min-width: 0;
-    }
-
-    .footer-status.is-visible {
-      min-height: 1.2rem;
-    }
-
-    .unsaved-tag {
-      font-size: 0.8rem;
-      line-height: 1.1;
-    }
   }
 </style>

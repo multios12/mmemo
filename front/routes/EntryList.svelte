@@ -1,11 +1,12 @@
 <script lang="ts">
   import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
+  import { MuPrimaryButton } from "mu-ui-lib";
   import type { entryType, listType } from "../models/entryModels.js";
   import { format } from "../lib/date.js";
   import { settingsStore } from "../store.js";
   import AppIcon from "../components/AppIcon.svelte";
   import Calendar from "../components/Calendar.svelte";
-  import { apiPath } from "../basePath.js";
+  import { apiPath, appPath } from "../basePath.js";
 
   const emptyListModel = (): listType => ({ WritedMonths: [], Lines: [] });
   const noOutlineLabel = "(no outline)";
@@ -57,7 +58,7 @@
   let hasLoadedInitialList = $state(false);
   let isCalendarExpanded = $state(false);
 
-  const addPath = () => `/${categoryKey}/add`;
+  const addPath = () => appPath(`/${categoryKey}/add`);
   const addPathWithPreset = (
     preset: {
       outline?: string;
@@ -448,14 +449,9 @@
           {/if}
         </div>
       </div>
-      <button
-        class="button add-button add-button-primary is-hidden-mobile"
-        aria-label={`add ${categoryKey}`}
-        onclick={() => push({ path: addPath() })}
-      >
-        <span class="icon"><AppIcon name="plus" /></span>
-        <span>新規</span>
-      </button>
+      <div class="add-button is-hidden-mobile">
+        <MuPrimaryButton href={addPath()} name="新規" />
+      </div>
     </div>
 
     {#if resolvedSettings.useMonthFilter}
@@ -529,21 +525,15 @@
             </div>
             <div class="entry-group-meta">
               <span class="entry-group-count">{group.entries.length}件</span>
-              <button
-                class="button is-small entry-group-add-button"
-                type="button"
-                aria-label={`${group.label} で新規作成`}
-                onclick={() =>
-                  push({
-                    path: addPathWithPreset({
-                      tag: group.label === noTagLabel ? "" : group.label,
-                      previousEntryId: latestUpdatedEntry(group.entries)?.Id,
-                    }),
+              <span class="entry-group-add-button">
+                <MuPrimaryButton
+                  href={addPathWithPreset({
+                    tag: group.label === noTagLabel ? "" : group.label,
+                    previousEntryId: latestUpdatedEntry(group.entries)?.Id,
                   })}
-              >
-                <span class="icon"><AppIcon name="plus" /></span>
-                <span>新規</span>
-              </button>
+                  name="新規"
+                />
+              </span>
             </div>
           </div>
           <div class="entry-list entry-list-nested">
@@ -598,22 +588,16 @@
             </div>
             <div class="entry-group-meta">
               <span class="entry-group-count">{group.entries.length}件</span>
-              <button
-                class="button is-small entry-group-add-button"
-                type="button"
-                aria-label={`${group.outline} で新規作成`}
-                onclick={() =>
-                  push({
-                    path: addPathWithPreset({
-                      outline:
-                        group.outline === noOutlineLabel ? "" : group.outline,
-                      previousEntryId: latestUpdatedEntry(group.entries)?.Id,
-                    }),
+              <span class="entry-group-add-button">
+                <MuPrimaryButton
+                  href={addPathWithPreset({
+                    outline:
+                      group.outline === noOutlineLabel ? "" : group.outline,
+                    previousEntryId: latestUpdatedEntry(group.entries)?.Id,
                   })}
-              >
-                <span class="icon"><AppIcon name="plus" /></span>
-                <span>新規</span>
-              </button>
+                  name="新規"
+                />
+              </span>
             </div>
           </div>
           <div class="outline-entry-list">
@@ -674,14 +658,9 @@
         </button>
       {/if}
 
-      <button
-        class="button mobile-add-button add-button-primary"
-        aria-label={`add ${categoryKey}`}
-        onclick={() => push({ path: addPath() })}
-      >
-        <span class="icon"><AppIcon name="plus" /></span>
-        <span>新規</span>
-      </button>
+      <div class="mobile-add-button">
+        <MuPrimaryButton href={addPath()} name="新規" />
+      </div>
     </div>
 
     {#if resolvedSettings.useMonthFilter && isCalendarExpanded}
@@ -821,13 +800,6 @@
     min-width: 7rem;
   }
 
-  .add-button-primary {
-    background: color-mix(in srgb, #2d8f86 62%, var(--bulma-scheme-main));
-    border: 1px solid color-mix(in srgb, #2d8f86 74%, black 26%);
-    color: #edf8f6;
-    box-shadow: 0 10px 24px rgba(10, 31, 29, 0.16);
-  }
-
   .sort-button {
     min-width: 2.75rem;
     background: color-mix(
@@ -914,14 +886,6 @@
     gap: 0.55rem;
     flex-wrap: wrap;
     justify-content: flex-end;
-  }
-
-  .entry-group-add-button {
-    border-radius: 999px;
-    border-color: color-mix(in srgb, #2d8f86 38%, var(--bulma-border));
-    background: color-mix(in srgb, #2d8f86 16%, var(--bulma-scheme-main));
-    color: color-mix(in srgb, var(--bulma-text) 92%, white 8%);
-    font-weight: 600;
   }
 
   .outline-entry-list {
@@ -1160,8 +1124,6 @@
 
   .mobile-add-button {
     flex: 1 1 auto;
-    min-height: 3rem;
-    box-shadow: 0 12px 28px rgba(10, 31, 29, 0.16);
   }
 
   @keyframes calendar-popup-slide-in {

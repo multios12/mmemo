@@ -34,7 +34,9 @@
   const filteredTemplates = $derived.by(() =>
     selectedCategoryKey === ""
       ? templates
-      : templates.filter((template) => template.categoryKey === selectedCategoryKey),
+      : templates.filter(
+          (template) => template.categoryKey === selectedCategoryKey,
+        ),
   );
 
   onMount(() => {
@@ -51,34 +53,22 @@
   const openTemplateDetail = async (name: string) => {
     await push({ path: `/settings/templates/${encodeURIComponent(name)}` });
   };
-
 </script>
 
 <section class="settings-page">
-  <div class="container is-fluid settings-page-inner">
+  <div class="settings-page-inner">
     <div class="settings-card">
-      <p class="settings-eyebrow">Settings</p>
-      <h1 class="title is-3 settings-title">設定</h1>
-      <p class="settings-description">
-        ここに表示設定や入力ルールなどの項目を追加していきます。
-      </p>
-
-      <div class="settings-placeholder box">
-        <p class="has-text-weight-semibold">設定画面のひな形</p>
-        <p class="has-text-grey">必要な設定項目を順番に追加できます。</p>
-      </div>
-
       <section class="template-admin">
         <div class="template-admin-header">
           <div>
             <p class="template-admin-eyebrow">Templates</p>
-            <h2 class="title is-4 template-admin-title">テンプレート管理</h2>
-            <p class="template-admin-description">
-              カテゴリで絞り込みながら、API から読み込んだテンプレートを管理します。
-            </p>
+            <h2 class="template-admin-title">テンプレート管理</h2>
           </div>
           <div class="template-admin-actions">
-            <MuPrimaryButton href={appPath("/settings/templates/new")} name="新規" />
+            <MuPrimaryButton
+              href={appPath("/settings/templates/new")}
+              name="新規"
+            />
           </div>
         </div>
 
@@ -106,8 +96,10 @@
         <div class="template-admin-layout">
           <aside class="template-list-panel">
             <div class="template-list-panel-header">
-              <p class="has-text-weight-semibold">テンプレート一覧</p>
-              <p class="has-text-grey">{filteredTemplates.length}件</p>
+              <p class="template-list-panel-title">テンプレート一覧</p>
+              <p class="template-list-panel-count">
+                {filteredTemplates.length}件
+              </p>
             </div>
 
             <div class="template-list">
@@ -126,9 +118,13 @@
                 >
                   <span class="template-list-item-main">
                     <span class="template-list-item-name">{template.name}</span>
-                    <span class="template-list-item-meta">{template.summary}</span>
+                    <span class="template-list-item-meta"
+                      >{template.summary}</span
+                    >
                     {#if template.tags.length > 0}
-                      <span class="template-list-item-tags">{template.tags.join(" / ")}</span>
+                      <span class="template-list-item-tags"
+                        >{template.tags.join(" / ")}</span
+                      >
                     {/if}
                   </span>
                 </div>
@@ -139,30 +135,32 @@
       </section>
     </div>
   </div>
-
 </section>
 
 <style>
   .settings-page {
     min-height: 100vh;
     padding: 1rem 1rem 3rem;
-    background: var(--bulma-scheme-main);
+    background: var(--app-scheme-main);
   }
 
   .settings-page-inner {
+    width: 100%;
     max-width: 56rem;
+    margin-right: auto;
+    margin-left: auto;
   }
 
   .settings-card {
     padding: 1.25rem 1rem;
     border-radius: 1rem;
-    background: color-mix(in srgb, var(--bulma-scheme-main) 94%, black 6%);
+    background: color-mix(in srgb, var(--app-scheme-main) 94%, black 6%);
   }
 
   .settings-eyebrow,
   .template-admin-eyebrow {
     margin-bottom: 0.35rem;
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -170,23 +168,42 @@
   }
 
   .settings-title {
+    margin-top: 0;
     margin-bottom: 0.65rem;
+    color: var(--app-text-strong);
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.15;
   }
 
   .settings-description {
     margin-bottom: 1rem;
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
   }
 
   .settings-placeholder {
     margin-bottom: 0;
+    padding: 1rem;
+    border: 1px solid var(--app-border);
+    border-radius: 0.5rem;
+    background: var(--app-control-bg);
+    box-shadow: var(--app-shadow);
+  }
+
+  .settings-placeholder-title,
+  .template-list-panel-title {
+    font-weight: 700;
+  }
+
+  .settings-placeholder-text,
+  .template-list-panel-count {
+    color: var(--app-text-weak);
   }
 
   .template-admin {
     margin-top: 1.5rem;
     padding-top: 1.25rem;
-    border-top: 1px solid
-      color-mix(in srgb, var(--bulma-border) 78%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--app-border) 78%, transparent);
   }
 
   .template-admin-header {
@@ -198,11 +215,16 @@
   }
 
   .template-admin-title {
+    margin-top: 0;
     margin-bottom: 0.35rem;
+    color: var(--app-text-strong);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.15;
   }
 
   .template-admin-description {
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
   }
 
   .template-admin-actions {
@@ -222,25 +244,17 @@
   .template-category-tab {
     min-height: 2.25rem;
     padding: 0.45rem 0.8rem;
-    border: 1px solid var(--bulma-border);
+    border: 1px solid var(--app-border);
     border-radius: 999px;
-    background: var(--bulma-scheme-main);
-    color: var(--bulma-text-weak);
+    background: var(--app-scheme-main);
+    color: var(--app-text-weak);
     font-weight: 600;
   }
 
   .template-category-tab.is-active {
-    border-color: color-mix(
-      in srgb,
-      var(--bulma-link) 45%,
-      var(--bulma-border)
-    );
-    background: color-mix(
-      in srgb,
-      var(--bulma-link) 10%,
-      var(--bulma-scheme-main)
-    );
-    color: var(--bulma-link-text);
+    border-color: color-mix(in srgb, var(--app-link) 45%, var(--app-border));
+    background: color-mix(in srgb, var(--app-link) 10%, var(--app-scheme-main));
+    color: var(--app-link-text);
   }
 
   .template-admin-layout {
@@ -250,9 +264,9 @@
   }
 
   .template-list-panel {
-    border: 1px solid var(--bulma-border);
+    border: 1px solid var(--app-border);
     border-radius: 1rem;
-    background: color-mix(in srgb, var(--bulma-scheme-main) 98%, black 2%);
+    background: color-mix(in srgb, var(--app-scheme-main) 98%, black 2%);
     padding: 1rem;
   }
 
@@ -276,7 +290,7 @@
     gap: 0.75rem;
     width: 100%;
     padding: 0.8rem 0.85rem;
-    border: 1px solid var(--bulma-border);
+    border: 1px solid var(--app-border);
     border-radius: 0.85rem;
     background: transparent;
     text-align: left;
@@ -296,7 +310,7 @@
 
   .template-list-item-meta,
   .template-list-item-tags {
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
     font-size: 0.9rem;
   }
 

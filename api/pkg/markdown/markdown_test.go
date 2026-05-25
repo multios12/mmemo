@@ -8,7 +8,7 @@ import (
 )
 
 func TestToHTML_ConvertsSampleMarkdown(t *testing.T) {
-	root := filepath.Join("..", "..")
+	root := filepath.Join("..", "..", "..")
 	body, err := os.ReadFile(filepath.Join(root, "markdown.md"))
 	if err != nil {
 		t.Fatalf("read markdown.md: %v", err)
@@ -37,7 +37,7 @@ func TestToHTML_ConvertsSampleMarkdown(t *testing.T) {
 		"<p>引用複数行<br>引用２行目</p>",
 		"</blockquote>",
 		"<p>文字装飾「<strong>太字</strong>」「<em>斜線</em>」「<u>下線</u>」「<del>取り消し線</del>」「<a href=\"https://google.co.jp\">リンク</a>」</p>",
-		"<p><img src=\"/api/diary/2026-04-03/images/001.png\" alt=\"イメージ\"></p>",
+		"<p><img src=\"./diary/2026-04-03/001.png\" alt=\"イメージ\"></p>",
 		"<hr>",
 		"<ul>",
 		"<li>親リスト１",

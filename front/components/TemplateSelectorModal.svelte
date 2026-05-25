@@ -36,7 +36,7 @@
   <div class="template-selector-modal">
     <div class="template-selector">
       <div class="template-selector-header">
-        <h2 class="title is-6 mb-2">テンプレート選択</h2>
+        <h2 class="template-selector-title">テンプレート選択</h2>
       </div>
       <div class="template-grid">
         {#each templates as template, index}
@@ -73,12 +73,12 @@
     overflow-y: auto;
     padding: 1rem;
     border: 1px solid
-      color-mix(in srgb, var(--bulma-link) 18%, var(--bulma-border));
+      color-mix(in srgb, var(--app-link) 18%, var(--app-border));
     border-radius: 1.1rem;
-    background: var(--bulma-scheme-main);
+    background: var(--app-scheme-main);
     box-shadow:
       0 1.2rem 3rem rgba(15, 23, 42, 0.18),
-      0 0 0 1px color-mix(in srgb, var(--bulma-link) 12%, transparent);
+      0 0 0 1px color-mix(in srgb, var(--app-link) 12%, transparent);
   }
 
   .template-selector-modal {
@@ -91,7 +91,7 @@
     padding: 1rem;
     background: color-mix(
       in srgb,
-      var(--bulma-scheme-main) 55%,
+      var(--app-scheme-main) 55%,
       rgba(15, 23, 42, 0.45)
     );
     backdrop-filter: blur(6px);
@@ -99,6 +99,14 @@
 
   .template-selector-header {
     margin-bottom: 0.75rem;
+  }
+
+  .template-selector-title {
+    margin: 0 0 0.5rem;
+    color: var(--app-text-strong);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.15;
   }
 
   .template-grid {
@@ -113,14 +121,14 @@
     gap: 0.45rem;
     width: 100%;
     padding: 1rem;
-    border: 1px solid var(--bulma-border);
+    border: 1px solid var(--app-border);
     border-radius: 0.9rem;
     background: color-mix(
       in srgb,
-      var(--bulma-link) 10%,
-      var(--bulma-scheme-main)
+      var(--app-link) 10%,
+      var(--app-scheme-main)
     );
-    color: var(--bulma-text);
+    color: var(--app-text);
     text-align: left;
     transition:
       border-color 0.15s ease,
@@ -129,18 +137,18 @@
   }
 
   .template-card:hover {
-    border-color: var(--bulma-link);
+    border-color: var(--app-link);
     transform: translateY(-1px);
   }
 
   .template-card.is-selected {
-    border-color: var(--bulma-link);
+    border-color: var(--app-link);
     background: color-mix(
       in srgb,
-      var(--bulma-link) 18%,
-      var(--bulma-scheme-main)
+      var(--app-link) 18%,
+      var(--app-scheme-main)
     );
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--bulma-link) 45%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--app-link) 45%, transparent);
   }
 
   .template-card-title {
@@ -149,12 +157,12 @@
   }
 
   .template-card-preview {
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
     line-height: 1.5;
   }
 
   .template-card-tags {
-    color: var(--bulma-link-text);
+    color: var(--app-link-text);
     font-size: 0.8rem;
     font-weight: 600;
     line-height: 1.4;

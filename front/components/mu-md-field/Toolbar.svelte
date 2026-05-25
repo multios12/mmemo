@@ -1,15 +1,32 @@
 <script lang="ts">
-  import AppIcon from "../AppIcon.svelte";
+  import Bold from "lucide-svelte/icons/bold";
+  import ChevronDown from "lucide-svelte/icons/chevron-down";
+  import Code from "lucide-svelte/icons/code";
+  import Grip from "lucide-svelte/icons/grip";
+  import Italic from "lucide-svelte/icons/italic";
+  import LinkIcon from "lucide-svelte/icons/link";
+  import List from "lucide-svelte/icons/list";
+  import ListOrdered from "lucide-svelte/icons/list-ordered";
+  import Quote from "lucide-svelte/icons/quote";
+  import Strikethrough from "lucide-svelte/icons/strikethrough";
+  import type { ToolbarButton, ToolbarIcon } from "./types.js";
 
-  export const paragraphs = [
-    { key: "normal", value: "本文", icon: "grip-lines" },
+  interface ParagraphOption {
+    key: string;
+    value: string;
+    icon?: ToolbarIcon;
+    badge?: string;
+  }
+
+  export const paragraphs: ParagraphOption[] = [
+    { key: "normal", value: "本文", icon: Grip },
     { key: "h1", value: "見出し1", badge: "H1" },
     { key: "h2", value: "見出し2", badge: "H2" },
     { key: "h3", value: "見出し3", badge: "H3" },
-    { key: "ol", value: "番号リスト", icon: "list-ol" },
-    { key: "ul", value: "段落リスト", icon: "list-ul" },
-    { key: "code", value: "コード", icon: "code" },
-    { key: "quote", value: "引用", icon: "quote-left" },
+    { key: "ol", value: "番号リスト", icon: ListOrdered },
+    { key: "ul", value: "段落リスト", icon: List },
+    { key: "code", value: "コード", icon: Code },
+    { key: "quote", value: "引用", icon: Quote },
   ];
 
   interface Props {
@@ -20,11 +37,11 @@
     strike?: boolean;
     onChange?: (value: string) => void;
     onBold?: () => void;
-    onCarryOver?: () => void;
-    onImage?: () => void;
     onItalic?: () => void;
     onLink?: () => void;
     onStrike?: () => void;
+    extraButtons?: ToolbarButton[];
+    onExtraButton?: (button: ToolbarButton) => void;
   }
 
   let {
@@ -35,17 +52,18 @@
     strike = false,
     onChange,
     onBold,
-    onCarryOver,
-    onImage,
     onItalic,
     onLink,
     onStrike,
+    extraButtons = [],
+    onExtraButton,
   }: Props = $props();
   let isParagraphMenuOpen = $state(false);
 
   const currentParagraph = $derived(
     paragraphs.find((item) => item.key === value) ?? paragraphs[0],
   );
+  const CurrentParagraphIcon = $derived(currentParagraph.icon ?? Grip);
 
   const handleChange = (nextValue: string) => {
     value = nextValue;
@@ -70,7 +88,7 @@
     {/if}
 
     <button
-      class="button md-paragraph-trigger"
+      class="md-button md-paragraph-trigger"
       type="button"
       aria-haspopup="menu"
       aria-expanded={isParagraphMenuOpen}
@@ -78,38 +96,39 @@
     >
       {#key currentParagraph.key}
         {#if currentParagraph.badge}
-          <span class="icon md-paragraph-icon-slot">
+          <span class="md-icon md-paragraph-icon-slot">
             <span class="md-paragraph-badge">{currentParagraph.badge}</span>
           </span>
         {:else}
-          <span class="icon md-paragraph-icon-slot">
-            <AppIcon name={currentParagraph.icon ?? "grip-lines"} />
+          <span class="md-icon md-paragraph-icon-slot">
+            <CurrentParagraphIcon />
           </span>
         {/if}
       {/key}
-      <span class="icon is-small">
-        <AppIcon name="chevron-down" size={16} />
+      <span class="md-icon md-icon-small">
+        <ChevronDown size={16} />
       </span>
     </button>
 
     {#if isParagraphMenuOpen}
       <div class="md-paragraph-menu" role="menu">
         {#each paragraphs as item}
+          {@const ParagraphIcon = item.icon ?? Grip}
           <button
-            class="button is-ghost md-paragraph-option"
-            class:is-active={item.key === value}
+            class="md-button md-paragraph-option"
+            class:md-active={item.key === value}
             type="button"
             role="menuitemradio"
             aria-checked={item.key === value}
             onclick={() => handleChange(item.key)}
           >
             {#if item.badge}
-              <span class="icon md-paragraph-icon-slot">
+              <span class="md-icon md-paragraph-icon-slot">
                 <span class="md-paragraph-badge">{item.badge}</span>
               </span>
             {:else}
-              <span class="icon md-paragraph-icon-slot">
-                <AppIcon name={item.icon ?? "grip-lines"} />
+              <span class="md-icon md-paragraph-icon-slot">
+                <ParagraphIcon />
               </span>
             {/if}
             <span>{item.value}</span>
@@ -119,58 +138,59 @@
     {/if}
   </div>
   <button
-    class="button is-ghost md-toolbar-button"
-    class:is-active={bold}
+    class="md-button md-toolbar-button"
+    class:md-active={bold}
     type="button"
     aria-label="bold"
     onclick={onBold}
   >
-    <AppIcon name="bold" />
+    <Bold />
   </button>
   <button
-    class="button is-ghost md-toolbar-button"
-    class:is-active={italic}
+    class="md-button md-toolbar-button"
+    class:md-active={italic}
     type="button"
     aria-label="italic"
     onclick={onItalic}
   >
-    <AppIcon name="italic" />
+    <Italic />
   </button>
   <button
-    class="button is-ghost md-toolbar-button"
-    class:is-active={strike}
+    class="md-button md-toolbar-button"
+    class:md-active={strike}
     type="button"
     aria-label="strike"
     onclick={onStrike}
   >
-    <AppIcon name="strikethrough" />
+    <Strikethrough />
   </button>
   <button
-    class="button is-ghost md-toolbar-button"
-    type="button"
-    aria-label="carry over marker"
-    title="次回グループ追加へ引き継ぐ位置を挿入"
-    onclick={onCarryOver}
-  >
-    <AppIcon name="arrows-rotate" />
-  </button>
-  <button
-    class="button is-ghost md-toolbar-button"
-    type="button"
-    aria-label="image"
-    onclick={onImage}
-  >
-    <AppIcon name="image" />
-  </button>
-  <button
-    class="button is-ghost md-toolbar-button"
-    class:is-active={link}
+    class="md-button md-toolbar-button"
+    class:md-active={link}
     type="button"
     aria-label="link"
     onclick={onLink}
   >
-    <AppIcon name="link" />
+    <LinkIcon />
   </button>
+  {#each extraButtons as button (button.key)}
+    <button
+      class="md-button md-toolbar-button"
+      class:md-active={button.active}
+      type="button"
+      aria-label={button.ariaLabel}
+      title={button.title}
+      disabled={button.disabled}
+      onclick={() => onExtraButton?.(button)}
+    >
+      {#if button.icon}
+        {@const ButtonIcon = button.icon}
+        <ButtonIcon />
+      {:else if button.label}
+        <span class="md-toolbar-button-label">{button.label}</span>
+      {/if}
+    </button>
+  {/each}
 </div>
 
 <style>
@@ -187,18 +207,44 @@
     position: relative;
   }
 
-  .md-paragraph-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 9;
-    border: none;
+  .md-button {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid color-mix(in srgb, white 12%, transparent);
+    border-radius: 0.45rem;
     background: transparent;
-    padding: 0;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    gap: 0.35rem;
+    line-height: 1;
+    min-height: 2rem;
+    min-width: 2rem;
+    padding: 0 0.55rem;
+    user-select: none;
+  }
+
+  .md-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .md-button:hover:not(:disabled),
+  .md-button:focus-visible {
+    background: color-mix(in srgb, white 8%, transparent);
+    outline: none;
+  }
+
+  .md-button.md-active {
+    background: color-mix(in srgb, #3e8ed0 22%, transparent);
+    border-color: color-mix(in srgb, #3e8ed0 55%, white 12%);
+    color: #8ec5ff;
   }
 
   .md-paragraph-trigger {
     min-width: 3.3rem;
-    min-height: 2rem;
     padding: 0 0.45rem;
     justify-content: space-between;
     gap: 0.2rem;
@@ -218,7 +264,7 @@
     min-width: 13rem;
     padding: 0.25rem;
     border: 1px solid color-mix(in srgb, white 12%, transparent);
-    border-radius: var(--bulma-radius-large);
+    border-radius: 0.75rem;
     background: #161b28;
     box-shadow: 0 0.85rem 2rem color-mix(in srgb, black 28%, transparent);
   }
@@ -251,7 +297,7 @@
     font-size: 0.88rem;
   }
 
-  .md-paragraph-option.is-active {
+  .md-paragraph-option.md-active {
     color: #8ec5ff;
     background: color-mix(in srgb, #2f7df4 18%, transparent);
   }
@@ -259,24 +305,34 @@
   .md-toolbar-button {
     flex: 0 0 auto;
     min-width: 2rem;
-    min-height: 2rem;
-    padding: 0 0.2rem;
+    padding: 0 0.5rem;
   }
 
-  .md-toolbar-button.is-active {
-    color: var(--bulma-link);
-    background: color-mix(in srgb, var(--bulma-link) 12%, transparent);
-    box-shadow: inset 0 0 0 1px
-      color-mix(in srgb, var(--bulma-link) 26%, transparent);
+  .md-toolbar-button-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
   }
 
-  @media screen and (max-width: 768px) {
-    .md-toolbar {
-      gap: 0.2rem;
-    }
+  .md-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+  }
 
-    .md-paragraph-trigger {
-      min-width: 3rem;
-    }
+  .md-icon-small {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .md-paragraph-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9;
+    border: none;
+    background: transparent;
+    padding: 0;
   }
 </style>

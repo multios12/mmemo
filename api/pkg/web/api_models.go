@@ -12,22 +12,23 @@ import (
 )
 
 var (
-	oldDiaryImagePattern = regexp.MustCompile(`/api/diary/(\d{4})/(\d{2})/(\d{2})/images/([^)"]+)`)
-	oldEntryImagePattern = regexp.MustCompile(`/api/memos/([^/]+)/(\d{5})/([^)"]+)`)
+	oldDiaryImagePattern      = regexp.MustCompile(`/api/diary/(\d{4})/(\d{2})/(\d{2})/images/([^)"]+)`)
+	oldEntryImagePattern      = regexp.MustCompile(`/api/memos/([^/]+)/(\d{5})/([^)"]+)`)
+	relativeEntryImagePattern = regexp.MustCompile(`\((?:\.\/)?([^/\s]+)/([^/\s]+)/(?:images/)?([^)"]+)\)`)
 )
 
 type entryRequest struct {
-	Id        int      `json:"Id,omitempty"`
-	Outline   string   `json:"Outline"`
-	Date      string   `json:"Date"`
-	Category  string   `json:"Category,omitempty"`
-	Tags      []string `json:"Tags"`
-	Value     string   `json:"Value"`
-	HTML      string   `json:"HTML,omitempty"`
+	Id        int            `json:"Id,omitempty"`
+	Outline   string         `json:"Outline"`
+	Date      string         `json:"Date"`
+	Category  string         `json:"Category,omitempty"`
+	Tags      []string       `json:"Tags"`
+	Value     string         `json:"Value"`
+	HTML      string         `json:"HTML,omitempty"`
 	Images    []imageRequest `json:"Images,omitempty"`
-	HasDetail bool     `json:"HasDetail"`
-	CreatedAt string   `json:"CreatedAt,omitempty"`
-	UpdatedAt string   `json:"UpdatedAt,omitempty"`
+	HasDetail bool           `json:"HasDetail"`
+	CreatedAt string         `json:"CreatedAt,omitempty"`
+	UpdatedAt string         `json:"UpdatedAt,omitempty"`
 }
 
 type imageRequest struct {
@@ -87,15 +88,23 @@ func normalizeEntryValue(entry store.Entry) string {
 			if len(subMatches) != 5 {
 				return match
 			}
-			return fmt.Sprintf("/api/diary/%d/images/%s", entry.Id, path.Base(subMatches[4]))
+			return fmt.Sprintf("./diary/%d/%s", entry.Id, path.Base(subMatches[4]))
 		})
 	}
+
+	value = relativeEntryImagePattern.ReplaceAllStringFunc(value, func(match string) string {
+		subMatches := relativeEntryImagePattern.FindStringSubmatch(match)
+		if len(subMatches) != 4 {
+			return match
+		}
+		return fmt.Sprintf("(./%s/%s/%s)", subMatches[1], subMatches[2], path.Base(subMatches[3]))
+	})
 
 	return oldEntryImagePattern.ReplaceAllStringFunc(value, func(match string) string {
 		subMatches := oldEntryImagePattern.FindStringSubmatch(match)
 		if len(subMatches) != 4 {
 			return match
 		}
-		return fmt.Sprintf("/api/%s/%s/images/%s", subMatches[1], subMatches[2], path.Base(subMatches[3]))
+		return fmt.Sprintf("./%s/%s/%s", subMatches[1], subMatches[2], path.Base(subMatches[3]))
 	})
 }

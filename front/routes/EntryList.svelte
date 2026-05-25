@@ -6,6 +6,7 @@
   import { settingsStore } from "../store.js";
   import AppIcon from "../components/AppIcon.svelte";
   import Calendar from "../components/Calendar.svelte";
+  import SegmentedControl from "../components/SegmentedControl.svelte";
   import { apiPath, appPath } from "../basePath.js";
 
   const emptyListModel = (): listType => ({ WritedMonths: [], Lines: [] });
@@ -301,7 +302,8 @@
   };
   const toggleSortOrder = () =>
     (sortOrder = sortOrder === "asc" ? "desc" : "asc");
-  const setViewMode = (nextMode: viewModeType) => (viewMode = nextMode);
+  const setViewMode = (nextMode: string) =>
+    (viewMode = nextMode as viewModeType);
   const outlineIconMap: Record<string, string> = {
     note: "note-sticky",
     tree: "folder-tree",
@@ -326,6 +328,17 @@
       .toLowerCase();
     return outlineIconMap[rawIcon] ?? outlineIconMap.note;
   });
+  const segmentedItems = $derived.by(() => [
+    { value: "default", label: "通常", icon: "layer-group" },
+    ...(resolvedSettings.showTags
+      ? [{ value: "tag", label: resolvedSettings.tagsLabel, icon: "tags" }]
+      : []),
+    {
+      value: "outline",
+      label: resolvedSettings.outlineLabel,
+      icon: outlineIconName,
+    },
+  ]);
 
   $effect(() => {
     if (typeof window === "undefined") {
@@ -380,13 +393,14 @@
       <div class="toolbar-group">
         <div class="toolbar-controls">
           {#if resolvedSettings.useMonthFilter}
-            <div class="select is-fullwidth-mobile toolbar-month-select">
-              <select class="select" bind:value={selectMonth}>
-                {#each model.WritedMonths as v}
-                  <option value={v}>{v}</option>
-                {/each}
-              </select>
-            </div>
+            <select
+              class="select is-fullwidth-mobile toolbar-month-select"
+              bind:value={selectMonth}
+            >
+              {#each model.WritedMonths as v}
+                <option value={v}>{v}</option>
+              {/each}
+            </select>
           {/if}
           {#if hasEntries}
             <div class="toolbar-mode-row">
@@ -404,47 +418,11 @@
                   />
                 </span>
               </button>
-              <div
-                class="view-mode-picker"
-                role="group"
-                aria-label="表示モード"
-              >
-                <span class="view-mode-label">表示モード</span>
-                <div class="view-mode-options">
-                  <button
-                    class="view-mode-option"
-                    class:is-active={viewMode === "default"}
-                    type="button"
-                    aria-pressed={viewMode === "default"}
-                    onclick={() => setViewMode("default")}
-                  >
-                    <span class="icon"><AppIcon name="layer-group" /></span>
-                    <span>通常</span>
-                  </button>
-                  {#if resolvedSettings.showTags}
-                    <button
-                      class="view-mode-option"
-                      class:is-active={viewMode === "tag"}
-                      type="button"
-                      aria-pressed={viewMode === "tag"}
-                      onclick={() => setViewMode("tag")}
-                    >
-                      <span class="icon"><AppIcon name="tags" /></span>
-                      <span>{resolvedSettings.tagsLabel}</span>
-                    </button>
-                  {/if}
-                  <button
-                    class="view-mode-option"
-                    class:is-active={viewMode === "outline"}
-                    type="button"
-                    aria-pressed={viewMode === "outline"}
-                    onclick={() => setViewMode("outline")}
-                  >
-                    <span class="icon"><AppIcon name={outlineIconName} /></span>
-                    <span>{resolvedSettings.outlineLabel}</span>
-                  </button>
-                </div>
-              </div>
+              <SegmentedControl
+                items={segmentedItems}
+                selected={viewMode}
+                onChange={setViewMode}
+              />
             </div>
           {/if}
         </div>
@@ -470,8 +448,8 @@
     <div class="entry-empty has-text-grey">読み込み中...</div>
   {:else if !hasEntries}
     <div class="entry-empty">
-      <p class="title is-6 mb-2">まだ記録がありません</p>
-      <p class="has-text-grey mb-4">
+      <p class="entry-empty-title">まだ記録がありません</p>
+      <p class="entry-empty-description">
         最初のエントリを作成すると、ここに一覧が表示されます。
       </p>
     </div>
@@ -483,9 +461,7 @@
             <div class="entry-row-head">
               <span class="entry-date">{entry.Date}</span>
               {#if entry.HasDetail}
-                <span class="icon has-text-grey-light">
-                  <AppIcon name="note-sticky" />
-                </span>
+                <AppIcon class="icon has-text-grey-light" name="note-sticky" />
               {/if}
             </div>
             <div class="entry-outline">{entry.Outline || noOutlineLabel}</div>
@@ -497,9 +473,7 @@
             <div class="tags are-medium entry-tags entry-tags-badge">
               {#each entry.Tags as tag}
                 <span class="tag"
-                  ><span class="icon"><AppIcon name="tags" /></span><span
-                    >{tag}</span
-                  ></span
+                  ><AppIcon class="icon" name="tags" /><span>{tag}</span></span
                 >
               {/each}
             </div>
@@ -514,7 +488,7 @@
           <div class="entry-group-header">
             <div class="entry-group-heading">
               <div class="entry-group-title">
-                <span class="icon"><AppIcon name="tags" /></span>
+                <AppIcon class="icon" name="tags" />
                 <span>{group.label}</span>
               </div>
               {#if extractGroupedPreviews(latestUpdatedEntry(group.entries)?.Value ?? "").hasMarker && groupUpperPreview(group.entries)}
@@ -551,9 +525,7 @@
                       </span>
                     {/if}
                     {#if entry.HasDetail}
-                      <span class="icon has-text-grey-light">
-                        <AppIcon name="note-sticky" />
-                      </span>
+                      <AppIcon class="icon has-text-grey-light" name="note-sticky" />
                     {/if}
                   </div>
                 </div>
@@ -577,7 +549,7 @@
           <div class="entry-group-header">
             <div class="entry-group-heading">
               <div class="entry-group-title">
-                <span class="icon"><AppIcon name={outlineIconName} /></span>
+                <AppIcon class="icon" name={outlineIconName} />
                 <span>{group.outline}</span>
               </div>
               {#if extractGroupedPreviews(latestUpdatedEntry(group.entries)?.Value ?? "").hasMarker && groupUpperPreview(group.entries)}
@@ -614,18 +586,14 @@
                     </span>
                   {/if}
                   {#if entry.HasDetail}
-                    <span class="icon has-text-grey-light">
-                      <AppIcon name="note-sticky" />
-                    </span>
+                    <AppIcon class="icon has-text-grey-light" name="note-sticky" />
                   {/if}
                 </div>
                 {#if resolvedSettings.showTags && entry.Tags.length > 0}
                   <div class="tags are-medium entry-tags entry-tags-badge">
                     {#each entry.Tags as tag}
                       <span class="tag"
-                        ><span class="icon"><AppIcon name="tags" /></span><span
-                          >{tag}</span
-                        ></span
+                        ><AppIcon class="icon" name="tags" /><span>{tag}</span></span
                       >
                     {/each}
                   </div>
@@ -648,13 +616,12 @@
           aria-label={isCalendarExpanded ? "hide calendar" : "show calendar"}
           onclick={() => (isCalendarExpanded = !isCalendarExpanded)}
         >
-          <span class="icon"><AppIcon name="calendar-days" /></span>
+          <AppIcon class="icon" name="calendar-days" />
           <span class="mobile-calendar-toggle-label">カレンダー</span>
-          <span class="icon mobile-calendar-toggle-chevron">
-            <AppIcon
-              name={isCalendarExpanded ? "chevron-up" : "chevron-down"}
-            />
-          </span>
+          <AppIcon
+            class="icon mobile-calendar-toggle-chevron"
+            name={isCalendarExpanded ? "chevron-up" : "chevron-down"}
+          />
         </button>
       {/if}
 
@@ -687,7 +654,7 @@
                   aria-label="previous month"
                   onclick={() => moveCalendarMonth(previousCalendarMonth)}
                 >
-                  <span class="icon"><AppIcon name="chevron-left" /></span>
+                  <AppIcon class="icon" name="chevron-left" />
                 </button>
               {/if}
             </div>
@@ -702,7 +669,7 @@
                   aria-label="next month"
                   onclick={() => moveCalendarMonth(nextCalendarMonth)}
                 >
-                  <span class="icon"><AppIcon name="chevron-right" /></span>
+                  <AppIcon class="icon" name="chevron-right" />
                 </button>
               {/if}
             </div>
@@ -752,48 +719,9 @@
     flex-wrap: wrap;
   }
 
-  .view-mode-picker {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-  }
-
-  .view-mode-label {
-    color: var(--bulma-text-weak);
-    font-size: 0.86rem;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-
-  .view-mode-options {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.22rem;
-    border: 1px solid var(--bulma-border);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--bulma-scheme-main) 94%, black 6%);
-  }
-
-  .view-mode-option {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    min-width: 0;
-    padding: 0.45rem 0.8rem;
-    border: none;
-    border-radius: 999px;
-    background: transparent;
-    color: var(--bulma-text-weak);
-    font-size: 0.9rem;
-    cursor: pointer;
-  }
-
-  .view-mode-option.is-active {
-    background: color-mix(in srgb, #2d8f86 22%, var(--bulma-scheme-main));
-    color: color-mix(in srgb, var(--bulma-text) 92%, white 8%);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, #2d8f86 26%, transparent);
+  .toolbar-month-select {
+    width: auto;
+    min-width: 11rem;
   }
 
   .add-button {
@@ -804,11 +732,11 @@
     min-width: 2.75rem;
     background: color-mix(
       in srgb,
-      var(--bulma-border) 74%,
-      var(--bulma-scheme-main)
+      var(--app-border) 74%,
+      var(--app-scheme-main)
     );
-    border: 1px solid color-mix(in srgb, var(--bulma-border) 86%, white 14%);
-    color: color-mix(in srgb, var(--bulma-text) 88%, white 12%);
+    border: 1px solid color-mix(in srgb, var(--app-border) 86%, white 14%);
+    color: color-mix(in srgb, var(--app-text) 88%, white 12%);
   }
 
   .sort-icon {
@@ -837,9 +765,9 @@
   }
 
   .entry-group-card {
-    border: 1px solid var(--bulma-border);
+    border: 1px solid var(--app-border);
     border-radius: 18px;
-    background: color-mix(in srgb, var(--bulma-scheme-main) 95%, white 5%);
+    background: color-mix(in srgb, var(--app-scheme-main) 95%, white 5%);
     padding: 0.9rem;
   }
 
@@ -857,7 +785,7 @@
     gap: 0.45rem;
     font-size: 1rem;
     font-weight: 700;
-    color: var(--bulma-text);
+    color: var(--app-text);
   }
 
   .entry-group-heading {
@@ -868,14 +796,14 @@
   }
 
   .entry-group-preview {
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
     font-size: 0.92rem;
     line-height: 1.45;
     min-width: 0;
   }
 
   .entry-group-count {
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
     font-size: 0.88rem;
     font-variant-numeric: tabular-nums;
   }
@@ -900,7 +828,7 @@
     background: transparent;
     border: none;
     border-top: 1px solid
-      color-mix(in srgb, var(--bulma-border) 78%, transparent);
+      color-mix(in srgb, var(--app-border) 78%, transparent);
   }
 
   .outline-entry-list .outline-entry-row:first-child {
@@ -940,9 +868,9 @@
   }
 
   .calendar-popup-card {
-    border: 1px solid color-mix(in srgb, var(--bulma-border) 82%, white 18%);
+    border: 1px solid color-mix(in srgb, var(--app-border) 82%, white 18%);
     border-radius: 18px;
-    background: color-mix(in srgb, var(--bulma-scheme-main) 93%, black 7%);
+    background: color-mix(in srgb, var(--app-scheme-main) 93%, black 7%);
     box-shadow:
       0 22px 48px rgba(0, 0, 0, 0.34),
       0 8px 18px rgba(0, 0, 0, 0.2);
@@ -955,7 +883,7 @@
     grid-template-columns: 2.5rem 1fr 2.5rem;
     align-items: center;
     gap: 0.25rem;
-    color: color-mix(in srgb, var(--bulma-text) 90%, white 10%);
+    color: color-mix(in srgb, var(--app-text) 90%, white 10%);
   }
 
   .calendar-popup-heading-side {
@@ -974,14 +902,14 @@
     width: 2.25rem;
     height: 2.25rem;
     border-radius: 999px;
-    color: color-mix(in srgb, var(--bulma-text) 88%, white 12%);
-    background: color-mix(in srgb, var(--bulma-scheme-main) 88%, black 12%);
+    color: color-mix(in srgb, var(--app-text) 88%, white 12%);
+    background: color-mix(in srgb, var(--app-scheme-main) 88%, black 12%);
   }
 
   .calendar-panel :global(table) {
     width: 100%;
     min-width: 20rem;
-    background: var(--bulma-scheme-main);
+    background: var(--app-scheme-main);
     border-radius: 14px;
     overflow: hidden;
   }
@@ -996,7 +924,7 @@
     display: flex;
     gap: 0.65rem;
     align-items: center;
-    background-color: var(--bulma-border);
+    background-color: var(--app-border);
   }
 
   .mobile-calendar-toggle-button {
@@ -1007,9 +935,9 @@
     padding-right: 0.9rem;
     gap: 0.25rem;
     border-radius: 999px;
-    border-color: color-mix(in srgb, var(--bulma-border) 82%, white 18%);
-    color: var(--bulma-text);
-    background: color-mix(in srgb, var(--bulma-scheme-main) 92%, black 8%);
+    border-color: color-mix(in srgb, var(--app-border) 82%, white 18%);
+    color: var(--app-text);
+    background: color-mix(in srgb, var(--app-scheme-main) 92%, black 8%);
     box-shadow: 0 10px 24px rgba(10, 10, 10, 0.18);
   }
 
@@ -1017,15 +945,11 @@
     font-size: 0.92rem;
   }
 
-  .mobile-calendar-toggle-chevron {
-    margin-left: 0.1rem;
-  }
-
   .entry-row {
     width: 100%;
-    border: 1px solid var(--bulma-border);
+    border: 1px solid var(--app-border);
     border-radius: 14px;
-    background: var(--bulma-scheme-main);
+    background: var(--app-scheme-main);
     text-align: left;
     padding: 1rem 1.1rem;
     transition:
@@ -1035,7 +959,7 @@
   }
 
   .entry-row:hover {
-    border-color: var(--bulma-link);
+    border-color: var(--app-link);
     transform: translateY(-1px);
     box-shadow: 0 10px 24px rgba(10, 10, 10, 0.08);
   }
@@ -1050,7 +974,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
     font-size: 0.95rem;
     flex-wrap: wrap;
   }
@@ -1060,13 +984,13 @@
   }
 
   .entry-date-outline {
-    color: var(--bulma-text);
+    color: var(--app-text);
     font-weight: 600;
     line-height: 1.4;
   }
 
   .entry-date-preview {
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
     font-size: 0.9rem;
     line-height: 1.4;
     overflow: hidden;
@@ -1079,12 +1003,12 @@
   .entry-outline {
     font-size: 1.05rem;
     font-weight: 600;
-    color: var(--bulma-text);
+    color: var(--app-text);
     line-height: 1.45;
   }
 
   .entry-preview {
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
     font-size: 0.92rem;
     line-height: 1.5;
     white-space: nowrap;
@@ -1100,7 +1024,7 @@
   .entry-tags-badge :global(.tag) {
     border-radius: 999px;
     background: transparent;
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
     font-size: 0.9rem;
     font-weight: 400;
     letter-spacing: 0.01em;
@@ -1112,14 +1036,27 @@
 
   .entry-tags-badge :global(.tag .icon) {
     margin-right: 0;
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
   }
 
   .entry-empty {
     padding: 3rem 1rem;
     text-align: center;
-    border: 1px dashed var(--bulma-border);
+    border: 1px dashed var(--app-border);
     border-radius: 14px;
+  }
+
+  .entry-empty-title {
+    margin: 0 0 0.5rem;
+    color: var(--app-text-strong);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .entry-empty-description {
+    margin: 0 0 1rem;
+    color: var(--app-text-weak);
   }
 
   .mobile-add-button {
@@ -1162,41 +1099,10 @@
       width: 100%;
     }
 
-    .toolbar-month-select :global(.select),
-    .toolbar-month-select :global(select) {
-      width: 100%;
-    }
-
     .toolbar-mode-row {
       width: 100%;
       flex-wrap: nowrap;
       align-items: center;
-    }
-
-    .view-mode-picker {
-      flex: 1 1 0;
-      min-width: 0;
-    }
-
-    .view-mode-label {
-      display: none;
-    }
-
-    .view-mode-options {
-      width: 100%;
-      justify-content: stretch;
-    }
-
-    .view-mode-option {
-      flex: 1 1 0;
-      justify-content: center;
-      font-size: 0.74rem;
-      padding: 0.38rem 0.3rem;
-      gap: 0.16rem;
-    }
-
-    .view-mode-option :global(.icon) {
-      display: none;
     }
 
     .entry-group-card {

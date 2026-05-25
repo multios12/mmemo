@@ -215,10 +215,10 @@
   .image-card {
     margin-top: 0.9rem;
     padding: 1rem;
-    border: 1px solid color-mix(in srgb, var(--bulma-border) 78%, white 22%);
+    border: 1px solid color-mix(in srgb, var(--app-border) 78%, white 22%);
     border-radius: 1rem;
     background:
-      linear-gradient(180deg, color-mix(in srgb, var(--bulma-scheme-main) 96%, white 4%), var(--bulma-scheme-main));
+      linear-gradient(180deg, color-mix(in srgb, var(--app-scheme-main) 96%, white 4%), var(--app-scheme-main));
     box-shadow: 0 0.75rem 2rem rgba(12, 18, 28, 0.08);
   }
 
@@ -232,7 +232,7 @@
     scroll-snap-type: x proximity;
     scrollbar-gutter: stable;
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, #2d8f86 58%, white 42%) color-mix(in srgb, var(--bulma-scheme-main) 82%, black 18%);
+    scrollbar-color: color-mix(in srgb, #2d8f86 58%, white 42%) color-mix(in srgb, var(--app-scheme-main) 82%, black 18%);
   }
 
   .image-card-strip::-webkit-scrollbar {
@@ -240,12 +240,12 @@
   }
 
   .image-card-strip::-webkit-scrollbar-track {
-    background: color-mix(in srgb, var(--bulma-scheme-main) 82%, black 18%);
+    background: color-mix(in srgb, var(--app-scheme-main) 82%, black 18%);
     border-radius: 999px;
   }
 
   .image-card-strip::-webkit-scrollbar-thumb {
-    border: 0.18rem solid color-mix(in srgb, var(--bulma-scheme-main) 82%, black 18%);
+    border: 0.18rem solid color-mix(in srgb, var(--app-scheme-main) 82%, black 18%);
     border-radius: 999px;
     background: linear-gradient(
       90deg,
@@ -272,9 +272,9 @@
     flex-direction: column;
     gap: 0.75rem;
     padding: 0.75rem;
-    border: 1px solid color-mix(in srgb, var(--bulma-border) 82%, white 18%);
+    border: 1px solid color-mix(in srgb, var(--app-border) 82%, white 18%);
     border-radius: 0.95rem;
-    background: var(--bulma-scheme-main);
+    background: var(--app-scheme-main);
     cursor: pointer;
     text-align: left;
   }
@@ -307,7 +307,7 @@
 
   .image-card-item-name {
     flex: 1 1 auto;
-    color: var(--bulma-text);
+    color: var(--app-text);
     font-size: 0.84rem;
     font-weight: 600;
     overflow: hidden;
@@ -338,10 +338,10 @@
     gap: 0.65rem;
     min-height: 100%;
     padding: 1rem;
-    border: 1px dashed color-mix(in srgb, var(--bulma-border) 82%, white 18%);
+    border: 1px dashed color-mix(in srgb, var(--app-border) 82%, white 18%);
     border-radius: 0.95rem;
-    background: color-mix(in srgb, var(--bulma-scheme-main) 88%, #edf4f2);
-    color: var(--bulma-text-weak);
+    background: color-mix(in srgb, var(--app-scheme-main) 88%, #edf4f2);
+    color: var(--app-text-weak);
   }
 
   .image-card-add-icon {
@@ -351,7 +351,7 @@
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 999px;
-    background: color-mix(in srgb, #2d8f86 12%, var(--bulma-scheme-main));
+    background: color-mix(in srgb, #2d8f86 12%, var(--app-scheme-main));
     color: color-mix(in srgb, #2d8f86 84%, black 16%);
   }
 

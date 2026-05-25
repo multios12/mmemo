@@ -34,10 +34,7 @@
     let dayIndex = 0;
     let weekIndex = 0;
     const lastDate = monthEnd(value);
-    while (
-      diffDays(targetDate, lastDate) <= 0 ||
-      dayIndex !== 0
-    ) {
+    while (diffDays(targetDate, lastDate) <= 0 || dayIndex !== 0) {
       if (calendarTable[weekIndex] == undefined) {
         calendarTable[weekIndex] = [];
       }
@@ -137,8 +134,8 @@
     width: 100%;
     table-layout: fixed;
     border-collapse: collapse;
-    background: color-mix(in srgb, var(--bulma-scheme-main) 94%, black 6%);
-    border: 1px solid color-mix(in srgb, var(--bulma-border) 82%, white 10%);
+    background: color-mix(in srgb, var(--app-scheme-main) 94%, black 6%);
+    border: 1px solid color-mix(in srgb, var(--app-border) 82%, white 10%);
   }
 
   .calendar th,
@@ -152,9 +149,9 @@
   .calendar th {
     padding: 0.5rem 0.25rem;
     font-weight: 600;
-    color: color-mix(in srgb, var(--bulma-text-weak) 84%, white 16%);
-    background: color-mix(in srgb, var(--bulma-border) 82%, black 18%);
-    border-color: color-mix(in srgb, var(--bulma-border) 82%, white 8%);
+    color: color-mix(in srgb, var(--app-text-weak) 84%, white 16%);
+    background: color-mix(in srgb, var(--app-border) 82%, black 18%);
+    border-color: color-mix(in srgb, var(--app-border) 82%, white 8%);
   }
 
   .holiday-head {
@@ -169,18 +166,18 @@
     padding: 0.2rem;
     height: 2.35rem;
     font-variant-numeric: tabular-nums;
-    color: var(--bulma-text);
-    background: color-mix(in srgb, var(--bulma-scheme-main) 93%, black 7%);
-    border-color: color-mix(in srgb, var(--bulma-border) 82%, white 8%);
+    color: var(--app-text);
+    background: color-mix(in srgb, var(--app-scheme-main) 93%, black 7%);
+    border-color: color-mix(in srgb, var(--app-border) 82%, white 8%);
   }
 
   .day-number {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.2rem;
-    height: 1.8rem;
     border-radius: 999px;
+    line-height: 1;
+    white-space: nowrap;
     transition:
       background-color 0.15s ease,
       box-shadow 0.15s ease,
@@ -191,6 +188,7 @@
     border: none;
     cursor: pointer;
     font: inherit;
+    padding: 0;
   }
 
   .day-button:hover {
@@ -205,7 +203,7 @@
   .active-day .day-number {
     font-weight: 700;
     color: #edf8f6;
-    background: color-mix(in srgb, #2d8f86 62%, var(--bulma-scheme-main));
+    background: color-mix(in srgb, #2d8f86 62%, var(--app-scheme-main));
     box-shadow:
       inset 0 0 0 1px rgba(170, 230, 223, 0.14),
       0 0 0 1px rgba(24, 79, 74, 0.24);
@@ -213,16 +211,16 @@
 
   .holiday {
     color: #f1e3e5;
-    background: color-mix(in srgb, #6d3d45 42%, var(--bulma-scheme-main));
+    background: color-mix(in srgb, #6d3d45 42%, var(--app-scheme-main));
   }
 
   .disable {
-    color: color-mix(in srgb, var(--bulma-text-weak) 55%, transparent);
-    background: color-mix(in srgb, var(--bulma-scheme-main) 96%, black 4%);
+    color: color-mix(in srgb, var(--app-text-weak) 55%, transparent);
+    background: color-mix(in srgb, var(--app-scheme-main) 96%, black 4%);
   }
 
   .saturday {
     color: #e4e9f8;
-    background: color-mix(in srgb, #40527f 40%, var(--bulma-scheme-main));
+    background: color-mix(in srgb, #40527f 40%, var(--app-scheme-main));
   }
 </style>

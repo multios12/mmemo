@@ -77,8 +77,8 @@ update: dependencies
 ```
 
 ```
-![イメージ](/api/diary/2024/06/06/images/00000004.png)
-![イメージ](/api/diary/2024/06/06/images/00000004.png "テスト")
+![イメージ](./diary/2024/06/06/00000004.png)
+![イメージ](./diary/2024/06/06/00000004.png "テスト")
 
 ![イメージ](/api/images/tmp_00000004.png)
 ![イメージ](/api/images/tmp_00000004.png "テスト")

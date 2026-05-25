@@ -67,7 +67,7 @@
   <div class="template-selector-modal">
     <div class="template-selector template-save-modal">
       <div class="template-selector-header">
-        <h2 class="title is-6 mb-2">テンプレート保存</h2>
+        <h2 class="template-selector-title">テンプレート保存</h2>
       </div>
 
       <div
@@ -83,7 +83,7 @@
           aria-selected={mode === "new"}
           onclick={() => (mode = "new")}
         >
-          <span class="icon"><AppIcon name="plus" /></span>
+          <AppIcon class="icon" name="plus" />
           <span>新規作成</span>
         </button>
         <button
@@ -95,39 +95,34 @@
           disabled={!hasTemplates}
           onclick={() => (mode = "overwrite")}
         >
-          <span class="icon"><AppIcon name="pen-to-square" /></span>
+          <AppIcon class="icon" name="pen-to-square" />
           <span>上書き</span>
         </button>
       </div>
 
       {#if mode === "new"}
-        <div class="field">
+        <div class="template-save-field">
           <label class="label" for="templateNameInput">テンプレート名</label>
-          <div class="control">
-            <input
-              id="templateNameInput"
-              class="input"
-              type="text"
-              bind:value={draftName}
-              placeholder="テンプレート名"
-            />
-          </div>
+          <input
+            id="templateNameInput"
+            class="input"
+            type="text"
+            bind:value={draftName}
+            placeholder="テンプレート名"
+          />
         </div>
       {:else}
-        <div class="field">
+        <div class="template-save-field">
           <label class="label" for="templateOverwriteSelect">上書き先テンプレート</label>
-          <div class="control">
-            <div class="select is-fullwidth template-save-select">
-              <select
-                id="templateOverwriteSelect"
-                bind:value={overwriteName}
-              >
-                {#each templates as template}
-                  <option value={template.Name}>{template.Name}</option>
-                {/each}
-              </select>
-            </div>
-          </div>
+          <select
+            id="templateOverwriteSelect"
+            class="select is-fullwidth template-save-select"
+            bind:value={overwriteName}
+          >
+            {#each templates as template}
+              <option value={template.Name}>{template.Name}</option>
+            {/each}
+          </select>
         </div>
       {/if}
 
@@ -139,17 +134,17 @@
 
       <div class="template-save-actions">
         <MuSecondaryButton disabled={isSaving || isDeleting} onclick={onClose}>
-          <span class="icon"><AppIcon name="xmark" /></span>
+          <AppIcon class="icon" name="xmark" />
           <span>キャンセル</span>
         </MuSecondaryButton>
         {#if mode === "overwrite" && hasTemplates}
           <MuDangerButton disabled={isSaving || isDeleting} onclick={onDeleteClick}>
-            <span class="icon"><AppIcon name="trash" /></span>
+            <AppIcon class="icon" name="trash" />
             <span>削除</span>
           </MuDangerButton>
         {/if}
         <MuPrimaryButton disabled={isSaving || isDeleting} onclick={onSubmit}>
-          <span class="icon"><AppIcon name="floppy-disk" /></span>
+          <AppIcon class="icon" name="floppy-disk" />
           <span>保存</span>
         </MuPrimaryButton>
       </div>
@@ -168,7 +163,7 @@
     padding: 1rem;
     background: color-mix(
       in srgb,
-      var(--bulma-scheme-main) 55%,
+      var(--app-scheme-main) 55%,
       rgba(15, 23, 42, 0.45)
     );
     backdrop-filter: blur(6px);
@@ -180,12 +175,12 @@
     overflow-y: auto;
     padding: 1rem;
     border: 1px solid
-      color-mix(in srgb, var(--bulma-link) 18%, var(--bulma-border));
+      color-mix(in srgb, var(--app-link) 18%, var(--app-border));
     border-radius: 1.1rem;
-    background: var(--bulma-scheme-main);
+    background: var(--app-scheme-main);
     box-shadow:
       0 1.2rem 3rem rgba(15, 23, 42, 0.18),
-      0 0 0 1px color-mix(in srgb, var(--bulma-link) 12%, transparent);
+      0 0 0 1px color-mix(in srgb, var(--app-link) 12%, transparent);
   }
 
   .template-save-modal {
@@ -196,14 +191,22 @@
     margin-bottom: 0.75rem;
   }
 
+  .template-selector-title {
+    margin: 0 0 0.5rem;
+    color: var(--app-text-strong);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
   .template-save-mode {
     display: flex;
     gap: 0.4rem;
     padding: 0.35rem;
     margin-bottom: 1rem;
-    border: 1px solid color-mix(in srgb, var(--bulma-link) 16%, var(--bulma-border));
+    border: 1px solid color-mix(in srgb, var(--app-link) 16%, var(--app-border));
     border-radius: 999px;
-    background: color-mix(in srgb, var(--bulma-link) 5%, var(--bulma-scheme-main));
+    background: color-mix(in srgb, var(--app-link) 5%, var(--app-scheme-main));
   }
 
   .template-save-mode-option {
@@ -217,7 +220,7 @@
     border: none;
     border-radius: 999px;
     background: transparent;
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
     font-size: 0.95rem;
     font-weight: 600;
     transition:
@@ -227,9 +230,9 @@
   }
 
   .template-save-mode-option.is-active {
-    background: color-mix(in srgb, var(--bulma-link) 18%, var(--bulma-scheme-main));
-    color: var(--bulma-link-text);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--bulma-link) 18%, transparent);
+    background: color-mix(in srgb, var(--app-link) 18%, var(--app-scheme-main));
+    color: var(--app-link-text);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--app-link) 18%, transparent);
   }
 
   .template-save-mode-option:disabled {
@@ -237,12 +240,15 @@
   }
 
   .template-save-mode-option:not(:disabled):hover {
-    color: var(--bulma-text);
-    background: color-mix(in srgb, var(--bulma-link) 10%, var(--bulma-scheme-main));
+    color: var(--app-text);
+    background: color-mix(in srgb, var(--app-link) 10%, var(--app-scheme-main));
   }
 
-  .template-save-select,
-  .template-save-select select {
+  .template-save-field:not(:last-child) {
+    margin-bottom: 0.75rem;
+  }
+
+  .template-save-select {
     width: 100%;
   }
 

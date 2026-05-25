@@ -6,12 +6,15 @@
     MuActionsFooter,
     MuPrimaryButton,
     MuSecondaryButton,
-    MuTagsInput,
+    MuTagsField,
   } from "mu-ui-lib";
   import { onMount } from "svelte";
+  import ImageIcon from "lucide-svelte/icons/image";
+  import RotateCw from "lucide-svelte/icons/rotate-cw";
   import AppIcon from "../components/AppIcon.svelte";
   import ImageSelectionCard from "../components/ImageSelectionCard.svelte";
-  import MDInput from "../components/MDInput/index.svelte";
+  import MuMdField from "../components/mu-md-field/index.svelte";
+  import type { ToolbarButton } from "../components/mu-md-field/types.js";
   import TemplateSelectorModal from "../components/TemplateSelectorModal.svelte";
   import type { entryType } from "../models/entryModels.js";
   import type { TemplateType } from "../models/settingType.js";
@@ -73,9 +76,7 @@
 
   const entryId = $derived(routeParams.id ? String(routeParams.id) : undefined);
   const isAddRoute = $derived(entryId == undefined || entryId === "");
-  const routeQuery = $derived(
-    (location?.query ?? {}) as EntryRouteQuery,
-  );
+  const routeQuery = $derived((location?.query ?? {}) as EntryRouteQuery);
   const imageUploadPath = $derived(
     isAddRoute
       ? apiPath(`${categoryKey}/images/tmp`)
@@ -289,8 +290,25 @@
   const onTextChange = (value: string) => {
     editorValue = value;
   };
-  const onEmbedImage = (markdown: string) => {
+  const escapeRegExp = (value: string) =>
+    value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const rewriteEmbeddedImageMarkdown = (markdown: string) => {
     const nextMarkdown = markdown.trim();
+    if (nextMarkdown === "" || isAddRoute || !entryId) {
+      return nextMarkdown;
+    }
+
+    const imagePathPattern = new RegExp(
+      `\\((?:\\./|/api/)?${escapeRegExp(categoryKey)}/${escapeRegExp(entryId)}/(?:images/)?([^\\s)]+)`,
+      "g",
+    );
+    return nextMarkdown.replace(
+      imagePathPattern,
+      `(./${categoryKey}/${entryId}/$1`,
+    );
+  };
+  const onEmbedImage = (markdown: string) => {
+    const nextMarkdown = rewriteEmbeddedImageMarkdown(markdown);
     if (nextMarkdown === "") {
       return;
     }
@@ -304,6 +322,44 @@
   const closeImagePicker = () => {
     isImagePickerOpen = false;
   };
+  const muMdFieldToolbarButtons: ToolbarButton[] = [
+    {
+      key: "carry-over-marker",
+      ariaLabel: "carry over marker",
+      icon: RotateCw,
+      title: "次回グループ追加へ引き継ぐ位置を挿入",
+      onClick: ({
+        value,
+        textarea,
+        selectionStart,
+        selectionEnd,
+        updateValue,
+        syncToolbarState,
+      }) => {
+        const before = value.slice(0, selectionStart);
+        const after = value.slice(selectionEnd);
+        const needsLeadingNewline = before !== "" && !before.endsWith("\n");
+        const needsTrailingNewline = after !== "" && !after.startsWith("\n");
+        const insertion = `${needsLeadingNewline ? "\n" : ""}${carryOverMarker}${needsTrailingNewline ? "\n" : ""}`;
+        const nextCursor = before.length + insertion.length;
+
+        updateValue(`${before}${insertion}${after}`);
+
+        requestAnimationFrame(() => {
+          textarea?.focus();
+          textarea?.setSelectionRange(nextCursor, nextCursor);
+          syncToolbarState();
+        });
+      },
+    },
+    {
+      key: "image-picker",
+      ariaLabel: "image",
+      icon: ImageIcon,
+      title: "画像を選択",
+      onClick: openImagePicker,
+    },
+  ];
   const onSelectTemplate = (payload: {
     template: TemplateType;
     index: number;
@@ -477,33 +533,29 @@
     <div class="detail-header">
       <div class="detail-header-main">
         <div class="detail-header-top">
-          <div class="field detail-date-field">
+          <div class="detail-date-field">
             <MuDateField bind:value={dateValue} editable={isNew} />
           </div>
-          <div class="field detail-outline-field">
-            <div class="field has-addons mobile-outline-row">
-              <div class="control is-expanded">
-                <input
-                  id="outlineInput"
-                  type="text"
-                  placeholder={resolvedSettings.outlineLabel}
-                  class="input is-medium"
-                  bind:this={outlineInput}
-                  bind:value={outlineValue}
-                />
-              </div>
+          <div class="detail-outline-field">
+            <div class="mobile-outline-row">
+              <input
+                id="outlineInput"
+                type="text"
+                placeholder={resolvedSettings.outlineLabel}
+                class="input is-medium"
+                bind:this={outlineInput}
+                bind:value={outlineValue}
+              />
               {#if resolvedSettings.showTags}
-                <div class="control is-hidden-tablet">
-                  <button
-                    class="button mobile-tag-button detail-secondary-button"
-                    class:is-link={showTagsOnMobile}
-                    type="button"
-                    aria-label="toggle tags"
-                    onclick={() => (showTagsOnMobile = !showTagsOnMobile)}
-                  >
-                    <span class="icon"><AppIcon name="tags" /></span>
-                  </button>
-                </div>
+                <button
+                  class="button is-hidden-tablet mobile-tag-button detail-secondary-button"
+                  class:is-link={showTagsOnMobile}
+                  type="button"
+                  aria-label="toggle tags"
+                  onclick={() => (showTagsOnMobile = !showTagsOnMobile)}
+                >
+                  <AppIcon class="icon" name="tags" />
+                </button>
               {/if}
             </div>
           </div>
@@ -513,7 +565,7 @@
                 ariaLabel={`delete ${categoryKey}`}
                 onclick={onDelete}
               >
-                <span class="icon"><AppIcon name="trash" /></span>
+                <AppIcon class="icon" name="trash" />
                 <span>削除</span>
               </MuDangerButton>
             </div>
@@ -524,9 +576,7 @@
     {#if resolvedSettings.showTags}
       <div class="detail-tags">
         <div class:mobile-hidden-tags={!showTagsOnMobile}>
-          <div class="control">
-            <MuTagsInput bind:items={tagsValue} />
-          </div>
+          <MuTagsField bind:items={tagsValue} />
         </div>
       </div>
     {/if}
@@ -540,12 +590,16 @@
       onSelect={onSelectTemplate}
     />
 
-    <div class="field detail-editor-field">
-      <div class="control detail-editor-control">
-        <MDInput value={editorValue} {imageUploadPath} {onTextChange} />
+    <div class="detail-editor-field">
+      <div class="detail-editor-control">
+        <MuMdField
+          value={editorValue}
+          {imageUploadPath}
+          {onTextChange}
+          toolbarButtons={muMdFieldToolbarButtons}
+        />
       </div>
     </div>
-
   </section>
 
   {#if isImagePickerOpen}
@@ -562,7 +616,11 @@
         if (event.target !== event.currentTarget) {
           return;
         }
-        if (event.key === "Escape" || event.key === "Enter" || event.key === " ") {
+        if (
+          event.key === "Escape" ||
+          event.key === "Enter" ||
+          event.key === " "
+        ) {
           event.preventDefault();
           closeImagePicker();
         }
@@ -572,13 +630,15 @@
         <div class="image-picker-modal-header">
           <div>
             <div class="image-picker-modal-title">画像選択</div>
-            <div class="image-picker-modal-subtitle">画像をクリックして本文に挿入できます</div>
+            <div class="image-picker-modal-subtitle">
+              画像をクリックして本文に挿入できます
+            </div>
           </div>
           <MuSecondaryButton
             ariaLabel="close image picker"
             onclick={closeImagePicker}
           >
-            <span class="icon"><AppIcon name="xmark" /></span>
+            <AppIcon class="icon" name="xmark" />
           </MuSecondaryButton>
         </div>
         <ImageSelectionCard
@@ -595,21 +655,21 @@
 
   <MuActionsFooter hasUnsavedChanges={isDirty}>
     <MuSecondaryButton onclick={onCancel}>
-      <span class="icon"><AppIcon name="arrow-left" /></span>
+      <AppIcon class="icon" name="arrow-left" />
       <span>戻る</span>
     </MuSecondaryButton>
     <MuSecondaryButton onclick={openImagePicker}>
-      <span class="icon"><AppIcon name="image" /></span>
+      <AppIcon class="icon" name="image" />
       <span>画像</span>
     </MuSecondaryButton>
     {#if isDirty}
       <MuPrimaryButton disabled={isLoading} onclick={onOk}>
-        <span class="icon"><AppIcon name="cloud-arrow-up" /></span>
+        <AppIcon class="icon" name="cloud-arrow-up" />
         <span>{saveButtonLabel}</span>
       </MuPrimaryButton>
     {:else}
       <MuSecondaryButton disabled={true} onclick={onOk}>
-        <span class="icon"><AppIcon name="cloud-arrow-up" /></span>
+        <AppIcon class="icon" name="cloud-arrow-up" />
         <span>{saveButtonLabel}</span>
       </MuSecondaryButton>
     {/if}
@@ -647,13 +707,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: color-mix(in srgb, var(--bulma-scheme-main) 86%, transparent);
+    background: color-mix(in srgb, var(--app-scheme-main) 86%, transparent);
     z-index: 1200;
     visibility: visible;
   }
 
   header {
-    background-color: var(--bulma-border);
+    background-color: var(--app-border);
     width: 100%;
     top: 0;
     left: 0;
@@ -693,6 +753,25 @@
     margin-bottom: 0;
   }
 
+  .detail-outline-field :global(.input.is-medium) {
+    border-color: #394152;
+    background-color: #161b28;
+    background-image: linear-gradient(180deg, #1b2030, #161b28);
+    color: #eef2ff;
+    caret-color: #8ec5ff;
+  }
+
+  .detail-outline-field :global(.input.is-medium::placeholder) {
+    color: rgba(238, 242, 255, 0.52);
+  }
+
+  .detail-outline-field :global(.input.is-medium:focus),
+  .detail-outline-field :global(.input.is-medium:focus-visible) {
+    border-color: #5ea7f0;
+    box-shadow: 0 0 0 0.15rem rgba(94, 167, 240, 0.28);
+    outline: none;
+  }
+
   .detail-action-wrap {
     display: flex;
     align-items: center;
@@ -715,17 +794,12 @@
   .detail-secondary-button {
     background: color-mix(
       in srgb,
-      var(--bulma-border) 74%,
-      var(--bulma-scheme-main)
+      var(--app-border) 74%,
+      var(--app-scheme-main)
     );
-    border: 1px solid color-mix(in srgb, var(--bulma-border) 86%, white 14%);
-    color: color-mix(in srgb, var(--bulma-text) 90%, white 10%);
+    border: 1px solid color-mix(in srgb, var(--app-border) 86%, white 14%);
+    color: color-mix(in srgb, var(--app-text) 90%, white 10%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  }
-
-  .detail-body .field {
-    height: 100%;
-    margin-bottom: 0;
   }
 
   .detail-editor-control {
@@ -761,7 +835,7 @@
     gap: 0.75rem;
     padding: 1rem;
     border-radius: 1rem;
-    background: var(--bulma-scheme-main);
+    background: var(--app-scheme-main);
     box-shadow: 0 1.5rem 3.5rem rgba(0, 0, 0, 0.28);
   }
 
@@ -773,7 +847,7 @@
   }
 
   .image-picker-modal-title {
-    color: var(--bulma-text);
+    color: var(--app-text);
     font-size: 1rem;
     font-weight: 700;
     line-height: 1.2;
@@ -781,7 +855,7 @@
 
   .image-picker-modal-subtitle {
     margin-top: 0.15rem;
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
     font-size: 0.82rem;
     line-height: 1.4;
   }
@@ -802,10 +876,6 @@
       gap: 0.2rem;
       margin-bottom: 0.15rem;
       flex-wrap: wrap;
-    }
-
-    .detail-header .field {
-      margin-bottom: 0.05rem;
     }
 
     .detail-action-wrap {
@@ -833,12 +903,6 @@
       align-items: stretch;
     }
 
-    .mobile-outline-row .control {
-      min-width: 0;
-      display: flex;
-      align-items: stretch;
-    }
-
     .mobile-tag-button {
       min-width: 2.5rem;
       padding-left: 0.5rem;
@@ -852,8 +916,7 @@
     }
 
     .detail-date-field,
-    .detail-action-wrap,
-    .mobile-outline-row .control {
+    .detail-action-wrap {
       display: flex;
       align-items: stretch;
       height: 2.35rem;
@@ -928,6 +991,5 @@
     .image-picker-modal :global(.image-card-item-footer) {
       padding: 0.65rem 0.75rem 0.75rem;
     }
-
   }
 </style>

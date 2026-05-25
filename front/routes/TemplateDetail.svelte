@@ -5,10 +5,10 @@
     MuActionsFooter,
     MuPrimaryButton,
     MuSecondaryButton,
-    MuTagsInput,
+    MuTagsField,
   } from "mu-ui-lib";
   import AppIcon from "../components/AppIcon.svelte";
-  import MDInput from "../components/MDInput/index.svelte";
+  import MuMdField from "../components/mu-md-field/index.svelte";
   import { apiPath, apiSettingsPath, appPath } from "../basePath.js";
   import type { settingType } from "../models/settingType.js";
   import { settingsStore } from "../store.js";
@@ -23,9 +23,11 @@
   let originalTemplateName = $state("");
   let loading = $state(true);
 
-  const routeParams = $derived((location?.params ?? {}) as {
-    name?: string | number | boolean;
-  });
+  const routeParams = $derived(
+    (location?.params ?? {}) as {
+      name?: string | number | boolean;
+    },
+  );
   const templateName = $derived(
     decodeURIComponent(String(routeParams.name ?? "")).trim(),
   );
@@ -41,7 +43,9 @@
       return undefined;
     }
     for (const category of $settingsStore.Categories ?? []) {
-      const match = category.Templates?.find((item) => item.Name === templateName);
+      const match = category.Templates?.find(
+        (item) => item.Name === templateName,
+      );
       if (match !== undefined) {
         return { categoryKey: category.Key, template: match };
       }
@@ -66,7 +70,11 @@
     outlineValue = nextOutlineValue;
     tagsValue = nextTagsValue;
     bodyValue = nextBodyValue;
-    initialSnapshot = snapshotTemplate(nextOutlineValue, nextTagsValue, nextBodyValue);
+    initialSnapshot = snapshotTemplate(
+      nextOutlineValue,
+      nextTagsValue,
+      nextBodyValue,
+    );
     loading = false;
   });
 
@@ -152,41 +160,35 @@
             ariaLabel={`delete ${templateCategoryKey}`}
             onclick={onDelete}
           >
-            <span class="icon"><AppIcon name="trash" /></span>
+            <AppIcon class="icon" name="trash" />
             <span>削除</span>
           </MuDangerButton>
         </div>
         <div class="template-detail-header-fields">
-          <div class="field">
+          <div class="template-detail-form-field">
             <label class="label" for="templateOutlineInput">見出し</label>
-            <div class="control">
-              <input
-                id="templateOutlineInput"
-                class="input is-medium"
-                type="text"
-                bind:value={outlineValue}
-              />
-            </div>
+            <input
+              id="templateOutlineInput"
+              class="input is-medium"
+              type="text"
+              bind:value={outlineValue}
+            />
           </div>
 
-          <div class="field">
+          <div class="template-detail-form-field">
             <label class="label" for="templateTagsInput">タグ</label>
-            <div class="control">
-              <MuTagsInput inputId="templateTagsInput" bind:items={tagsValue} />
-            </div>
+            <MuTagsField inputId="templateTagsInput" bind:items={tagsValue} />
           </div>
         </div>
       </div>
     </header>
 
     <div class="template-detail-body">
-      <div class="container is-fluid template-detail-inner">
+      <div class="template-detail-inner">
         <div class="template-detail-card">
           <div class="template-detail-grid">
-            <div class="field template-detail-body-field">
-              <div class="control">
-                <MDInput value={bodyValue} {onTextChange} />
-              </div>
+            <div class="template-detail-body-field">
+              <MuMdField value={bodyValue} {onTextChange} />
             </div>
           </div>
         </div>
@@ -195,17 +197,17 @@
 
     <MuActionsFooter hasUnsavedChanges={isDirty}>
       <MuSecondaryButton href={appPath("/settings")}>
-        <span class="icon"><AppIcon name="arrow-left" /></span>
+        <AppIcon class="icon" name="arrow-left" />
         <span>戻る</span>
       </MuSecondaryButton>
       {#if isDirty}
         <MuPrimaryButton onclick={onSave}>
-          <span class="icon"><AppIcon name="cloud-arrow-up" /></span>
+          <AppIcon class="icon" name="cloud-arrow-up" />
           <span>保存</span>
         </MuPrimaryButton>
       {:else}
         <MuSecondaryButton disabled={true} onclick={onSave}>
-          <span class="icon"><AppIcon name="cloud-arrow-up" /></span>
+          <AppIcon class="icon" name="cloud-arrow-up" />
           <span>保存</span>
         </MuSecondaryButton>
       {/if}
@@ -220,7 +222,7 @@
   }
 
   .template-detail-header {
-    background-color: var(--bulma-border);
+    background-color: var(--app-border);
     width: 100%;
     top: 0;
     left: 0;
@@ -249,7 +251,7 @@
   }
 
   .template-detail-category {
-    color: var(--bulma-text);
+    color: var(--app-text);
     font-size: 1.45rem;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -269,7 +271,7 @@
     flex: 1 1 auto;
     min-height: 0;
     width: 100%;
-    max-width: 56rem;
+    max-width: none;
     padding-left: 0.25rem;
     padding-right: 0.25rem;
   }
@@ -279,6 +281,7 @@
     flex: 1 1 auto;
     min-height: 0;
     width: 100%;
+    max-width: none;
     padding-top: 0.45rem;
   }
 
@@ -298,14 +301,7 @@
     grid-column: 1 / 2;
   }
 
-  .template-detail-body-field :global(.control) {
-    display: flex;
-    flex: 1 1 auto;
-    min-height: 0;
-    width: 100%;
-  }
-
-  .template-detail-header-fields :global(.field) {
+  .template-detail-form-field {
     margin-bottom: 0.35rem;
   }
 
@@ -319,6 +315,10 @@
     display: flex;
     flex: 1 1 auto;
     min-height: 0;
+    width: 100%;
+  }
+
+  .template-detail-body-field :global(.md-input-area) {
     width: 100%;
   }
 
@@ -351,6 +351,5 @@
     .template-detail-body-field :global(.md-input-area) {
       min-height: calc(100vh - 19rem);
     }
-
   }
 </style>

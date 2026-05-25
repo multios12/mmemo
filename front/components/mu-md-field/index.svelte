@@ -1,3 +1,7 @@
+<script lang="ts" module>
+  export type { ToolbarButton, ToolbarButtonContext } from "./types.js";
+</script>
+
 <script lang="ts">
   import { tick } from "svelte";
   import ArrowLeft from "lucide-svelte/icons/arrow-left";
@@ -5,16 +9,21 @@
   import Link from "lucide-svelte/icons/link";
   import Trash from "lucide-svelte/icons/trash";
   import Toolbar from "./Toolbar.svelte";
-
-  const carryOverMarker = "----ここまで前回内容で置換";
+  import type { ToolbarButton, ToolbarButtonContext } from "./types.js";
 
   interface Props {
     value?: string;
     imageUploadPath?: string;
     onTextChange?: (value: string) => void;
+    toolbarButtons?: ToolbarButton[];
   }
 
-  let { value = $bindable(""), imageUploadPath = "", onTextChange }: Props = $props();
+  let {
+    value = $bindable(""),
+    imageUploadPath = "",
+    onTextChange,
+    toolbarButtons = [],
+  }: Props = $props();
   let textarea = $state<HTMLTextAreaElement | null>(null);
   let paragraph = $state("normal");
   let isBold = $state(false);
@@ -452,37 +461,32 @@
     });
   };
 
-  const insertCarryOverMarker = () => {
-    if (textarea === null) {
-      return;
-    }
-
-    const rawValue = textarea.value;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const before = rawValue.slice(0, start);
-    const after = rawValue.slice(end);
-
-    const needsLeadingNewline =
-      before !== "" && !before.endsWith("\n");
-    const needsTrailingNewline =
-      after !== "" && !after.startsWith("\n");
-    const insertion =
-      `${needsLeadingNewline ? "\n" : ""}${carryOverMarker}${needsTrailingNewline ? "\n" : ""}`;
-    const nextValue = `${before}${insertion}${after}`;
-    const nextCursor = before.length + insertion.length;
-
-    updateValue(nextValue);
-
+  const focusTextarea = () => {
     requestAnimationFrame(() => {
-      if (textarea === null) {
-        return;
+      textarea?.focus();
+      if (textarea !== null) {
+        syncToolbarState(textarea);
       }
-
-      textarea.focus();
-      textarea.setSelectionRange(nextCursor, nextCursor);
-      syncToolbarState(textarea);
     });
+  };
+
+  const getToolbarButtonContext = (): ToolbarButtonContext => ({
+    value,
+    textarea,
+    selectionStart: textarea?.selectionStart ?? 0,
+    selectionEnd: textarea?.selectionEnd ?? 0,
+    updateValue,
+    focus: focusTextarea,
+    openImageUploadModal: openImageModal,
+    syncToolbarState: () => {
+      if (textarea !== null) {
+        syncToolbarState(textarea);
+      }
+    },
+  });
+
+  const handleExtraToolbarButton = (button: ToolbarButton) => {
+    button.onClick?.(getToolbarButtonContext());
   };
 
   const toImageAltText = (fileName: string) => {
@@ -756,7 +760,6 @@
     value;
     tick().then(resizeTextarea);
   });
-
 </script>
 
 <div class="md-input">
@@ -767,15 +770,15 @@
     link={isLink}
     strike={isStrike}
     onBold={() => applyInline("bold")}
-    onCarryOver={insertCarryOverMarker}
-    onImage={openImageModal}
     onItalic={() => applyInline("italic")}
     onLink={openLinkModal}
     onStrike={() => applyInline("strike")}
+    extraButtons={toolbarButtons}
+    onExtraButton={handleExtraToolbarButton}
   />
 
   <textarea
-    class="textarea md-input-area"
+    class="md-input-area"
     bind:this={textarea}
     bind:value
     oninput={handleInput}
@@ -801,10 +804,10 @@
   {#if isLinkModalOpen}
     <div class="md-link-modal-backdrop">
       <div class="md-link-modal">
-        <div class="field has-addons">
-          <div class="control is-expanded">
+        <div class="md-link-controls">
+          <div class="md-link-input-wrap">
             <input
-              class="input"
+              class="md-link-input"
               type="text"
               bind:this={linkInput}
               bind:value={linkValue}
@@ -821,24 +824,24 @@
               }}
             />
           </div>
-          <div class="control">
+          <div class="md-link-action">
             <button
-              class="button is-link"
+              class="md-button md-button-primary"
               type="button"
               aria-label="apply link"
               onclick={applyLink}
             >
-              <span class="icon"><Link /></span>
+              <span class="md-icon"><Link /></span>
             </button>
           </div>
-          <div class="control">
+          <div class="md-link-action">
             <button
-              class="button is-light"
+              class="md-button md-button-light"
               type="button"
               aria-label="remove link"
               onclick={removeLink}
             >
-              <span class="icon"><Trash /></span>
+              <span class="md-icon"><Trash /></span>
             </button>
           </div>
         </div>
@@ -872,38 +875,41 @@
     >
       <div class="md-link-modal">
         {#if imageError !== ""}
-          <div class="notification is-danger mb-3">{imageError}</div>
+          <div class="md-error-message">{imageError}</div>
         {/if}
         <div class="md-image-actions">
           <button
-            class="button is-light"
+            class="md-button md-button-light"
             type="button"
             aria-label="back"
             disabled={isImageUploading}
             onclick={closeImageModal}
           >
-            <span class="icon">
+            <span class="md-icon">
               <ArrowLeft />
             </span>
           </button>
           <button
-            class="button is-link md-image-select-button"
+            class="md-button md-button-primary md-image-select-button"
             type="button"
             aria-label="add image"
             disabled={isImageUploading}
             onclick={openImagePicker}
           >
-            <span class="icon">
+            <span class="md-icon">
               <Image />
             </span>
             <span>画像選択</span>
           </button>
           {#if isImageUploading}
-            <button class="button is-light is-loading" aria-label="uploading"></button>
+            <button
+              class="md-button md-button-light md-loading-button"
+              aria-label="uploading"
+            ></button>
           {/if}
         </div>
         <input
-          class="is-hidden"
+          class="md-hidden"
           type="file"
           accept="image/*"
           bind:this={imageInput}
@@ -932,7 +938,11 @@
     box-sizing: border-box;
     align-self: stretch;
     padding: 0.9rem 1rem;
-    border-radius: var(--bulma-radius-large);
+    border: 1px solid #394152;
+    border-radius: 0.75rem;
+    background-color: #161b28;
+    background-image: linear-gradient(180deg, #1b2030, #161b28);
+    color: #eef2ff;
     font-family:
       "Iosevka Custom",
       "SFMono-Regular",
@@ -941,8 +951,25 @@
       monospace;
     font-size: 0.96rem;
     line-height: 1.65;
+    caret-color: #8ec5ff;
     tab-size: 2;
     white-space: pre-wrap;
+    color-scheme: dark;
+  }
+
+  .md-input-area:focus {
+    border-color: #5ea7f0;
+    box-shadow: 0 0 0 0.15rem rgba(94, 167, 240, 0.28);
+    outline: none;
+  }
+
+  .md-input-area::placeholder {
+    color: rgba(238, 242, 255, 0.52);
+  }
+
+  .md-input-area::selection {
+    background: rgba(47, 125, 244, 0.38);
+    color: #ffffff;
   }
 
   .md-link-modal-backdrop {
@@ -959,9 +986,107 @@
   .md-link-modal {
     width: min(34rem, 100%);
     padding: 1rem;
-    border-radius: var(--bulma-radius-large);
-    background: var(--bulma-scheme-main);
+    border-radius: 0.75rem;
+    background: #ffffff;
     box-shadow: 0 1.2rem 3rem color-mix(in srgb, black 18%, transparent);
+  }
+
+  .md-link-controls {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .md-link-input-wrap {
+    flex: 1 1 auto;
+  }
+
+  .md-link-action {
+    flex: 0 0 auto;
+  }
+
+  .md-link-input {
+    width: 100%;
+    height: 2.5rem;
+    box-sizing: border-box;
+    border: 1px solid #d9dee8;
+    border-right: 0;
+    border-radius: 0.45rem 0 0 0.45rem;
+    color: #1f2937;
+    font: inherit;
+    padding: 0 0.75rem;
+  }
+
+  .md-link-input:focus {
+    border-color: #3e8ed0;
+    outline: none;
+  }
+
+  .md-button {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    border: 1px solid transparent;
+    border-radius: 0.45rem;
+    cursor: pointer;
+    font: inherit;
+    gap: 0.35rem;
+    line-height: 1;
+    padding: 0 0.75rem;
+    user-select: none;
+  }
+
+  .md-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .md-button-primary {
+    background: #3e8ed0;
+    border-color: #3e8ed0;
+    color: #ffffff;
+  }
+
+  .md-button-primary:not(:disabled):hover {
+    background: #3273dc;
+    border-color: #3273dc;
+  }
+
+  .md-button-light {
+    background: #f5f7fb;
+    border-color: #d9dee8;
+    color: #1f2937;
+  }
+
+  .md-button-light:not(:disabled):hover {
+    background: #e8edf5;
+  }
+
+  .md-link-action .md-button {
+    border-radius: 0;
+  }
+
+  .md-link-action:last-child .md-button {
+    border-radius: 0 0.45rem 0.45rem 0;
+  }
+
+  .md-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .md-error-message {
+    margin-bottom: 0.75rem;
+    border-radius: 0.5rem;
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 0.75rem;
   }
 
   .md-image-actions {
@@ -973,6 +1098,32 @@
   .md-image-select-button {
     flex: 1 1 auto;
     justify-content: center;
+  }
+
+  .md-loading-button {
+    position: relative;
+    color: transparent;
+  }
+
+  .md-loading-button::after {
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid color-mix(in srgb, #1f2937 18%, transparent);
+    border-top-color: #1f2937;
+    border-radius: 999px;
+    content: "";
+    animation: md-spin 0.8s linear infinite;
+  }
+
+  .md-hidden {
+    display: none;
+  }
+
+  @keyframes md-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   @media screen and (max-width: 768px) {

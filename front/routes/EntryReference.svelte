@@ -1,6 +1,10 @@
 <script lang="ts">
   import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
-  import { MuPrimaryButton, MuSecondaryButton } from "mu-ui-lib";
+  import {
+    MuActionsFooter,
+    MuPrimaryButton,
+    MuSecondaryButton,
+  } from "mu-ui-lib";
   import { onMount } from "svelte";
   import AppIcon from "../components/AppIcon.svelte";
   import ImageSelectionCard from "../components/ImageSelectionCard.svelte";
@@ -55,7 +59,7 @@
   };
   const renderedHTML = $derived.by(() => {
     if (entry.HTML && entry.HTML.trim() !== "") {
-      return entry.HTML.replace(/<img\b[^>]*>/gi, "");
+      return entry.HTML;
     }
     return "";
   });
@@ -183,24 +187,22 @@
     />
   {/if}
 
-  <footer class="reference-footer">
-    <div class="reference-footer-actions">
-      <MuSecondaryButton onclick={goToList}>
-        <span class="icon"><AppIcon name="arrow-left" /></span>
-        <span>戻る</span>
-      </MuSecondaryButton>
-      <MuPrimaryButton onclick={goToEdit}>
-        <span class="icon"><AppIcon name="pen" /></span>
-        <span>編集</span>
-      </MuPrimaryButton>
-    </div>
-  </footer>
+  <MuActionsFooter>
+    <MuSecondaryButton onclick={goToList}>
+      <AppIcon class="icon" name="arrow-left" />
+      <span>戻る</span>
+    </MuSecondaryButton>
+    <MuPrimaryButton onclick={goToEdit}>
+      <AppIcon class="icon" name="pen" />
+      <span>編集</span>
+    </MuPrimaryButton>
+  </MuActionsFooter>
 </div>
 
 <style>
   .reference-page {
     min-height: 100vh;
-    background: var(--bulma-scheme-main);
+    background: var(--app-scheme-main);
   }
 
   .reference-page.is-page-loading {
@@ -213,14 +215,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: color-mix(in srgb, var(--bulma-scheme-main) 86%, transparent);
+    background: color-mix(in srgb, var(--app-scheme-main) 86%, transparent);
     z-index: 1200;
     visibility: visible;
   }
 
   .reference-header {
     padding: 0.9rem 1rem 0.8rem;
-    background: var(--bulma-border);
+    background: var(--app-border);
     position: sticky;
     top: 0;
     z-index: 20;
@@ -232,7 +234,7 @@
     font-weight: 600;
     line-height: 1.2;
     font-variant-numeric: tabular-nums;
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
   }
 
   .reference-outline-value {
@@ -251,7 +253,7 @@
     gap: 0.45rem;
     flex-wrap: wrap;
     margin-top: 0.55rem;
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
     font-size: 0.94rem;
   }
 
@@ -259,11 +261,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--bulma-text);
+    color: var(--app-text);
   }
 
   .reference-tag {
-    color: var(--bulma-text);
+    color: var(--app-text);
   }
 
   .reference-body {
@@ -289,12 +291,12 @@
   .reference-empty-body {
     padding: 1.1rem 1rem;
     border-radius: 1rem;
-    background: color-mix(in srgb, var(--bulma-scheme-main) 92%, black 8%);
+    background: color-mix(in srgb, var(--app-scheme-main) 92%, black 8%);
     box-shadow: 0 0.5rem 1.4rem rgba(15, 23, 42, 0.06);
   }
 
   .reference-empty-body {
-    color: var(--bulma-text-weak);
+    color: var(--app-text-weak);
   }
 
   .reference-markdown :global(*) {
@@ -315,7 +317,7 @@
   .reference-markdown :global(h1),
   .reference-markdown :global(h2),
   .reference-markdown :global(h3) {
-    color: color-mix(in srgb, var(--bulma-link) 58%, white 42%);
+    color: color-mix(in srgb, var(--app-link) 58%, white 42%);
     font-weight: 700;
     letter-spacing: 0.01em;
   }
@@ -324,7 +326,7 @@
     margin-top: 1.8rem;
     padding-bottom: 0.45rem;
     border-bottom: 1px solid
-      color-mix(in srgb, var(--bulma-link) 35%, transparent);
+      color-mix(in srgb, var(--app-link) 35%, transparent);
     font-size: 1.45rem;
   }
 
@@ -332,7 +334,7 @@
     margin-top: 1.55rem;
     padding-left: 0.7rem;
     border-left: 0.25rem solid
-      color-mix(in srgb, var(--bulma-link) 55%, transparent);
+      color-mix(in srgb, var(--app-link) 55%, transparent);
     font-size: 1.2rem;
   }
 
@@ -376,7 +378,7 @@
     content: "・";
     position: absolute;
     left: 0;
-    color: color-mix(in srgb, var(--bulma-link) 45%, white 55%);
+    color: color-mix(in srgb, var(--app-link) 45%, white 55%);
   }
 
   .reference-markdown :global(ol) {
@@ -388,21 +390,21 @@
     border-collapse: collapse;
     overflow: hidden;
     border-radius: 0.75rem;
-    border: 1px solid color-mix(in srgb, var(--bulma-border) 70%, white 10%);
-    background: color-mix(in srgb, var(--bulma-scheme-main) 94%, black 6%);
+    border: 1px solid color-mix(in srgb, var(--app-border) 70%, white 10%);
+    background: color-mix(in srgb, var(--app-scheme-main) 94%, black 6%);
   }
 
   .reference-markdown :global(th),
   .reference-markdown :global(td) {
     padding: 0.7rem 0.8rem;
-    border: 1px solid color-mix(in srgb, var(--bulma-border) 74%, white 8%);
+    border: 1px solid color-mix(in srgb, var(--app-border) 74%, white 8%);
     text-align: left;
     vertical-align: top;
   }
 
   .reference-markdown :global(th) {
-    background: color-mix(in srgb, var(--bulma-border) 86%, black 14%);
-    color: color-mix(in srgb, var(--bulma-text) 82%, white 18%);
+    background: color-mix(in srgb, var(--app-border) 86%, black 14%);
+    color: color-mix(in srgb, var(--app-text) 82%, white 18%);
     font-weight: 600;
   }
 
@@ -414,28 +416,13 @@
     overflow-x: auto;
     padding: 0.85rem 1rem;
     border-radius: 0.75rem;
-    background: color-mix(in srgb, var(--bulma-border) 70%, black 30%);
+    background: color-mix(in srgb, var(--app-border) 70%, black 30%);
   }
 
   .reference-markdown :global(blockquote) {
     padding-left: 1rem;
-    border-left: 0.25rem solid var(--bulma-link);
-    color: var(--bulma-text-strong);
-  }
-
-  .reference-footer {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--bulma-border);
-  }
-
-  .reference-footer-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
+    border-left: 0.25rem solid var(--app-link);
+    color: var(--app-text-strong);
   }
 
   @media screen and (max-width: 768px) {
@@ -455,11 +442,6 @@
 
     .reference-date-value {
       font-size: 0.92rem;
-    }
-
-    .reference-footer-actions {
-      gap: 0.5rem;
-      padding: 0.65rem 0.75rem;
     }
 
   }

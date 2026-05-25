@@ -74,7 +74,7 @@
 >
   <div class="navbar-brand">
     <div
-      class="navbar-item is-unselectable has-text-weight-bold is-hidden-mobile"
+      class="navbar-item navbar-brand-title is-unselectable is-hidden-mobile"
     >
       memo
     </div>
@@ -142,18 +142,22 @@
 
 <style>
   .navbar-settings-button {
-    color: var(--bulma-text-weak-invert);
+    color: var(--app-text-weak-invert);
     border-color: transparent;
     min-width: 2.5rem;
     height: 2.5rem;
     padding: 0;
   }
 
+  .navbar-brand-title {
+    font-weight: 700;
+  }
+
   .navbar-settings-button:hover,
   .navbar-settings-button:focus-visible,
   .navbar-settings-button.is-active {
-    color: var(--bulma-text-invert);
-    background-color: color-mix(in srgb, var(--bulma-text) 16%, transparent);
+    color: var(--app-text-invert);
+    background-color: color-mix(in srgb, var(--app-text) 16%, transparent);
   }
 
   .navbar-mobile-context {
@@ -185,14 +189,14 @@
     border: none;
     border-radius: 0;
     background: transparent;
-    color: var(--bulma-text-weak-invert);
+    color: var(--app-text-weak-invert);
     font-size: 0.95rem;
     font-weight: 500;
     white-space: nowrap;
   }
 
   .mobile-nav-segment.is-active {
-    color: var(--bulma-text-invert);
-    box-shadow: inset 0 -2px 0 var(--bulma-link);
+    color: var(--app-text-invert);
+    box-shadow: inset 0 -2px 0 var(--app-link);
   }
 </style>

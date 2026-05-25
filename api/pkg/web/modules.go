@@ -10,10 +10,11 @@ import (
 
 // 一時保存画像をdiaryデータパスに移動
 func Move(value string, category string, id string) (string, error) {
+	displayID := id
 	idNumber, _ := strconv.Atoi(id)
-	id = fmt.Sprintf("%05d", idNumber)
-	newDirPath := path.Join(category, id) + "/"
-	imageTemplate := fmt.Sprintf("![イメージ](/api/%s/%s/images/%%s)", category, id)
+	storageID := fmt.Sprintf("%05d", idNumber)
+	newDirPath := path.Join(category, storageID) + "/"
+	imageTemplate := fmt.Sprintf("![イメージ](./%s/%s/%%s)", category, displayID)
 	d, err := entryimage.MoveTempImages(value, newDirPath, imageTemplate)
 	if err != nil {
 		return d, err

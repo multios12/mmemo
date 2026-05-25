@@ -17,19 +17,18 @@
   },
   "dependencies": {
     "@dvcol/svelte-simple-router": "2.7.2",
-    "bulma": "1.0.4",
     "lucide-svelte": "1.0.1",
     "mu-ui-lib": "file:../../mu-ui-lib",
-    "svelte": "5.55.5"
+    "svelte": "5.55.7"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "7.1.2",
     "@tsconfig/svelte": "5.0.8",
-    "@types/node": "25.6.2",
+    "@types/node": "25.8.0",
     "purgecss": "8.0.0",
     "svelte-check": "4.4.8",
     "tslib": "2.8.1",
     "typescript": "6.0.3",
-    "vite": "8.0.11"
+    "vite": "8.0.13"
   }
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
-  import "bulma/css/bulma.css";
+  import "mu-ui-lib/mu-theme.css";
+  import "./app.css";
   import { RouterContext } from "@dvcol/svelte-simple-router/components";
   import EntryList from "./routes/EntryList.svelte";
   import EntryDetail from "./routes/EntryDetail.svelte";

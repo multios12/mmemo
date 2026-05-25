@@ -43,6 +43,8 @@ func Initial(router *http.ServeMux, s SettingModel) error {
 	router.HandleFunc("POST   /api/{category}/{id}/images", postEntryImage)
 	router.HandleFunc("GET    /api/{category}/{id}/images/{file}", getImage)
 	router.HandleFunc("DELETE /api/{category}/{id}/images/{file}", deleteImage)
+	router.HandleFunc("GET    /{category}/{id}/{file}", getImage)
+	router.HandleFunc("DELETE /{category}/{id}/{file}", deleteImage)
 
 	return nil
 }
@@ -481,13 +483,13 @@ func imagePathToURL(imagePath string, category string, id string) string {
 	if err == nil {
 		padded := fmt.Sprintf("%05d", n)
 		if strings.HasPrefix(imagePath, path.Join(category, padded)+"/") {
-			return fmt.Sprintf("/api/%s/%s/images/%s", category, id, path.Base(imagePath))
+			return fmt.Sprintf("./%s/%s/%s", category, id, path.Base(imagePath))
 		}
 	}
 	if category == "diary" {
 		for _, prefix := range entryImagePrefixes(category, id) {
 			if strings.HasPrefix(imagePath, prefix) {
-				return fmt.Sprintf("/api/%s/%s/images/%s", category, id, path.Base(imagePath))
+				return fmt.Sprintf("./%s/%s/%s", category, id, path.Base(imagePath))
 			}
 		}
 	}

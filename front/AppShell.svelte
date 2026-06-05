@@ -15,7 +15,7 @@
     return parts.length === 2 || (parts.length === 3 && parts[1] === "edit");
   });
   const isSettingsDetailRoute = $derived.by(() =>
-    /^\/settings\/templates\/[^/]+$/.test(currentPath),
+    /^\/settings\/templates\/(?:[^/]+\/)?[^/]+$/.test(currentPath),
   );
   const mobileNavItems = $derived.by(() => {
     return (

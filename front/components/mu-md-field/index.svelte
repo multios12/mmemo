@@ -937,7 +937,7 @@
     overflow-y: hidden;
     box-sizing: border-box;
     align-self: stretch;
-    padding: 0.9rem 1rem;
+    padding: 0.9rem 1rem 4.25rem;
     border: 1px solid #394152;
     border-radius: 0.75rem;
     background-color: #161b28;
@@ -955,6 +955,7 @@
     tab-size: 2;
     white-space: pre-wrap;
     color-scheme: dark;
+    scroll-padding-bottom: 4.25rem;
   }
 
   .md-input-area:focus {

@@ -25,12 +25,17 @@
 
   const routeParams = $derived(
     (location?.params ?? {}) as {
+      categoryKey?: string | number | boolean;
       name?: string | number | boolean;
     },
+  );
+  const routeCategoryKey = $derived(
+    decodeURIComponent(String(routeParams.categoryKey ?? "")).trim(),
   );
   const templateName = $derived(
     decodeURIComponent(String(routeParams.name ?? "")).trim(),
   );
+  const isNewTemplate = $derived(templateName === "new");
   const categories = $derived.by(
     () =>
       $settingsStore.Categories?.map((category) => ({
@@ -39,7 +44,19 @@
       })) ?? [],
   );
   const template = $derived.by(() => {
-    if (templateName === "new") {
+    if (isNewTemplate) {
+      return undefined;
+    }
+    if (routeCategoryKey !== "") {
+      const category = $settingsStore.Categories?.find(
+        (item) => item.Key === routeCategoryKey,
+      );
+      const match = category?.Templates?.find(
+        (item) => item.Name === templateName,
+      );
+      if (category !== undefined && match !== undefined) {
+        return { categoryKey: category.Key, template: match };
+      }
       return undefined;
     }
     for (const category of $settingsStore.Categories ?? []) {
@@ -59,7 +76,8 @@
   $effect(() => {
     const currentTemplate = template?.template;
     const nextTemplateCategoryKey =
-      template?.categoryKey ?? (templateName === "new" ? blankCategoryKey : "");
+      template?.categoryKey ??
+      (routeCategoryKey !== "" ? routeCategoryKey : isNewTemplate ? blankCategoryKey : "");
     const nextOriginalTemplateName = currentTemplate?.Name ?? "";
     const nextOutlineValue = currentTemplate?.Name ?? "";
     const nextTagsValue = [...(currentTemplate?.Tags ?? [])];
@@ -71,6 +89,7 @@
     tagsValue = nextTagsValue;
     bodyValue = nextBodyValue;
     initialSnapshot = snapshotTemplate(
+      nextTemplateCategoryKey,
       nextOutlineValue,
       nextTagsValue,
       nextBodyValue,
@@ -78,15 +97,22 @@
     loading = false;
   });
 
-  const snapshotTemplate = (outline: string, tags: string[], body: string) =>
+  const snapshotTemplate = (
+    categoryKey: string,
+    outline: string,
+    tags: string[],
+    body: string,
+  ) =>
     JSON.stringify({
+      Category: categoryKey ?? "",
       Outline: outline ?? "",
       Tags: tags ?? [],
       Value: body ?? "",
     });
 
   const isDirty = $derived(
-    snapshotTemplate(outlineValue, tagsValue, bodyValue) !== initialSnapshot,
+    snapshotTemplate(templateCategoryKey, outlineValue, tagsValue, bodyValue) !==
+      initialSnapshot,
   );
 
   const backToSettings = async () => {
@@ -137,7 +163,12 @@
     }
     await refreshSettings();
     originalTemplateName = outlineValue.trim();
-    initialSnapshot = snapshotTemplate(outlineValue, tagsValue, bodyValue);
+    initialSnapshot = snapshotTemplate(
+      templateCategoryKey,
+      outlineValue,
+      tagsValue,
+      bodyValue,
+    );
   };
 
   const onTextChange = (value: string) => {
@@ -152,10 +183,27 @@
     <header class="template-detail-header">
       <div class="template-detail-header-main">
         <div class="template-detail-header-top">
-          <div class="template-detail-category">
-            {categories.find((category) => category.key === templateCategoryKey)
-              ?.name ?? "不明"}
-          </div>
+          {#if isNewTemplate}
+            <div class="template-detail-category-select-wrap">
+              <label class="template-detail-category-label" for="templateCategorySelect">
+                カテゴリ
+              </label>
+              <select
+                id="templateCategorySelect"
+                class="input is-medium template-detail-category-select"
+                bind:value={templateCategoryKey}
+              >
+                {#each categories as category}
+                  <option value={category.key}>{category.name}</option>
+                {/each}
+              </select>
+            </div>
+          {:else}
+            <div class="template-detail-category">
+              {categories.find((category) => category.key === templateCategoryKey)
+                ?.name ?? "不明"}
+            </div>
+          {/if}
           <MuDangerButton
             ariaLabel={`delete ${templateCategoryKey}`}
             onclick={onDelete}
@@ -256,6 +304,23 @@
     font-weight: 700;
     letter-spacing: 0.02em;
     line-height: 1;
+  }
+
+  .template-detail-category-select-wrap {
+    display: grid;
+    gap: 0.25rem;
+    min-width: min(24rem, 100%);
+  }
+
+  .template-detail-category-label {
+    color: var(--app-text);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .template-detail-category-select {
+    width: 100%;
   }
 
   .template-detail-body {

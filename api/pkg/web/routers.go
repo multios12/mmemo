@@ -50,14 +50,15 @@ func Initial(router *http.ServeMux, s SettingModel) error {
 }
 
 func getSetting(w http.ResponseWriter, _ *http.Request) {
-	latestSetting, err := loadSettingFromFile()
+	latestSetting, err := loadResolvedSetting()
 	if err == nil {
 		setting = hydrateSetting(latestSetting)
 	}
 	writeJSON(w, http.StatusOK, setting)
 }
 
-func loadSettingFromFile() (SettingModel, error) {
+/** 設定ファイルからテンプレートを含む設定を読み込む。テンプレートはストアから取得してモデルにセットする。 */
+func loadResolvedSetting() (SettingModel, error) {
 	b, err := os.ReadFile("settings.json")
 	if err != nil {
 		return SettingModel{}, err
@@ -67,19 +68,48 @@ func loadSettingFromFile() (SettingModel, error) {
 	if err := json.Unmarshal(b, &latest); err != nil {
 		return SettingModel{}, err
 	}
+
+	// テンプレートをストアから読み込んでモデルにセットする
+	for categoryIndex := range latest.Categories {
+		category := &latest.Categories[categoryIndex]
+		if strings.TrimSpace(category.Key) == "" {
+			continue
+		}
+
+		templates, err := entryStore.FindTemplates(category.Key)
+		if err != nil {
+			log.Printf("template load failed[category=%s]: %v", category.Key, err)
+			continue
+		}
+		category.Templates = storeTemplatesToModels(templates)
+	}
+
 	normalizeSetting(&latest)
 	return latest, nil
 }
 
+/** テンプレート名が空の場合にデフォルト名を割り当てる */
 func normalizeSetting(target *SettingModel) {
 	for categoryIndex := range target.Categories {
 		category := &target.Categories[categoryIndex]
+		category.Key = strings.TrimSpace(category.Key)
+		category.Name = strings.TrimSpace(category.Name)
 		for templateIndex := range category.Templates {
 			template := &category.Templates[templateIndex]
 			template.Name = strings.TrimSpace(template.Name)
 			if template.Name == "" {
 				template.Name = fmt.Sprintf("テンプレート%d", templateIndex+1)
 			}
+			for tagIndex := range template.Tags {
+				template.Tags[tagIndex] = strings.TrimSpace(template.Tags[tagIndex])
+			}
+			var tags []string
+			for _, tag := range template.Tags {
+				if tag != "" {
+					tags = append(tags, tag)
+				}
+			}
+			template.Tags = tags
 		}
 	}
 }
@@ -180,7 +210,7 @@ func saveTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	latestSetting, err := loadSettingFromFile()
+	latestSetting, err := loadResolvedSetting()
 	if err == nil {
 		setting = hydrateSetting(latestSetting)
 	}
@@ -205,7 +235,7 @@ func deleteTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	latestSetting, err := loadSettingFromFile()
+	latestSetting, err := loadResolvedSetting()
 	if err == nil {
 		setting = hydrateSetting(latestSetting)
 	}

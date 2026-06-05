@@ -20,6 +20,10 @@
     { path: "/planner", component: Planner },
     { path: "/settings", component: SettingsPage },
     {
+      path: "/settings/templates/:categoryKey/:name",
+      component: SettingsTemplatePage,
+    },
+    {
       path: "/settings/templates/:name",
       component: SettingsTemplatePage,
     },

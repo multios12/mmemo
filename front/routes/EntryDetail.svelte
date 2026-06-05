@@ -20,7 +20,7 @@
   import type { TemplateType } from "../models/settingType.js";
   import { settingsStore } from "../store.js";
   import { apiPath } from "../basePath.js";
-  import { createEmptyEntry, loadEntry } from "../lib/entryApi.js";
+  import { createEmptyEntry, loadEntryApi } from "../lib/entryApi.js";
 
   type EntryRouteParams = {
     id?: string | number | boolean;
@@ -54,10 +54,10 @@
   let isErr = $state(false);
   let errMessage = $state("");
   let isLoading = $state(false);
-  let editorValue = $state("");
-  let outlineValue = $state("");
-  let dateValue = $state("");
-  let tagsValue = $state<string[]>([]);
+  let dateValue = $state(""); // 日付（ISOフォーマットの文字列）。例: "2024-12-31"
+  let outlineValue = $state(""); // 概要
+  let tagsValue = $state<string[]>([]); // タグ
+  let editorValue = $state(""); // 本文
   let isNew = $state(false);
   let initialized = $state(false);
   let initialSnapshot = $state("");
@@ -111,6 +111,7 @@
       });
     });
   };
+  // 差分判定用スナップショット
   const snapshotEntry = (
     outline: string,
     date: string,
@@ -390,29 +391,38 @@
     canCheckDirty = true;
   };
 
+  // 初期化処理
   const initializeDetail = async () => {
+    // まだ初期化前、またはカテゴリが未確定なら何もしない
     if (!initialized || !categoryKey) {
       return;
     }
 
-    const nextIsNew = isAddRoute;
+    // ルート切り替え中に古い読み込み結果が混ざらないよう、世代番号を更新する
     const currentLoadSequence = ++loadSequence;
+
+    // テンプレートの先頭を、初期表示や自動適用の基準値として使う
+    console.log("settings", resolvedSettings);
     const initialTemplateValue = resolvedSettings.templates[0]?.Value ?? "";
     const initialTemplateTags = resolvedSettings.templates[0]?.Tags ?? [];
     const shouldAutoApplyTemplate =
       resolvedSettings.templates.length <= 1 && initialTemplateValue !== "";
+
+    // URLクエリから、初期値として反映する指定を拾う
     const presetOutline = queryValue("presetOutline") ?? "";
     const presetTag = queryValue("presetTag") ?? "";
     const hasPresetOutline = hasQueryValue("presetOutline");
     const hasPresetTag = hasQueryValue("presetTag");
     const previousEntryId = parsePreviousEntryId();
 
-    resetDetailState(nextIsNew);
+    // 入力欄やエラー表示などを一度クリアしてから、分岐ごとに初期化する
+    resetDetailState(isAddRoute);
 
-    if (nextIsNew) {
+    if (isAddRoute) {
+      // 新規作成時は、前回エントリの本文を引き継ぐために必要なら読み込む
       if (previousEntryId != undefined) {
         try {
-          const previousEntry = await loadEntry(
+          const previousEntry = await loadEntryApi(
             categoryKey,
             String(previousEntryId),
           );
@@ -426,6 +436,7 @@
         }
       }
 
+      // 新規作成用の初期値を組み立てる
       const nextEntry = createEmptyEntry();
       const nextOutline = hasPresetOutline ? presetOutline : nextEntry.Outline;
       const nextDate = nextEntry.Date;
@@ -442,14 +453,18 @@
       initialSnapshot = snapshotEntry(nextOutline, nextDate, nextTags, "");
       isLoading = false;
       finishPageLoading();
+
+      // テンプレートが複数なら選択肢を開き、1つだけならそのまま本文へ適用する
       if (resolvedSettings.templates.length > 1) {
         isTemplateSelectorOpen = true;
       } else if (shouldAutoApplyTemplate) {
+        console.log("initial", initialTemplateValue);
         applyInitialEditorValue(applyTemplateValue(initialTemplateValue));
       }
       return;
     }
 
+    // `id` が無い場合は、既存の entry の値をそのまま画面に反映する
     if (entryId == undefined || entryId === "") {
       const nextOutline = entry.Outline ?? "";
       const nextDate = entry.Date ?? "";
@@ -465,9 +480,11 @@
       return;
     }
 
+    // 既存エントリを API から読み込んで、編集状態を初期化する
     isLoading = true;
     try {
-      const nextEntry = await loadEntry(categoryKey, entryId);
+      const nextEntry = await loadEntryApi(categoryKey, entryId);
+      // 別の初期化処理が走っていたら、この結果は破棄する
       if (currentLoadSequence !== loadSequence) {
         return;
       }
@@ -488,6 +505,7 @@
       );
       canCheckDirty = true;
     } finally {
+      // どの分岐でも、最後にローディング表示だけは閉じる
       if (currentLoadSequence === loadSequence) {
         isLoading = false;
         finishPageLoading();
@@ -653,6 +671,7 @@
     </div>
   {/if}
 
+  <!-- アクションフッタ -->
   <MuActionsFooter hasUnsavedChanges={isDirty}>
     <MuSecondaryButton onclick={onCancel}>
       <AppIcon class="icon" name="arrow-left" />

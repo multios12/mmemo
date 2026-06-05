@@ -11,7 +11,7 @@
   import ImagePreviewModal from "../components/ImagePreviewModal.svelte";
   import type { entryType } from "../models/entryModels.js";
   import { settingsStore } from "../store.js";
-  import { createEmptyEntry, loadEntry } from "../lib/entryApi.js";
+  import { createEmptyEntry, loadEntryApi } from "../lib/entryApi.js";
 
   type EntryRouteParams = {
     id?: string | number | boolean;
@@ -108,7 +108,7 @@
 
     (async () => {
       try {
-        entry = await loadEntry(categoryKey, entryId);
+        entry = await loadEntryApi(categoryKey, entryId);
       } catch (error) {
         isErr = true;
         errMessage =
@@ -443,6 +443,5 @@
     .reference-date-value {
       font-size: 0.92rem;
     }
-
   }
 </style>

@@ -50,8 +50,10 @@
   });
 
   const { push } = useNavigate();
-  const openTemplateDetail = async (name: string) => {
-    await push({ path: `/settings/templates/${encodeURIComponent(name)}` });
+  const openTemplateDetail = async (categoryKey: string, name: string) => {
+    await push({
+      path: `/settings/templates/${encodeURIComponent(categoryKey)}/${encodeURIComponent(name)}`,
+    });
   };
 </script>
 
@@ -108,11 +110,16 @@
                   class="template-list-item"
                   role="button"
                   tabindex="0"
-                  onclick={() => openTemplateDetail(template.name)}
+                  onclick={() =>
+                    openTemplateDetail(template.categoryKey, template.name)
+                  }
                   onkeydown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      void openTemplateDetail(template.name);
+                      void openTemplateDetail(
+                        template.categoryKey,
+                        template.name,
+                      );
                     }
                   }}
                 >

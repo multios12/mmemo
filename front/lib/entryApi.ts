@@ -10,7 +10,7 @@ export const createEmptyEntry = (): entryType => ({
   Tags: [],
 });
 
-export const loadEntry = async (
+export const loadEntryApi = async (
   categoryKey: string,
   entryId: string,
 ): Promise<entryType> => {

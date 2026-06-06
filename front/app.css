@@ -1,34 +1,26 @@
 :root {
   color-scheme: dark;
   --app-scheme-main: var(--body-background-color);
-  --app-scheme-main-bis: color-mix(
-    in srgb,
-    var(--body-background-color) 88%,
-    var(--color-primary)
-  );
+  --app-scheme-main-bis: color-mix(in srgb,
+      var(--body-background-color) 88%,
+      var(--color-primary));
   --app-text: var(--body-color);
   --app-text-strong: var(--color-primary-contract);
-  --app-text-weak: color-mix(
-    in srgb,
-    var(--body-color) 58%,
-    var(--body-background-color)
-  );
+  --app-text-weak: color-mix(in srgb,
+      var(--body-color) 58%,
+      var(--body-background-color));
   --app-text-invert: var(--color-primary-contract);
   --app-text-weak-invert: var(--header-sub-title-color);
   --app-border: var(--header-border-color);
   --app-link: var(--color-primary);
   --app-link-text: var(--header-link-color);
   --app-danger: var(--color-error);
-  --app-danger-bg: color-mix(
-    in srgb,
-    var(--color-error) 14%,
-    var(--body-background-color)
-  );
-  --app-control-bg: color-mix(
-    in srgb,
-    var(--color-primmary) 82%,
-    var(--body-color)
-  );
+  --app-danger-bg: color-mix(in srgb,
+      var(--color-error) 14%,
+      var(--body-background-color));
+  --app-control-bg: color-mix(in srgb,
+      var(--color-primmary) 82%,
+      var(--body-color));
   --app-shadow: var(--header-box-shadow);
 }
 
@@ -106,6 +98,9 @@ table {
   z-index: 30;
   display: flex;
   align-items: stretch;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
   min-height: 3.25rem;
   padding: 0 0.75rem;
   color: var(--app-text);

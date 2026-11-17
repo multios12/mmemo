@@ -21,6 +21,7 @@
   import { settingsStore } from "../store.js";
   import { apiPath } from "../basePath.js";
   import { createEmptyEntry, loadEntryApi } from "../lib/entryApi.js";
+  import { resolveImageSrc } from "../lib/resolveImageSrc.js";
 
   type EntryRouteParams = {
     id?: string | number | boolean;
@@ -85,7 +86,7 @@
   const previewImages = $derived.by(() =>
     (entry.Images ?? []).map((image) => ({
       id: image.Id,
-      src: image.Src,
+      src: resolveImageSrc(image.Src),
       alt: image.Alt,
       markdown: image.Markdown,
     })),

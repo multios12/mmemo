@@ -1,5 +1,6 @@
 <script lang="ts">
   import AppIcon from "./AppIcon.svelte";
+  import { resolveImageSrc } from "../lib/resolveImageSrc.js";
 
   interface PreviewImage {
     id: string;
@@ -92,7 +93,7 @@
     const alt = fileName.replace(/\.[^.]+$/, "").trim() || "image";
     return {
       id,
-      src,
+      src: resolveImageSrc(src),
       alt,
       markdown: `![${alt}](${src})`,
     };

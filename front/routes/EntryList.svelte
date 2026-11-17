@@ -30,10 +30,14 @@
   );
   let sortOrder = $state<"desc" | "asc">("desc");
   let viewMode = $state<viewModeType>("default");
+  let groupSortBy = $state<"name" | "updated">("name");
 
   const categoryKey = $derived(String(location?.params?.category ?? ""));
   const sortOrderStorageKey = $derived(
     `entry-list-sort-order:${categoryKey || "default"}`,
+  );
+  const groupSortByStorageKey = $derived(
+    `entry-list-group-sort-by:${categoryKey || "default"}`,
   );
   const viewModeStorageKey = $derived(
     `entry-list-view-mode:${categoryKey || "default"}`,
@@ -84,6 +88,7 @@
   const detailPath = (entry: entryType) => `/${categoryKey}/${entry.Id}`;
   const isPreviewLine = (line: string) =>
     line !== "" &&
+    line.replace(/^\\/, "") !== carryOverMarker &&
     !/^[-*_]{3,}$/.test(line) &&
     !/^([-*+]\s+|\d+\.\s+)/.test(line);
   const carryOverMarker = "----ここまで前回内容で置換";
@@ -150,6 +155,25 @@
   };
   const latestUpdatedEntry = (targetEntries: entryType[]) =>
     [...targetEntries].sort(compareEntriesByRecentUpdate)[0];
+  const compareGroups = (
+    left: { entries: entryType[] },
+    right: { entries: entryType[] },
+    leftLabel: string,
+    rightLabel: string,
+  ) => {
+    if (groupSortBy === "updated") {
+      const leftEntry = latestUpdatedEntry(left.entries);
+      const rightEntry = latestUpdatedEntry(right.entries);
+      const leftUpdatedAt = leftEntry?.UpdatedAt ?? leftEntry?.CreatedAt ?? "";
+      const rightUpdatedAt = rightEntry?.UpdatedAt ?? rightEntry?.CreatedAt ?? "";
+      const compared = leftUpdatedAt.localeCompare(rightUpdatedAt);
+      if (compared !== 0) {
+        return compared;
+      }
+    }
+
+    return leftLabel.localeCompare(rightLabel, "ja");
+  };
   const groupUpperPreview = (targetEntries: entryType[]) =>
     extractGroupedPreviews(latestUpdatedEntry(targetEntries)?.Value ?? "")
       .upper;
@@ -176,7 +200,9 @@
         ([label, entries]) =>
           ({ label, entries }) satisfies groupedEntriesByTagType,
       )
-      .sort((left, right) => left.label.localeCompare(right.label, "ja"));
+      .sort((left, right) =>
+        compareGroups(left, right, left.label, right.label),
+      );
 
     return sortOrder === "asc" ? grouped : grouped.reverse();
   });
@@ -197,7 +223,7 @@
     );
 
     grouped.sort((left, right) =>
-      left.outline.localeCompare(right.outline, "ja"),
+      compareGroups(left, right, left.outline, right.outline),
     );
 
     return sortOrder === "asc" ? grouped : grouped.reverse();
@@ -350,6 +376,9 @@
       sortOrder = storedSortOrder;
     }
 
+    const storedGroupSortBy = window.localStorage.getItem(groupSortByStorageKey);
+    groupSortBy = storedGroupSortBy === "updated" ? "updated" : "name";
+
     const storedViewMode = window.localStorage.getItem(viewModeStorageKey);
     if (
       storedViewMode === "default" ||
@@ -367,6 +396,7 @@
 
     window.localStorage.setItem(sortOrderStorageKey, sortOrder);
     window.localStorage.setItem(viewModeStorageKey, viewMode);
+    window.localStorage.setItem(groupSortByStorageKey, groupSortBy);
   });
 
   $effect(() => {
@@ -418,6 +448,16 @@
                   />
                 </span>
               </button>
+              {#if viewMode !== "default"}
+                <select
+                  class="select"
+                  aria-label="まとめカードの並び順"
+                  bind:value={groupSortBy}
+                >
+                  <option value="name">名前順</option>
+                  <option value="updated">更新日順</option>
+                </select>
+              {/if}
               <SegmentedControl
                 items={segmentedItems}
                 selected={viewMode}
@@ -1101,7 +1141,7 @@
 
     .toolbar-mode-row {
       width: 100%;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       align-items: center;
     }
 

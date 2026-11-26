@@ -1,4 +1,5 @@
 <script lang="ts">
+  import HomeLink from "../components/HomeLink.svelte";
   import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
   import {
     MuActionsFooter,
@@ -136,6 +137,7 @@
   {/if}
 
   <header class="reference-header">
+    <HomeLink />
     <div class="reference-date-value">{entry.Date}</div>
 
     <div class="reference-outline-value">{entry.Outline || "-"}</div>

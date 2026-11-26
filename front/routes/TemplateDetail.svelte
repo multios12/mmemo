@@ -1,4 +1,5 @@
 <script lang="ts">
+  import HomeLink from "../components/HomeLink.svelte";
   import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
   import {
     MuDangerButton,
@@ -115,6 +116,9 @@
       initialSnapshot,
   );
 
+  const shouldLeave = () =>
+    !isDirty || window.confirm("未保存の変更があります。戻りますか？");
+
   const backToSettings = async () => {
     await push({ path: "/settings" });
   };
@@ -181,6 +185,7 @@
     <div class="template-detail-loading">読み込み中...</div>
   {:else}
     <header class="template-detail-header">
+      <HomeLink canLeave={shouldLeave} />
       <div class="template-detail-header-main">
         <div class="template-detail-header-top">
           {#if isNewTemplate}

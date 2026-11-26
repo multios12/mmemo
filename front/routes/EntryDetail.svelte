@@ -1,4 +1,5 @@
 <script lang="ts">
+  import HomeLink from "../components/HomeLink.svelte";
   import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
   import {
     MuDangerButton,
@@ -549,6 +550,7 @@
   {/if}
 
   <header>
+    <HomeLink canLeave={shouldLeave} />
     <div class="detail-header">
       <div class="detail-header-main">
         <div class="detail-header-top">

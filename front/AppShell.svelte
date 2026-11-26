@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import HomeLink from "./components/HomeLink.svelte";
   import Settings from "lucide-svelte/icons/settings";
   import { useNavigate, useRoute } from "@dvcol/svelte-simple-router/router";
   import type { settingType } from "./models/settingType.js";
@@ -73,6 +74,7 @@
   class:is-hidden={isDetailRoute || isSettingsDetailRoute}
 >
   <div class="navbar-brand">
+    <HomeLink onNavigate={closeNavbarMenu} />
     <div
       class="navbar-item navbar-brand-title is-unselectable is-hidden-mobile"
     >
@@ -149,6 +151,10 @@
     padding: 0;
   }
 
+  .navbar-brand {
+    align-items: center;
+  }
+
   .navbar-brand-title {
     font-weight: 700;
   }
@@ -165,7 +171,8 @@
     margin-right: 0;
     padding-left: 0.75rem;
     padding-right: 0.75rem;
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .mobile-nav-segments {
@@ -175,7 +182,14 @@
     width: 100%;
     overflow-x: auto;
     scrollbar-width: none;
-    justify-content: center;
+  }
+
+  .mobile-nav-segment:first-child {
+    margin-inline-start: auto;
+  }
+
+  .mobile-nav-segment:last-child {
+    margin-inline-end: auto;
   }
 
   .mobile-nav-segments::-webkit-scrollbar {

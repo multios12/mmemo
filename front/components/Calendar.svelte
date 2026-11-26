@@ -135,15 +135,31 @@
     table-layout: fixed;
     border-collapse: collapse;
     background: color-mix(in srgb, var(--app-scheme-main) 94%, black 6%);
-    border: 1px solid color-mix(in srgb, var(--app-border) 82%, white 10%);
   }
 
   .calendar th,
   .calendar td {
+    border-color: color-mix(in srgb, var(--app-border) 82%, white 8%);
     width: calc(100% / 7);
     min-width: 0;
     text-align: center;
     vertical-align: middle;
+  }
+
+  .calendar tr > :first-child {
+    border-left: none;
+  }
+
+  .calendar tr > :last-child {
+    border-right: none;
+  }
+
+  .calendar thead th {
+    border-top: none;
+  }
+
+  .calendar tbody tr:last-child td {
+    border-bottom: none;
   }
 
   .calendar th {
@@ -151,7 +167,6 @@
     font-weight: 600;
     color: color-mix(in srgb, var(--app-text-weak) 84%, white 16%);
     background: color-mix(in srgb, var(--app-border) 82%, black 18%);
-    border-color: color-mix(in srgb, var(--app-border) 82%, white 8%);
   }
 
   .holiday-head {
@@ -168,7 +183,6 @@
     font-variant-numeric: tabular-nums;
     color: var(--app-text);
     background: color-mix(in srgb, var(--app-scheme-main) 93%, black 7%);
-    border-color: color-mix(in srgb, var(--app-border) 82%, white 8%);
   }
 
   .day-number {

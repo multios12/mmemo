@@ -8,16 +8,10 @@
   import { apiSettingsPath, appPath } from "./basePath.js";
 
   const { push } = useNavigate();
-  const { location } = $derived(useRoute());
+  const { location, route } = $derived(useRoute());
 
   const currentPath = $derived(location?.path ?? "/");
-  const isDetailRoute = $derived.by(() => {
-    const parts = currentPath.split("/").filter(Boolean);
-    return parts.length === 2 || (parts.length === 3 && parts[1] === "edit");
-  });
-  const isSettingsDetailRoute = $derived.by(() =>
-    /^\/settings\/templates\/(?:[^/]+\/)?[^/]+$/.test(currentPath),
-  );
+  const hideNavbar = $derived(route?.meta?.hideNavbar === true);
   const mobileNavItems = $derived.by(() => {
     return (
       $settingsStore?.Categories?.map((category) => ({
@@ -71,7 +65,7 @@
 
 <nav
   class="navbar is-transparent is-dark"
-  class:is-hidden={isDetailRoute || isSettingsDetailRoute}
+  class:is-hidden={hideNavbar}
 >
   <div class="navbar-brand">
     <HomeLink onNavigate={closeNavbarMenu} />

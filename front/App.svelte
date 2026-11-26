@@ -22,14 +22,16 @@
     {
       path: "/settings/templates/:categoryKey/:name",
       component: SettingsTemplatePage,
+      meta: { hideNavbar: true },
     },
     {
       path: "/settings/templates/:name",
       component: SettingsTemplatePage,
+      meta: { hideNavbar: true },
     },
-    { path: "/:category/add", component: EntryDetail },
-    { path: "/:category/:id/edit", component: EntryDetail },
-    { path: "/:category/:id", component: EntryReference },
+    { path: "/:category/add", component: EntryDetail, meta: { hideNavbar: true } },
+    { path: "/:category/:id/edit", component: EntryDetail, meta: { hideNavbar: true } },
+    { path: "/:category/:id", component: EntryReference, meta: { hideNavbar: true } },
     { path: "/:category", component: EntryList },
   ];
   const options = {

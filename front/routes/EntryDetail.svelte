@@ -74,8 +74,6 @@
   let lastInitKey = "";
   let loadSequence = 0;
 
-  document.querySelector<HTMLDivElement>(".navbar")?.classList.add("is-hidden");
-
   const entryId = $derived(routeParams.id ? String(routeParams.id) : undefined);
   const isAddRoute = $derived(entryId == undefined || entryId === "");
   const routeQuery = $derived((location?.query ?? {}) as EntryRouteQuery);

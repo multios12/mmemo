@@ -4,12 +4,12 @@
   import {
     MuDangerButton,
     MuActionsFooter,
+    MuMdField,
     MuPrimaryButton,
     MuSecondaryButton,
     MuTagsField,
   } from "mu-ui-lib";
   import AppIcon from "../components/AppIcon.svelte";
-  import MuMdField from "../components/mu-md-field/index.svelte";
   import { apiPath, apiSettingsPath, appPath } from "../basePath.js";
   import type { settingType } from "../models/settingType.js";
   import { settingsStore } from "../store.js";
@@ -175,9 +175,6 @@
     );
   };
 
-  const onTextChange = (value: string) => {
-    bodyValue = value;
-  };
 </script>
 
 <section class="template-detail-page">
@@ -241,7 +238,7 @@
         <div class="template-detail-card">
           <div class="template-detail-grid">
             <div class="template-detail-body-field">
-              <MuMdField value={bodyValue} {onTextChange} />
+              <MuMdField bind:value={bodyValue} />
             </div>
           </div>
         </div>
@@ -365,6 +362,7 @@
   }
 
   .template-detail-body-field {
+    --mu-md-field-bottom-padding: 4.25rem;
     display: flex;
     min-height: 0;
     width: 100%;

@@ -5,6 +5,7 @@
     MuDangerButton,
     MuDateField,
     MuActionsFooter,
+    MuMdField,
     MuPrimaryButton,
     MuSecondaryButton,
     MuTagsField,
@@ -14,8 +15,7 @@
   import RotateCw from "lucide-svelte/icons/rotate-cw";
   import AppIcon from "../components/AppIcon.svelte";
   import ImageSelectionCard from "../components/ImageSelectionCard.svelte";
-  import MuMdField from "../components/mu-md-field/index.svelte";
-  import type { ToolbarButton } from "../components/mu-md-field/types.js";
+  import type { ToolbarButton } from "mu-ui-lib";
   import TemplateSelectorModal from "../components/TemplateSelectorModal.svelte";
   import type { entryType } from "../models/entryModels.js";
   import type { TemplateType } from "../models/settingType.js";
@@ -290,9 +290,6 @@
     await goToList();
   };
 
-  const onTextChange = (value: string) => {
-    editorValue = value;
-  };
   const escapeRegExp = (value: string) =>
     value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const rewriteEmbeddedImageMarkdown = (markdown: string) => {
@@ -614,9 +611,8 @@
     <div class="detail-editor-field">
       <div class="detail-editor-control">
         <MuMdField
-          value={editorValue}
+          bind:value={editorValue}
           {imageUploadPath}
-          {onTextChange}
           toolbarButtons={muMdFieldToolbarButtons}
         />
       </div>
@@ -825,6 +821,7 @@
   }
 
   .detail-editor-control {
+    --mu-md-field-bottom-padding: 4.25rem;
     display: flex;
     flex: 1 1 auto;
     min-height: 0;
